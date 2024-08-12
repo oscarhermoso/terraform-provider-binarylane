@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     binarylane = {
-      source = "hashicorp.com/oscarhermoso/binarylane"
+      source = "oscarhermoso/binarylane"
     }
   }
 }
@@ -12,7 +12,7 @@ provider "binarylane" {
 }
 
 resource "binarylane_server" "example" {
-  name   = "example"
+  name   = "tf-example"
   region = "per" # or "syd", "mel", "bne", "sin"
   image  = "ubuntu-24.04"
   size   = "std-min"

@@ -1,4 +1,4 @@
-# binary-lane-terraform-provider
+# terraform-provider-binarylane
 
 See the examples in the [examples directory](./examples/basic/main.tf).
 
@@ -21,7 +21,6 @@ If somehow you use this in production I would be pretty impressed.
 - [ ] Deploy the rest of the owl
 
 ## Local development
-
 
 Based on [this example from the terraform docs](https://developer.hashicorp.com/terraform/plugin/code-generation/workflow-example),
 
@@ -49,7 +48,7 @@ provider_installation {
 
   dev_overrides {
     # Example GOBIN path, will need to be replaced with your own GOBIN path. Default is $GOPATH/bin
-    "hashicorp.com/oscarhermoso/binarylane" = "/home/oscarhermoso/Git/terraform-provider-binarylane/bin"
+    "oscarhermoso/binarylane" = "/home/oscarhermoso/Git/terraform-provider-binarylane/bin"
   }
 
   direct {}

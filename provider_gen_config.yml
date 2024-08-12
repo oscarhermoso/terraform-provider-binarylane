@@ -49,16 +49,16 @@ resources:
               generated and emailed to the account email address.
             sensitive: true
             optional_required: optional
-        ignores:
-          - ipv6
-          - licenses
-          - links
-          - options
-          - server
-          - ssh_keys
-          - vpc_id
-          - user_data
-          - port_blocking
+      ignores:
+        - ipv6
+        - licenses
+        - links
+        - options
+        - server
+        - ssh_keys
+        - vpc_id
+        - user_data
+        - port_blocking
 
 data_sources:
   server:

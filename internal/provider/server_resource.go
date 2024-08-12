@@ -97,7 +97,7 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	if plan.Password.IsNull() {
-		plan.Password = types.StringUnknown()
+		plan.Password = types.StringNull()
 	} else {
 		body.Password = plan.Password.ValueStringPointer()
 	}
