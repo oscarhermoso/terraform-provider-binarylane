@@ -5,6 +5,7 @@
 *.so
 *.dylib
 bin
+dist
 terraform-provider-binarylane
 
 # Test binary, built with `go test -c`
