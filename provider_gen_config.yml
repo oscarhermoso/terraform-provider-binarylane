@@ -1,0 +1,81 @@
+# https://developer.hashicorp.com/terraform/plugin/code-generation/openapi-generator
+
+provider:
+  name: binarylane
+  schema:
+    attributes:
+      api_endpoint:
+        source: env
+        name: BINARYLANE_API_ENDPOINT
+      api_token:
+        source: env
+        name: BINARYLANE_API_TOKEN
+        sensitive: true
+
+resources:
+  server:
+    create:
+      path: /servers
+      method: POST
+    read:
+      path: /servers/{server_id}
+      method: GET
+    delete:
+      path: /servers/{server_id}
+      method: DELETE
+    schema:
+      attributes:
+        aliases:
+          server_id: id
+        overrides:
+          backups:
+            type: bool
+            description: >
+              If true this will enable two daily backups for the server. Options.daily_backups will override this value if provided. Setting this to false has no effect.
+            optional: true
+            default:
+              static: false
+            computed: false
+          image:
+            type: string
+            description: The slug of the selected operating system.
+            example: "ubuntu-24.04"
+          password:
+            type: string
+            description: >
+              If this is provided the specified or default remote user's account password will be set to this value.
+              Only valid if the server supports password change actions (check server.password_change_supported via the
+              servers endpoint). If omitted and the server supports password change actions a random password will be
+              generated and emailed to the account email address.
+            sensitive: true
+            optional_required: optional
+        ignores:
+          - ipv6
+          - licenses
+          - links
+          - options
+          - server
+          - ssh_keys
+          - vpc_id
+          - user_data
+          - port_blocking
+
+data_sources:
+  server:
+    read:
+      path: /servers/{server_id}
+      method: GET
+    schema:
+      attributes:
+        aliases:
+          server_id: id
+      ignores:
+        - ipv6
+        - licenses
+        - links
+        - options
+        - server
+        - ssh_keys
+        - vpc_id
+        - user_data
+        - port_blocking

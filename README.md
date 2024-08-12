@@ -1,52 +1,33 @@
 # binary-lane-terraform-provider
 
-## Following the example from the terraform docs
+See the examples in the [examples directory](./examples/basic/main.tf).
 
-https://developer.hashicorp.com/terraform/plugin/code-generation/workflow-example
-
-Initial setup
-
-```sh
-mkdir terraform-provider-binarylane
-cd terraform-provider-binarylane
-go mod init terraform-provider-binarylane
-touch main.go
-touch provider.go
+```terraform
+resource "binarylane_server" "example" {
+  name   = "example"
+  region = "per"
+  image  = "ubuntu-24.04"
+  size   = "std-min"
+}
 ```
 
-1. Run `go genereate` to generate the OpenAPI spec in `internal/binarylane/openapi.yml`
-2. Make any changes to `provider_gen_config.yml` (see https://developer.hashicorp.com/terraform/plugin/code-generation/openapi-generator#generator-config)
-3. Generate JSON spec for provider code
+## WIP
 
-```sh
-go install github.com/hashicorp/terraform-plugin-codegen-openapi/cmd/tfplugingen-openapi@latest
+If somehow you use this in production I would be pretty impressed.
 
-tfplugingen-openapi generate \
-  --config ./provider_gen_config.yml \
-  ./openapi.yml \
-  --output ./provider_code_spec.json
-```
+- [x] Create/delete a server when runing locally
+- [ ] Publish to Terraform Registry (and maybe OpenTofu?)
+- [ ] Deploy the rest of the owl
 
-4. Generate code for provider, resources and data sources
+## Local development
 
-```sh
-go install github.com/hashicorp/terraform-plugin-codegen-framework/cmd/tfplugingen-framework@latest
 
-tfplugingen-framework generate all \
-    --input provider_code_spec.json \
-    --force \
-    --output internal
-```
+Based on [this example from the terraform docs](https://developer.hashicorp.com/terraform/plugin/code-generation/workflow-example),
 
-5. Scaffold provider, resources and data sources
-
-```sh
-mkdir -p internal/provider
-
-tfplugingen-framework scaffold provider \
-  --name binarylane \
-  --output-dir ./internal/provider
-```
+1. `go mod tidy`
+2. Run `go generate` to fetch/transform the OpenAPI spec in `internal/binarylane/openapi.json`
+3. Make any changes to `provider_gen_config.yml` (see https://developer.hashicorp.com/terraform/plugin/code-generation/openapi-generator#generator-config), and run `go generate` again
+4. Scaffold any new resources and data sources
 
 ```sh
 tfplugingen-framework scaffold data-source \
@@ -60,42 +41,79 @@ tfplugingen-framework scaffold data-source \
     --output-dir ./internal/provider
 ```
 
-6. Add this to your `~/.terraformrc` (your home directory!)
+5. Create or modify `~/.terraformrc` in your home directory
 
 ```hcl
 provider_installation {
 
   dev_overrides {
     # Example GOBIN path, will need to be replaced with your own GOBIN path. Default is $GOPATH/bin
-    "hashicorp.com/edu/binarylane" = "/home/oscarhermoso/Git/terraform-provider-binarylane/bin"
+    "hashicorp.com/oscarhermoso/binarylane" = "/home/oscarhermoso/Git/terraform-provider-binarylane/bin"
   }
 
-  # For all other providers, install them directly from their origin provider
-  # registries as normal. If you omit this, Terraform will _only_ use
-  # the dev_overrides block, and so no other providers will be available.
   direct {}
 }
 ```
 
+6. Build and test the provider
+
+```sh
+go build -o bin/terraform-provider-binarylane
+go install
+cd examples/resources/binarylane_image
+terraform plan
+terraform apply
+```
+
 ## Notes
 
-Getting a list of images
+Images:
 
 ```sh
 curl -X GET "https://api.binarylane.com.au/v2/images?type=distribution&&page=1&per_page=200" \
-  -H "Authorization: Bearer **********" > images.json
+  -H "Authorization: Bearer **********" > tmp/images.json
 
-jq '[ .images[] | .slug ] | sort' images.json
+jq '[ .images[] | .slug ] | sort' tmp/images.json
 ```
 
-Getting a list of regions
+```json
+[
+  "alma-8",
+  "alma-9",
+  "byo-os",
+  "byo-os-virtio-disabled",
+  "cpanel-plus-whm",
+  "debian-11",
+  "debian-12",
+  "rocky-8",
+  "rocky-9",
+  "ubuntu-20.04-neon-desktop",
+  "ubuntu-20.04.6",
+  "ubuntu-22.04",
+  "ubuntu-22.04-desktop",
+  "ubuntu-24.04",
+  "windows-2012-r2",
+  "windows-2016",
+  "windows-2016-sql-2016-web",
+  "windows-2019",
+  "windows-2019-sql-2017-std",
+  "windows-2019-sql-2017-web",
+  "windows-2022",
+  "windows-2022-sql-2019-std",
+  "windows-2022-sql-2019-web"
+]
+```
+
+Regions:
 
 ```sh
 curl -X GET "https://api.binarylane.com.au/v2/regions" \
-  -H "Authorization: Bearer **********"" > regions.json
+  -H "Authorization: Bearer **********"" > tmp/regions.json
 
-jq '[ .regions[] | .slug ] | sort' regions.json
+jq '[ .regions[] | .slug ] | sort' tmp/regions.json
+```
 
+```json
 [
   "bne",
   "mel",
@@ -105,14 +123,16 @@ jq '[ .regions[] | .slug ] | sort' regions.json
 ]
 ```
 
-Getting a list of sizes
+Sizes (not all sizes are available in all regions):
 
 ```sh
 curl -X GET "https://api.binarylane.com.au/v2/sizes" \
-  -H "Authorization: Bearer **********"" > sizes.json
+  -H "Authorization: Bearer **********"" > tmp/sizes.json
 
-jq '[ .sizes[] | .slug ] | sort' sizes.json
+jq '[ .sizes[] | .slug ] | sort' tmp/sizes.json
+```
 
+```json
 [
   "cpu-2thr",
   "cpu-4thr",
