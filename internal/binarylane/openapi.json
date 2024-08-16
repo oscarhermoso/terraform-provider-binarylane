@@ -1594,15 +1594,8 @@
             "description": "The ID or fingerprint of the SSH Key to fetch.",
             "required": true,
             "schema": {
-              "oneOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "string"
-                }
-              ],
-              "example": 5
+              "example": 5,
+              "type": "integer"
             }
           }
         ],
@@ -1652,15 +1645,8 @@
             "description": "The ID or fingerprint of the SSH Key to update.",
             "required": true,
             "schema": {
-              "oneOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "string"
-                }
-              ],
-              "example": 5
+              "example": 5,
+              "type": "integer"
             }
           }
         ],
@@ -1733,15 +1719,8 @@
             "description": "The ID or fingerprint of the SSH Key to delete.",
             "required": true,
             "schema": {
-              "oneOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "string"
-                }
-              ],
-              "example": 5
+              "example": 5,
+              "type": "integer"
             }
           }
         ],

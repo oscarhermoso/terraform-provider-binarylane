@@ -77,35 +77,35 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 }
 
 func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resources.ServerModel
+	var data resources.ServerModel
 
 	// Read Terraform plan data into the model
-	diags := req.Plan.Get(ctx, &plan)
+	diags := req.Plan.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Create API call logic
-	tflog.Debug(ctx, fmt.Sprintf("Creating server: name=%s", plan.Name.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("Creating server: name=%s", data.Name.ValueString()))
 
 	body := binarylane.CreateServerRequest{
-		Name:   plan.Name.ValueStringPointer(),
-		Image:  plan.Image.ValueString(),
-		Region: plan.Region.ValueString(),
-		Size:   plan.Size.ValueString(),
+		Name:   data.Name.ValueStringPointer(),
+		Image:  data.Image.ValueString(),
+		Region: data.Region.ValueString(),
+		Size:   data.Size.ValueString(),
 	}
 
-	if plan.Password.IsNull() {
-		plan.Password = types.StringNull()
+	if data.Password.IsNull() {
+		data.Password = types.StringNull()
 	} else {
-		body.Password = plan.Password.ValueStringPointer()
+		body.Password = data.Password.ValueStringPointer()
 	}
 
 	serverResp, err := r.bc.client.PostServersWithResponse(ctx, body)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error creating server: name=%s", plan.Name.ValueString()),
+			fmt.Sprintf("Error creating server: name=%s", data.Name.ValueString()),
 			err.Error(),
 		)
 		return
@@ -114,16 +114,16 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	if serverResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code creating server",
-			fmt.Sprintf("Received %s creating new server: name=%s. Details: %s", serverResp.Status(), plan.Name.ValueString(), serverResp.Body))
+			fmt.Sprintf("Received %s creating new server: name=%s. Details: %s", serverResp.Status(), data.Name.ValueString(), serverResp.Body))
 		return
 	}
 
-	assignInt64(serverResp.JSON200.Server.Id, &plan.Id)
-	assignStr(serverResp.JSON200.Server.Name, &plan.Name)
-	assignStr(serverResp.JSON200.Server.Image.Slug, &plan.Image)
-	assignStr(serverResp.JSON200.Server.Region.Slug, &plan.Region)
-	assignStr(serverResp.JSON200.Server.Size.Slug, &plan.Size)
-	plan.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
+	assignInt64(serverResp.JSON200.Server.Id, &data.Id)
+	assignStr(serverResp.JSON200.Server.Name, &data.Name)
+	assignStr(serverResp.JSON200.Server.Image.Slug, &data.Image)
+	assignStr(serverResp.JSON200.Server.Region.Slug, &data.Region)
+	assignStr(serverResp.JSON200.Server.Size.Slug, &data.Size)
+	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
 	// assignBool(&serverResp.JSON200.Server.Networks.PortBlocking, &plan.PortBlocking)
 
 	if resp.Diagnostics.HasError() {
@@ -131,7 +131,7 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -157,7 +157,7 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	if serverResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
-			"Unexpected HTTP status code creating server",
+			"Unexpected HTTP status code reading server",
 			fmt.Sprintf("Received %s reading server: name=%s. Details: %s", serverResp.Status(), data.Id.String(), serverResp.Body))
 		return
 	}
@@ -184,6 +184,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	// Update API call logic
+	// TODO
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -207,7 +208,7 @@ func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		Reason: &reason,
 	}
 
-	delResp, err := r.bc.client.DeleteServersServerIdWithResponse(ctx, data.Id.ValueInt64(), &params)
+	serverResp, err := r.bc.client.DeleteServersServerIdWithResponse(ctx, data.Id.ValueInt64(), &params)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error deleting server: name=%s, server_id=%s", data.Name.ValueString(), data.Id.String()),
@@ -216,10 +217,10 @@ func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	if delResp.StatusCode() != http.StatusNoContent {
+	if serverResp.StatusCode() != http.StatusNoContent {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code deleting server",
-			fmt.Sprintf("Received %s deleting server: name=%s, server_id=%s. Details: %s", delResp.Status(), data.Name.ValueString(), data.Id.String(), delResp.Body))
+			fmt.Sprintf("Received %s deleting server: name=%s, server_id=%s. Details: %s", serverResp.Status(), data.Name.ValueString(), data.Id.String(), serverResp.Body))
 		return
 	}
 }

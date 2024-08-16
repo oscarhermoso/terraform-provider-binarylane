@@ -141,11 +141,15 @@ func (p *binarylaneProvider) Metadata(_ context.Context, _ provider.MetadataRequ
 }
 
 func (p *binarylaneProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{}
+	return []func() datasource.DataSource{
+		NewServerDataSource,
+		NewSshKeyDataSource,
+	}
 }
 
 func (p *binarylaneProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewServerResource,
+		NewSshKeyResource,
 	}
 }

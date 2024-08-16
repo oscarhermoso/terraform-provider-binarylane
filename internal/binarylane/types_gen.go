@@ -3142,26 +3142,8 @@ type GetAccountKeysParams struct {
 // PostAccountKeysJSONBody defines parameters for PostAccountKeys.
 type PostAccountKeysJSONBody = SshKeyRequest
 
-// DeleteAccountKeysKeyIdParamsKeyId0 defines parameters for DeleteAccountKeysKeyId.
-type DeleteAccountKeysKeyIdParamsKeyId0 = int
-
-// DeleteAccountKeysKeyIdParamsKeyId1 defines parameters for DeleteAccountKeysKeyId.
-type DeleteAccountKeysKeyIdParamsKeyId1 = string
-
-// GetAccountKeysKeyIdParamsKeyId0 defines parameters for GetAccountKeysKeyId.
-type GetAccountKeysKeyIdParamsKeyId0 = int
-
-// GetAccountKeysKeyIdParamsKeyId1 defines parameters for GetAccountKeysKeyId.
-type GetAccountKeysKeyIdParamsKeyId1 = string
-
 // PutAccountKeysKeyIdJSONBody defines parameters for PutAccountKeysKeyId.
 type PutAccountKeysKeyIdJSONBody = UpdateSshKeyRequest
-
-// PutAccountKeysKeyIdParamsKeyId0 defines parameters for PutAccountKeysKeyId.
-type PutAccountKeysKeyIdParamsKeyId0 = int
-
-// PutAccountKeysKeyIdParamsKeyId1 defines parameters for PutAccountKeysKeyId.
-type PutAccountKeysKeyIdParamsKeyId1 = string
 
 // GetActionsParams defines parameters for GetActions.
 type GetActionsParams struct {

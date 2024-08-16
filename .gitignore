@@ -26,3 +26,8 @@ go.work.sum
 
 # Misc
 tmp
+
+# Normally, you wouldn't want to exclude lock files, but in this case, we're
+# using Terraform's lock file to store the provider version, so we need to
+# ignore it.
+terraform.lock.hcl

@@ -13,6 +13,20 @@
 					}
 				]
 			}
+		},
+		{
+			"name": "ssh_key",
+			"schema": {
+				"attributes": [
+					{
+						"name": "id",
+						"int64": {
+							"computed_optional_required": "required",
+							"description": "The ID or fingerprint of the SSH Key to fetch."
+						}
+					}
+				]
+			}
 		}
 	],
 	"provider": {
@@ -94,6 +108,65 @@
 						"int64": {
 							"computed_optional_required": "computed_optional",
 							"description": "The ID of the server to fetch."
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "ssh_key",
+			"schema": {
+				"attributes": [
+					{
+						"name": "default",
+						"bool": {
+							"computed_optional_required": "computed_optional",
+							"description": "Optional: If true this will be added to all new server installations (if we support SSH Key injection for the server's operating system)."
+						}
+					},
+					{
+						"name": "name",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "A name to help you identify the key.",
+							"validators": [
+								{
+									"custom": {
+										"imports": [
+											{
+												"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+											}
+										],
+										"schema_definition": "stringvalidator.LengthAtLeast(1)"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "public_key",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "The public key in OpenSSH \"authorized_keys\" format.",
+							"validators": [
+								{
+									"custom": {
+										"imports": [
+											{
+												"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+											}
+										],
+										"schema_definition": "stringvalidator.LengthAtLeast(1)"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "id",
+						"int64": {
+							"computed_optional_required": "computed_optional",
+							"description": "The ID or fingerprint of the SSH Key to fetch."
 						}
 					}
 				]

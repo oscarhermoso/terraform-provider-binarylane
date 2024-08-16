@@ -59,6 +59,22 @@ resources:
         - vpc_id
         - user_data
         - port_blocking
+  ssh_key:
+    create:
+      path: /account/keys
+      method: POST
+    read:
+      path: /account/keys/{key_id}
+      method: GET
+    delete:
+      path: /account/keys/{key_id}
+      method: DELETE
+    schema:
+      attributes:
+        aliases:
+          key_id: id
+      ignores:
+        - ssh_key
 
 data_sources:
   server:
@@ -79,3 +95,13 @@ data_sources:
         - vpc_id
         - user_data
         - port_blocking
+  ssh_key:
+    read:
+      path: /account/keys/{key_id}
+      method: GET
+    schema:
+      attributes:
+        aliases:
+          key_id: id
+      ignores:
+        - ssh_key

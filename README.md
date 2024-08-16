@@ -20,52 +20,7 @@ If somehow you use this in production I would be pretty impressed.
   - [ ] (and maybe OpenTofu?)
 - [ ] Deploy the rest of the owl
 
-## Local development
-
-Based on [this example from the terraform docs](https://developer.hashicorp.com/terraform/plugin/code-generation/workflow-example),
-
-1. `go mod tidy`
-2. Run `go generate` to fetch/transform the OpenAPI spec in `internal/binarylane/openapi.json`
-3. Make any changes to `provider_gen_config.yml` (see https://developer.hashicorp.com/terraform/plugin/code-generation/openapi-generator#generator-config), and run `go generate` again
-4. Scaffold any new resources and data sources
-
-```sh
-tfplugingen-framework scaffold data-source \
-    --name REPLACE_ME \
-    --output-dir ./internal/provider
-```
-
-```sh
-tfplugingen-framework scaffold data-source \
-    --name REPLACE_ME \
-    --output-dir ./internal/provider
-```
-
-5. Create or modify `~/.terraformrc` in your home directory
-
-```hcl
-provider_installation {
-
-  dev_overrides {
-    # Example GOBIN path, will need to be replaced with your own GOBIN path. Default is $GOPATH/bin
-    "oscarhermoso/binarylane" = "/home/oscarhermoso/Git/terraform-provider-binarylane/bin"
-  }
-
-  direct {}
-}
-```
-
-6. Build and test the provider
-
-```sh
-go build -o bin/terraform-provider-binarylane
-go install
-cd examples/resources/binarylane_image
-terraform plan
-terraform apply
-```
-
-## Notes
+## Parameters
 
 Images:
 

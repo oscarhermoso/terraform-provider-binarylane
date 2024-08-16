@@ -101,23 +101,15 @@ type ClientInterface interface {
 	PostAccountKeys(ctx context.Context, body PostAccountKeysJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteAccountKeysKeyId request
-	DeleteAccountKeysKeyId(ctx context.Context, keyId struct {
-		union json.RawMessage
-	}, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteAccountKeysKeyId(ctx context.Context, keyId int, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetAccountKeysKeyId request
-	GetAccountKeysKeyId(ctx context.Context, keyId struct {
-		union json.RawMessage
-	}, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetAccountKeysKeyId(ctx context.Context, keyId int, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutAccountKeysKeyIdWithBody request with any body
-	PutAccountKeysKeyIdWithBody(ctx context.Context, keyId struct {
-		union json.RawMessage
-	}, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutAccountKeysKeyIdWithBody(ctx context.Context, keyId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PutAccountKeysKeyId(ctx context.Context, keyId struct {
-		union json.RawMessage
-	}, body PutAccountKeysKeyIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutAccountKeysKeyId(ctx context.Context, keyId int, body PutAccountKeysKeyIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetActions request
 	GetActions(ctx context.Context, params *GetActionsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -623,9 +615,7 @@ func (c *Client) PostAccountKeys(ctx context.Context, body PostAccountKeysJSONRe
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteAccountKeysKeyId(ctx context.Context, keyId struct {
-	union json.RawMessage
-}, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) DeleteAccountKeysKeyId(ctx context.Context, keyId int, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteAccountKeysKeyIdRequest(c.Server, keyId)
 	if err != nil {
 		return nil, err
@@ -637,9 +627,7 @@ func (c *Client) DeleteAccountKeysKeyId(ctx context.Context, keyId struct {
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetAccountKeysKeyId(ctx context.Context, keyId struct {
-	union json.RawMessage
-}, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) GetAccountKeysKeyId(ctx context.Context, keyId int, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAccountKeysKeyIdRequest(c.Server, keyId)
 	if err != nil {
 		return nil, err
@@ -651,9 +639,7 @@ func (c *Client) GetAccountKeysKeyId(ctx context.Context, keyId struct {
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutAccountKeysKeyIdWithBody(ctx context.Context, keyId struct {
-	union json.RawMessage
-}, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PutAccountKeysKeyIdWithBody(ctx context.Context, keyId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutAccountKeysKeyIdRequestWithBody(c.Server, keyId, contentType, body)
 	if err != nil {
 		return nil, err
@@ -665,9 +651,7 @@ func (c *Client) PutAccountKeysKeyIdWithBody(ctx context.Context, keyId struct {
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutAccountKeysKeyId(ctx context.Context, keyId struct {
-	union json.RawMessage
-}, body PutAccountKeysKeyIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PutAccountKeysKeyId(ctx context.Context, keyId int, body PutAccountKeysKeyIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutAccountKeysKeyIdRequest(c.Server, keyId, body)
 	if err != nil {
 		return nil, err
@@ -2856,9 +2840,7 @@ func NewPostAccountKeysRequestWithBody(server string, contentType string, body i
 }
 
 // NewDeleteAccountKeysKeyIdRequest generates requests for DeleteAccountKeysKeyId
-func NewDeleteAccountKeysKeyIdRequest(server string, keyId struct {
-	union json.RawMessage
-}) (*http.Request, error) {
+func NewDeleteAccountKeysKeyIdRequest(server string, keyId int) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -2892,9 +2874,7 @@ func NewDeleteAccountKeysKeyIdRequest(server string, keyId struct {
 }
 
 // NewGetAccountKeysKeyIdRequest generates requests for GetAccountKeysKeyId
-func NewGetAccountKeysKeyIdRequest(server string, keyId struct {
-	union json.RawMessage
-}) (*http.Request, error) {
+func NewGetAccountKeysKeyIdRequest(server string, keyId int) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -2928,9 +2908,7 @@ func NewGetAccountKeysKeyIdRequest(server string, keyId struct {
 }
 
 // NewPutAccountKeysKeyIdRequest calls the generic PutAccountKeysKeyId builder with application/json body
-func NewPutAccountKeysKeyIdRequest(server string, keyId struct {
-	union json.RawMessage
-}, body PutAccountKeysKeyIdJSONRequestBody) (*http.Request, error) {
+func NewPutAccountKeysKeyIdRequest(server string, keyId int, body PutAccountKeysKeyIdJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
@@ -2941,9 +2919,7 @@ func NewPutAccountKeysKeyIdRequest(server string, keyId struct {
 }
 
 // NewPutAccountKeysKeyIdRequestWithBody generates requests for PutAccountKeysKeyId with any type of body
-func NewPutAccountKeysKeyIdRequestWithBody(server string, keyId struct {
-	union json.RawMessage
-}, contentType string, body io.Reader) (*http.Request, error) {
+func NewPutAccountKeysKeyIdRequestWithBody(server string, keyId int, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -8539,23 +8515,15 @@ type ClientWithResponsesInterface interface {
 	PostAccountKeysWithResponse(ctx context.Context, body PostAccountKeysJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAccountKeysResponse, error)
 
 	// DeleteAccountKeysKeyIdWithResponse request
-	DeleteAccountKeysKeyIdWithResponse(ctx context.Context, keyId struct {
-		union json.RawMessage
-	}, reqEditors ...RequestEditorFn) (*DeleteAccountKeysKeyIdResponse, error)
+	DeleteAccountKeysKeyIdWithResponse(ctx context.Context, keyId int, reqEditors ...RequestEditorFn) (*DeleteAccountKeysKeyIdResponse, error)
 
 	// GetAccountKeysKeyIdWithResponse request
-	GetAccountKeysKeyIdWithResponse(ctx context.Context, keyId struct {
-		union json.RawMessage
-	}, reqEditors ...RequestEditorFn) (*GetAccountKeysKeyIdResponse, error)
+	GetAccountKeysKeyIdWithResponse(ctx context.Context, keyId int, reqEditors ...RequestEditorFn) (*GetAccountKeysKeyIdResponse, error)
 
 	// PutAccountKeysKeyIdWithBodyWithResponse request with any body
-	PutAccountKeysKeyIdWithBodyWithResponse(ctx context.Context, keyId struct {
-		union json.RawMessage
-	}, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutAccountKeysKeyIdResponse, error)
+	PutAccountKeysKeyIdWithBodyWithResponse(ctx context.Context, keyId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutAccountKeysKeyIdResponse, error)
 
-	PutAccountKeysKeyIdWithResponse(ctx context.Context, keyId struct {
-		union json.RawMessage
-	}, body PutAccountKeysKeyIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAccountKeysKeyIdResponse, error)
+	PutAccountKeysKeyIdWithResponse(ctx context.Context, keyId int, body PutAccountKeysKeyIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAccountKeysKeyIdResponse, error)
 
 	// GetActionsWithResponse request
 	GetActionsWithResponse(ctx context.Context, params *GetActionsParams, reqEditors ...RequestEditorFn) (*GetActionsResponse, error)
@@ -11819,9 +11787,7 @@ func (c *ClientWithResponses) PostAccountKeysWithResponse(ctx context.Context, b
 }
 
 // DeleteAccountKeysKeyIdWithResponse request returning *DeleteAccountKeysKeyIdResponse
-func (c *ClientWithResponses) DeleteAccountKeysKeyIdWithResponse(ctx context.Context, keyId struct {
-	union json.RawMessage
-}, reqEditors ...RequestEditorFn) (*DeleteAccountKeysKeyIdResponse, error) {
+func (c *ClientWithResponses) DeleteAccountKeysKeyIdWithResponse(ctx context.Context, keyId int, reqEditors ...RequestEditorFn) (*DeleteAccountKeysKeyIdResponse, error) {
 	rsp, err := c.DeleteAccountKeysKeyId(ctx, keyId, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -11830,9 +11796,7 @@ func (c *ClientWithResponses) DeleteAccountKeysKeyIdWithResponse(ctx context.Con
 }
 
 // GetAccountKeysKeyIdWithResponse request returning *GetAccountKeysKeyIdResponse
-func (c *ClientWithResponses) GetAccountKeysKeyIdWithResponse(ctx context.Context, keyId struct {
-	union json.RawMessage
-}, reqEditors ...RequestEditorFn) (*GetAccountKeysKeyIdResponse, error) {
+func (c *ClientWithResponses) GetAccountKeysKeyIdWithResponse(ctx context.Context, keyId int, reqEditors ...RequestEditorFn) (*GetAccountKeysKeyIdResponse, error) {
 	rsp, err := c.GetAccountKeysKeyId(ctx, keyId, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -11841,9 +11805,7 @@ func (c *ClientWithResponses) GetAccountKeysKeyIdWithResponse(ctx context.Contex
 }
 
 // PutAccountKeysKeyIdWithBodyWithResponse request with arbitrary body returning *PutAccountKeysKeyIdResponse
-func (c *ClientWithResponses) PutAccountKeysKeyIdWithBodyWithResponse(ctx context.Context, keyId struct {
-	union json.RawMessage
-}, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutAccountKeysKeyIdResponse, error) {
+func (c *ClientWithResponses) PutAccountKeysKeyIdWithBodyWithResponse(ctx context.Context, keyId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutAccountKeysKeyIdResponse, error) {
 	rsp, err := c.PutAccountKeysKeyIdWithBody(ctx, keyId, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -11851,9 +11813,7 @@ func (c *ClientWithResponses) PutAccountKeysKeyIdWithBodyWithResponse(ctx contex
 	return ParsePutAccountKeysKeyIdResponse(rsp)
 }
 
-func (c *ClientWithResponses) PutAccountKeysKeyIdWithResponse(ctx context.Context, keyId struct {
-	union json.RawMessage
-}, body PutAccountKeysKeyIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAccountKeysKeyIdResponse, error) {
+func (c *ClientWithResponses) PutAccountKeysKeyIdWithResponse(ctx context.Context, keyId int, body PutAccountKeysKeyIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAccountKeysKeyIdResponse, error) {
 	rsp, err := c.PutAccountKeysKeyId(ctx, keyId, body, reqEditors...)
 	if err != nil {
 		return nil, err
