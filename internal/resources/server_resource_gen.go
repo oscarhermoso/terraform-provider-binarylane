@@ -59,6 +59,15 @@ func ServerResourceSchema(ctx context.Context) schema.Schema {
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
+			"user_data": schema.StringAttribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         "If provided this will be used to initialise the new server. This must be left null if the Image does not support UserData, see DistributionInfo.Features for more information.",
+				MarkdownDescription: "If provided this will be used to initialise the new server. This must be left null if the Image does not support UserData, see DistributionInfo.Features for more information.",
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(65536),
+				},
+			},
 		},
 	}
 }
@@ -71,4 +80,5 @@ type ServerModel struct {
 	Password types.String `tfsdk:"password"`
 	Region   types.String `tfsdk:"region"`
 	Size     types.String `tfsdk:"size"`
+	UserData types.String `tfsdk:"user_data"`
 }

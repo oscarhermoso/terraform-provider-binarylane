@@ -74,6 +74,25 @@
 						}
 					},
 					{
+						"name": "user_data",
+						"string": {
+							"computed_optional_required": "computed_optional",
+							"description": "If provided this will be used to initialise the new server. This must be left null if the Image does not support UserData, see DistributionInfo.Features for more information.",
+							"validators": [
+								{
+									"custom": {
+										"imports": [
+											{
+												"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+											}
+										],
+										"schema_definition": "stringvalidator.LengthAtMost(65536)"
+									}
+								}
+							]
+						}
+					},
+					{
 						"name": "id",
 						"int64": {
 							"computed_optional_required": "computed_optional",

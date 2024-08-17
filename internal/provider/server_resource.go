@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -74,6 +76,17 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Computed:            backups.IsOptional(),
 		Default:             booldefault.StaticBool(false), // Add default to backups
 	}
+
+	user_data := resp.Schema.Attributes["user_data"]
+	resp.Schema.Attributes["user_data"] = &schema.StringAttribute{
+		Description:         user_data.GetDescription(),
+		MarkdownDescription: user_data.GetMarkdownDescription(),
+		Optional:            user_data.IsComputed(),
+		Computed:            user_data.IsOptional(),
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.RequiresReplace(),
+		},
+	}
 }
 
 func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -90,10 +103,11 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	tflog.Debug(ctx, fmt.Sprintf("Creating server: name=%s", data.Name.ValueString()))
 
 	body := binarylane.CreateServerRequest{
-		Name:   data.Name.ValueStringPointer(),
-		Image:  data.Image.ValueString(),
-		Region: data.Region.ValueString(),
-		Size:   data.Size.ValueString(),
+		Name:     data.Name.ValueStringPointer(),
+		Image:    data.Image.ValueString(),
+		Region:   data.Region.ValueString(),
+		Size:     data.Size.ValueString(),
+		UserData: data.UserData.ValueStringPointer(),
 	}
 
 	if data.Password.IsNull() {

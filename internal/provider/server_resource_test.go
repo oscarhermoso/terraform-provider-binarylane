@@ -18,6 +18,10 @@ resource "binarylane_server" "test" {
   region = "per"
   image  = "ubuntu-24.04"
   size   = "std-min"
+	user_data = <<EOT
+#cloud-config
+echo "Hello World" > /var/tmp/output.txt
+EOT
 }
 
 data "binarylane_server" "test" {
@@ -32,6 +36,9 @@ data "binarylane_server" "test" {
 					resource.TestCheckResourceAttr("binarylane_server.test", "region", "per"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "image", "ubuntu-24.04"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "size", "std-min"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "user_data", `#cloud-config
+echo "Hello World" > /var/tmp/output.txt
+`),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "id"),
 
 					// Verify data source values
@@ -40,6 +47,10 @@ data "binarylane_server" "test" {
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "image", "ubuntu-24.04"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "size", "std-min"),
 					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "id"),
+					// 					resource.TestCheckResourceAttr("data.binarylane_server.test", "user_data", `
+					// #cloud-config
+					// echo "Hello World" > /var/tmp/output.txt
+					// 					`),
 				),
 			},
 			// ImportState testing

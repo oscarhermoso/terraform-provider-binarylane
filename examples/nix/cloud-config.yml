@@ -1,0 +1,14 @@
+#cloud-config
+# yaml-language-server: $schema=https://raw.githubusercontent.com/canonical/cloud-init/main/cloudinit/config/schemas/schema-cloud-config-v1.json
+
+#cloud-config
+write_files:
+  - path: /etc/nixos/host.nix
+    permissions: "0644"
+    content: |
+      {pkgs, ...}:
+      {
+        environment.systemPackages = with pkgs; [ vim ];
+      }
+runcmd:
+  - curl https://raw.githubusercontent.com/elitak/nixos-infect/master/nixos-infect | NIXOS_IMPORT=./host.nix NIX_CHANNEL=nixos-23.05 bash 2>&1 | tee /var/tmp/infect.log
