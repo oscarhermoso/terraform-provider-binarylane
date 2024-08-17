@@ -32,6 +32,13 @@ terraform plan
 terraform apply
 ```
 
+### Testing
+
+
+```sh
+TF_ACC=1 go test -v ./...
+```
+
 ### Adding resources/data sources to the provider
 
 1. Make any changes to `provider_gen_config.yml` (see https://developer.hashicorp.com/terraform/plugin/code-generation/openapi-generator#generator-config)

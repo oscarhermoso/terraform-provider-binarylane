@@ -1,34 +1,4 @@
 {
-	"datasources": [
-		{
-			"name": "server",
-			"schema": {
-				"attributes": [
-					{
-						"name": "id",
-						"int64": {
-							"computed_optional_required": "required",
-							"description": "The ID of the server to fetch."
-						}
-					}
-				]
-			}
-		},
-		{
-			"name": "ssh_key",
-			"schema": {
-				"attributes": [
-					{
-						"name": "id",
-						"int64": {
-							"computed_optional_required": "required",
-							"description": "The ID or fingerprint of the SSH Key to fetch."
-						}
-					}
-				]
-			}
-		}
-	],
 	"provider": {
 		"name": "binarylane"
 	},

@@ -61,17 +61,17 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 	resp.Schema.Attributes["password"] = &schema.StringAttribute{
 		Description:         pw.GetDescription(),
 		MarkdownDescription: pw.GetMarkdownDescription(),
-		Optional:            true,
-		Computed:            true,
-		Sensitive:           true, // Add sensitive to password
+		Optional:            pw.IsOptional(),
+		Computed:            false, // Computed must be false to allow server to be created without password
+		Sensitive:           true,  // Mark password as sensitive
 	}
 
 	backups := resp.Schema.Attributes["backups"]
 	resp.Schema.Attributes["backups"] = &schema.BoolAttribute{
 		Description:         backups.GetDescription(),
 		MarkdownDescription: backups.GetMarkdownDescription(),
-		Optional:            true,
-		Computed:            true,
+		Optional:            backups.IsComputed(),
+		Computed:            backups.IsOptional(),
 		Default:             booldefault.StaticBool(false), // Add default to backups
 	}
 }
@@ -162,8 +162,11 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	assignInt64(serverResp.JSON200.Server.Id, &data.Id)
-	assignStr(serverResp.JSON200.Server.Name, &data.Name)
+	data.Id = types.Int64Value(*serverResp.JSON200.Server.Id)
+	data.Name = types.StringValue(*serverResp.JSON200.Server.Name)
+	data.Image = types.StringValue(*serverResp.JSON200.Server.Image.Slug)
+	data.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
+	data.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -224,3 +227,8 @@ func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 }
+
+// func (r *serverResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+// 	// Retrieve import ID and save to id attribute
+// 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+// }

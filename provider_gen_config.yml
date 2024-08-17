@@ -75,33 +75,34 @@ resources:
           key_id: id
       ignores:
         - ssh_key
-
-data_sources:
-  server:
-    read:
-      path: /servers/{server_id}
-      method: GET
-    schema:
-      attributes:
-        aliases:
-          server_id: id
-      ignores:
-        - ipv6
-        - licenses
-        - links
-        - options
-        - server
-        - ssh_keys
-        - vpc_id
-        - user_data
-        - port_blocking
-  ssh_key:
-    read:
-      path: /account/keys/{key_id}
-      method: GET
-    schema:
-      attributes:
-        aliases:
-          key_id: id
-      ignores:
-        - ssh_key
+#
+# Currently don't need to generate data sources as they use the same schema as resources
+# data_sources:
+#   server:
+#     read:
+#       path: /servers/{server_id}
+#       method: GET
+#     schema:
+#       attributes:
+#         aliases:
+#           server_id: id
+#       ignores:
+#         - ipv6
+#         - licenses
+#         - links
+#         - options
+#         - server
+#         - ssh_keys
+#         - vpc_id
+#         - user_data
+#         - port_blocking
+#   ssh_key:
+#     read:
+#       path: /account/keys/{key_id}
+#       method: GET
+#     schema:
+#       attributes:
+#         aliases:
+#           key_id: id
+#       ignores:
+#         - ssh_key

@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -55,13 +57,21 @@ func (r *sshKeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 	resp.Schema.Description = "TODO"
 
 	// Overrides
-	defaultAttr := resp.Schema.Attributes["default"]
+	default_ := resp.Schema.Attributes["default"]
 	resp.Schema.Attributes["default"] = schema.BoolAttribute{
 		Optional:            true,
 		Computed:            true,
-		Description:         defaultAttr.GetDescription(),
-		MarkdownDescription: defaultAttr.GetMarkdownDescription(),
+		Description:         default_.GetDescription(),
+		MarkdownDescription: default_.GetMarkdownDescription(),
 		Default:             booldefault.StaticBool(false), // Add default to backups
+	}
+
+	public_key := resp.Schema.Attributes["public_key"]
+	resp.Schema.Attributes["public_key"] = schema.StringAttribute{
+		Required:            true,
+		Description:         public_key.GetDescription(),
+		MarkdownDescription: public_key.GetMarkdownDescription(),
+		PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 	}
 }
 
@@ -113,6 +123,8 @@ func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
+	data.PublicKey = types.StringValue(data.PublicKey.ValueString())
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -138,7 +150,7 @@ func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	data.Id = types.Int64Value(*sshResp.JSON200.SshKey.Id)
 	data.Default = types.BoolValue(*sshResp.JSON200.SshKey.Default)
 	data.Name = types.StringValue(*sshResp.JSON200.SshKey.Name)
-	data.PublicKey = types.StringValue(*sshResp.JSON200.SshKey.PublicKey)
+	// data.PublicKey = types.StringValue(*sshResp.JSON200.SshKey.PublicKey) // don't set or it will force replacement every time
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -149,13 +161,29 @@ func (r *sshKeyResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Update API call logic
-	// TODO
+	sshResp, err := r.bc.client.PutAccountKeysKeyIdWithResponse(ctx, int(data.Id.ValueInt64()), binarylane.UpdateSshKeyRequest{
+		Name:    data.Name.ValueString(),
+		Default: data.Default.ValueBoolPointer(),
+	})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Error updating SSH Key: name=%s", data.Name.ValueString()),
+			err.Error(),
+		)
+		return
+	}
+	if sshResp.StatusCode() != http.StatusOK {
+		resp.Diagnostics.AddError(
+			"Unexpected HTTP status code updating SSH Key",
+			fmt.Sprintf("Received %s updating new SSH Key: name=%s. Details: %s", sshResp.Status(), data.Name.ValueString(), sshResp.Body),
+		)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -188,3 +216,8 @@ func (r *sshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 }
+
+// func (r *sshKeyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+// 	// Retrieve import ID and save to id attribute
+// 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+// }
