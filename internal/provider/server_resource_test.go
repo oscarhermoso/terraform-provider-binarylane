@@ -16,7 +16,7 @@ func TestServerResource(t *testing.T) {
 resource "binarylane_server" "test" {
 	name   = "tf-server-resource-test"
   region = "per"
-  image  = "ubuntu-24.04"
+  image  = "debian-12"
   size   = "std-min"
 	user_data = <<EOT
 #cloud-config
@@ -34,7 +34,7 @@ data "binarylane_server" "test" {
 					// Verify resource values
 					resource.TestCheckResourceAttr("binarylane_server.test", "name", "tf-server-resource-test"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "region", "per"),
-					resource.TestCheckResourceAttr("binarylane_server.test", "image", "ubuntu-24.04"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "image", "debian-12"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "size", "std-min"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "user_data", `#cloud-config
 echo "Hello World" > /var/tmp/output.txt
@@ -44,7 +44,7 @@ echo "Hello World" > /var/tmp/output.txt
 					// Verify data source values
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "name", "tf-server-resource-test"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "region", "per"),
-					resource.TestCheckResourceAttr("data.binarylane_server.test", "image", "ubuntu-24.04"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "image", "debian-12"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "size", "std-min"),
 					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "id"),
 					// 					resource.TestCheckResourceAttr("data.binarylane_server.test", "user_data", `

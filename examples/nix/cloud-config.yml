@@ -10,5 +10,5 @@ write_files:
       {
         environment.systemPackages = with pkgs; [ vim ];
       }
-runcmd:
-  - curl https://raw.githubusercontent.com/elitak/nixos-infect/master/nixos-infect | NIXOS_IMPORT=./host.nix NIX_CHANNEL=nixos-23.05 bash 2>&1 | tee /var/tmp/infect.log
+bootcmd:
+  - cloud-init-per once "infect" curl https://raw.githubusercontent.com/elitak/nixos-infect/master/nixos-infect | NIXOS_IMPORT=./host.nix NIX_CHANNEL=nixos-23.05 bash 2>&1 | tee /var/tmp/infect.log

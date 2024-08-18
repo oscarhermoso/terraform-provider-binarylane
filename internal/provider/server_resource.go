@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"terraform-provider-binarylane/internal/binarylane"
 	"terraform-provider-binarylane/internal/resources"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -138,10 +139,56 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	assignStr(serverResp.JSON200.Server.Region.Slug, &data.Region)
 	assignStr(serverResp.JSON200.Server.Size.Slug, &data.Size)
 	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
-	// assignBool(&serverResp.JSON200.Server.Networks.PortBlocking, &plan.PortBlocking)
 
-	if resp.Diagnostics.HasError() {
+	var createActionId int64
+	for _, action := range *serverResp.JSON200.Links.Actions {
+		if *action.Rel == "create" {
+			createActionId = *action.Id
+			break
+		}
+	}
+	if createActionId == 0 {
+		resp.Diagnostics.AddError(
+			"Unexpected API response when creating server, no create action found",
+			fmt.Sprintf("Received %s creating new server: name=%s. Details: %s", serverResp.Status(), data.Name.ValueString(), serverResp.Body))
 		return
+	}
+
+	// Wait for server to be ready
+	var ready bool
+	startTime := time.Now()
+
+	for attempts := 0; attempts < 10; attempts++ {
+		tflog.Info(ctx, "Waiting for server to be ready...")
+
+		readyResp, err := r.bc.client.GetServersServerIdActionsActionIdWithResponse(ctx, data.Id.ValueInt64(), createActionId)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error waiting for server to be ready",
+				err.Error(),
+			)
+			return
+		}
+		if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {
+			tflog.Info(ctx, "Server is ready")
+			ready = true
+			break
+		}
+		if readyResp.StatusCode() != http.StatusOK && startTime.Add(time.Minute*5).After(time.Now()) {
+			resp.Diagnostics.AddError(
+				"Timed out for server to be ready, last response was not OK",
+				fmt.Sprintf("Received %s creating new server: name=%s. Details: %s", readyResp.Status(), data.Name.ValueString(), readyResp.Body),
+			)
+			return
+		}
+		time.Sleep(time.Second * 5)
+	}
+
+	if !ready {
+		resp.Diagnostics.AddError(
+			"Exceeded 10 attempts waiting for server to be ready",
+			"Exceeded 10 attempts waiting for server to be ready",
+		)
 	}
 
 	// Save data into Terraform state
