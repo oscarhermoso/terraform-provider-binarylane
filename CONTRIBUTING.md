@@ -12,7 +12,6 @@ Based on [this example from the terraform docs](https://developer.hashicorp.com/
 
 ```hcl
 provider_installation {
-
   dev_overrides {
     # Example GOBIN path, will need to be replaced with your own GOBIN path. Default is $GOPATH/bin
     "oscarhermoso/binarylane" = "/home/oscarhermoso/Git/terraform-provider-binarylane/bin"
@@ -67,20 +66,20 @@ tfplugingen-framework scaffold data-source \
 Define the interfaces that the resource/data source should implement:
 
 ```diff
-- var _ resource.Resource = (*replaceMeResource)(nil)
+- var _ resource.Resource = (*exampleResource)(nil)
 + // Ensure the implementation satisfies the expected interfaces.
 + var (
-+ 	_ resource.Resource              = &replaceMeResource{}
-+ 	_ resource.ResourceWithConfigure = &replaceMeResource{}
-+ 	// _ resource.ResourceWithImportState = &replaceMeResource{}
++ 	_ resource.Resource              = &exampleResource{}
++ 	_ resource.ResourceWithConfigure = &exampleResource{}
++ 	// _ resource.ResourceWithImportState = &exampleResource{}
 + )
 ```
 
 Pass the API client to the resource:
 
 ```diff
-- type replaceMeResource struct{}
-+ type replaceMeResource struct {
+- type exampleResource struct{}
++ type exampleResource struct {
 + 	bc *BinarylaneClient
 + }
 ```
@@ -88,7 +87,7 @@ Pass the API client to the resource:
 Add a `Configure` method to the resource:
 
 ```diff
-+ func (d *replaceMeResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
++ func (d *exampleResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 + 	if req.ProviderData == nil {
 + 		return
 + 	}
@@ -107,18 +106,14 @@ Add a `Configure` method to the resource:
 + }
 ```
 
-Delete the local `*ResourceModel` struct, and import the generated `resources.*Model` instead.
+Extend the resource model from the generated `resources.*Model`.
 
 ```diff
-- type replaceMeResourceModel struct {
+  type exampleResourceModel struct {
 - 	Id types.String `tfsdk:"id"`
-- }
-```
-
-```diff
-func (r *replaceMeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
--	var data replaceMeResourceModel
-+	var data resources.ReplaceMeModel
++ 	*resources.ExampleModel
++   // Add any additional fields here
+  }
 ```
 
 Add the new data source/resource to `provider.go`:
@@ -126,6 +121,6 @@ Add the new data source/resource to `provider.go`:
 ```diff
   return []func() resource.Resource{
     # ...
-+   NewReplaceMeResource,
++   NewExampleResource,
   }
 ```

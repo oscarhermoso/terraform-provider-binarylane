@@ -4,7 +4,6 @@ See the examples in the [examples directory](./examples/basic/main.tf).
 
 ```terraform
 resource "binarylane_server" "example" {
-  name   = "example"
   region = "per"
   image  = "ubuntu-24.04"
   size   = "std-min"

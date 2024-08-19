@@ -1,12 +1,19 @@
 package provider
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestServerResource(t *testing.T) {
+	// Must assign a password to the server or Binary Lane will send emails
+	pw_bytes := make([]byte, 12)
+	rand.Read(pw_bytes)
+	password := base64.URLEncoding.EncodeToString(pw_bytes)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -16,8 +23,9 @@ func TestServerResource(t *testing.T) {
 resource "binarylane_server" "test" {
 	name   = "tf-server-resource-test"
   region = "per"
-  image  = "ubuntu-24.04"
+  image  = "debian-12"
   size   = "std-min"
+	password = "` + password + `"
 	user_data = <<EOT
 #cloud-config
 echo "Hello World" > /var/tmp/output.txt
@@ -32,61 +40,24 @@ data "binarylane_server" "test" {
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify resource values
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "id"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "name", "tf-server-resource-test"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "region", "per"),
-					resource.TestCheckResourceAttr("binarylane_server.test", "image", "ubuntu-24.04"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "image", "debian-12"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "size", "std-min"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "password", password),
 					resource.TestCheckResourceAttr("binarylane_server.test", "user_data", `#cloud-config
 echo "Hello World" > /var/tmp/output.txt
 `),
-					resource.TestCheckResourceAttrSet("binarylane_server.test", "id"),
 
 					// Verify data source values
+					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "id"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "name", "tf-server-resource-test"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "region", "per"),
-					resource.TestCheckResourceAttr("data.binarylane_server.test", "image", "ubuntu-24.04"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "image", "debian-12"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "size", "std-min"),
-					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "id"),
-					// 					resource.TestCheckResourceAttr("data.binarylane_server.test", "user_data", `
-					// #cloud-config
-					// echo "Hello World" > /var/tmp/output.txt
-					// 					`),
 				),
 			},
-			// ImportState testing
-			// {
-			// 	ResourceName:            "binarylane_server.test",
-			// 	ImportState:             true,
-			// 	ImportStateVerify:       true,
-			// 	ImportStateVerifyIgnore: []string{}, // nothing to ignore
-			// },
-			// TODO: Update and Read testing
-			// 			{
-			// 				Config: providerConfig + `
-			// resource "binarylane_server" "test" {
-			//   items = [
-			//     {
-			//       coffee = {
-			//         id = 2
-			//       }
-			//       quantity = 2
-			//     },
-			//   ]
-			// }
-			// `,
-			// 				Check: resource.ComposeAggregateTestCheckFunc(
-			// 					// Verify first order item updated
-			// 					resource.TestCheckResourceAttr("binarylane_server.test", "items.0.quantity", "2"),
-			// 					resource.TestCheckResourceAttr("binarylane_server.test", "items.0.coffee.id", "2"),
-			// 					// Verify first coffee item has Computed attributes updated.
-			// 					resource.TestCheckResourceAttr("binarylane_server.test", "items.0.coffee.description", ""),
-			// 					resource.TestCheckResourceAttr("binarylane_server.test", "items.0.coffee.image", "/packer.png"),
-			// 					resource.TestCheckResourceAttr("binarylane_server.test", "items.0.coffee.name", "Packer Spiced Latte"),
-			// 					resource.TestCheckResourceAttr("binarylane_server.test", "items.0.coffee.price", "350"),
-			// 					resource.TestCheckResourceAttr("binarylane_server.test", "items.0.coffee.teaser", "Packed with goodness to spice up your images"),
-			// 				),
-			// 			},
-			// Delete testing automatically occurs in TestCase
 		},
 	})
 }
