@@ -144,6 +144,7 @@ func (p *binarylaneProvider) DataSources(_ context.Context) []func() datasource.
 	return []func() datasource.DataSource{
 		NewServerDataSource,
 		NewSshKeyDataSource,
+		NewVpcDataSource,
 	}
 }
 
@@ -151,5 +152,6 @@ func (p *binarylaneProvider) Resources(_ context.Context) []func() resource.Reso
 	return []func() resource.Resource{
 		NewServerResource,
 		NewSshKeyResource,
+		NewVpcResource,
 	}
 }

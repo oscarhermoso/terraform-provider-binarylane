@@ -31,7 +31,8 @@ resources:
           backups:
             type: bool
             description: >
-              If true this will enable two daily backups for the server. Options.daily_backups will override this value if provided. Setting this to false has no effect.
+              If true this will enable two daily backups for the server. `options.daily_backups` will override this
+              value if provided. Setting this to false has no effect.
             optional: true
             default:
               static: false
@@ -39,7 +40,7 @@ resources:
           image:
             type: string
             description: The slug of the selected operating system.
-            example: "ubuntu-24.04"
+            example: 'ubuntu-24.04'
           password:
             type: string
             description: >
@@ -74,34 +75,24 @@ resources:
           key_id: id
       ignores:
         - ssh_key
-#
-# Currently don't need to generate data sources as they use the same schema as resources
+  vpc:
+    create:
+      path: /vpcs
+      method: POST
+    read:
+      path: /vpcs/{vpc_id}
+      method: GET
+    update:
+      path: /vpcs/{vpc_id}
+      method: PUT
+    delete:
+      path: /vpcs/{vpc_id}
+      method: DELETE
+    schema:
+      attributes:
+        aliases:
+          vpc_id: id
+      ignores:
+        - vpc
 # data_sources:
-#   server:
-#     read:
-#       path: /servers/{server_id}
-#       method: GET
-#     schema:
-#       attributes:
-#         aliases:
-#           server_id: id
-#       ignores:
-#         - ipv6
-#         - licenses
-#         - links
-#         - options
-#         - server
-#         - ssh_keys
-#         - vpc_id
-#         - user_data
-#         - port_blocking
-#   ssh_key:
-#     read:
-#       path: /account/keys/{key_id}
-#       method: GET
-#     schema:
-#       attributes:
-#         aliases:
-#           key_id: id
-#       ignores:
-#         - ssh_key
+# Currently, don't need to generate data sources as they use the same schema as resources

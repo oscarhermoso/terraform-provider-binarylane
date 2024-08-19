@@ -17,8 +17,8 @@ func ServerResourceSchema(ctx context.Context) schema.Schema {
 			"backups": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
-				Description:         "If true this will enable two daily backups for the server. Options.daily_backups will override this value if provided. Setting this to false has no effect.\n",
-				MarkdownDescription: "If true this will enable two daily backups for the server. Options.daily_backups will override this value if provided. Setting this to false has no effect.\n",
+				Description:         "If true this will enable two daily backups for the server. `options.daily_backups` will override this value if provided. Setting this to false has no effect.\n",
+				MarkdownDescription: "If true this will enable two daily backups for the server. `options.daily_backups` will override this value if provided. Setting this to false has no effect.\n",
 			},
 			"id": schema.Int64Attribute{
 				Optional:            true,
