@@ -4,7 +4,7 @@
 #cloud-config
 write_files:
   - path: /etc/nixos/host.nix
-    permissions: "0644"
+    permissions: '0644'
     content: |
       {pkgs, ...}:
       {

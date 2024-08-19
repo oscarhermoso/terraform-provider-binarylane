@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -31,6 +32,11 @@ func NewServerResource() resource.Resource {
 
 type serverResource struct {
 	bc *BinarylaneClient
+}
+
+type serverModel struct {
+	resources.ServerModel
+	WaitForCreateSeconds int32 `tfsdk:"wait_for_create"`
 }
 
 func (d *serverResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -88,10 +94,22 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 			stringplanmodifier.RequiresReplace(),
 		},
 	}
+
+	// Additional attributes
+	waitDescription := "The number of seconds to wait for the server to be created, after which, a timeout error will " +
+		"be reported. If `wait_seconds` is left empty or set to 0, Terraform will succeed without waiting for the " +
+		"server creation to complete."
+	resp.Schema.Attributes["wait_for_create"] = &schema.Int32Attribute{
+		Description:         waitDescription,
+		MarkdownDescription: waitDescription,
+		Optional:            true,
+		Computed:            true,
+		Default:             int32default.StaticInt32(0),
+	}
 }
 
 func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data resources.ServerModel
+	var data serverModel
 
 	// Read Terraform plan data into the model
 	diags := req.Plan.Get(ctx, &data)
@@ -133,13 +151,21 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	assignInt64(serverResp.JSON200.Server.Id, &data.Id)
-	assignStr(serverResp.JSON200.Server.Name, &data.Name)
-	assignStr(serverResp.JSON200.Server.Image.Slug, &data.Image)
-	assignStr(serverResp.JSON200.Server.Region.Slug, &data.Region)
-	assignStr(serverResp.JSON200.Server.Size.Slug, &data.Size)
+	data.Id = types.Int64Value(*serverResp.JSON200.Server.Id)
+	data.Name = types.StringValue(*serverResp.JSON200.Server.Name)
+	data.Image = types.StringValue(*serverResp.JSON200.Server.Image.Slug)
+	data.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
+	data.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
 	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
 
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+	if data.WaitForCreateSeconds <= 0 {
+		return
+	}
+
+	// Wait for server to be ready
 	var createActionId int64
 	for _, action := range *serverResp.JSON200.Links.Actions {
 		if *action.Rel == "create" {
@@ -149,54 +175,42 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 	if createActionId == 0 {
 		resp.Diagnostics.AddError(
-			"Unexpected API response when creating server, no create action found",
+			"Unable to wait for server to be created, links.actions with rel=create missing from response",
 			fmt.Sprintf("Received %s creating new server: name=%s. Details: %s", serverResp.Status(), data.Name.ValueString(), serverResp.Body))
 		return
 	}
 
-	// Wait for server to be ready
-	var ready bool
-	startTime := time.Now()
-
-	for attempts := 0; attempts < 10; attempts++ {
+	timeLimit := time.Now().Add(time.Duration(data.WaitForCreateSeconds) * time.Second)
+	for {
 		tflog.Info(ctx, "Waiting for server to be ready...")
 
 		readyResp, err := r.bc.client.GetServersServerIdActionsActionIdWithResponse(ctx, data.Id.ValueInt64(), createActionId)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error waiting for server to be ready",
-				err.Error(),
-			)
+			resp.Diagnostics.AddError("Error waiting for server to be ready", err.Error())
 			return
 		}
 		if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {
 			tflog.Info(ctx, "Server is ready")
-			ready = true
 			break
 		}
-		if readyResp.StatusCode() != http.StatusOK && startTime.Add(time.Minute*5).After(time.Now()) {
+		if time.Now().After(timeLimit) {
 			resp.Diagnostics.AddError(
-				"Timed out for server to be ready, last response was not OK",
-				fmt.Sprintf("Received %s creating new server: name=%s. Details: %s", readyResp.Status(), data.Name.ValueString(), readyResp.Body),
+				"Timed out waiting for server to be ready",
+				fmt.Sprintf(
+					"Timed out waiting for server to be created, as `wait_for_create` was surpassed without "+
+						"recieving a `completed_at` in response: name=%s, status=%s, details: %s",
+					data.Name.ValueString(), readyResp.Status(), readyResp.Body,
+				),
 			)
 			return
 		}
+		tflog.Debug(ctx, fmt.Sprintf("Waiting for server to be ready: name=%s, status=%s, details: %s", data.Name.ValueString(), readyResp.Status(), readyResp.Body))
 		time.Sleep(time.Second * 5)
 	}
-
-	if !ready {
-		resp.Diagnostics.AddError(
-			"Exceeded 10 attempts waiting for server to be ready",
-			"Exceeded 10 attempts waiting for server to be ready",
-		)
-	}
-
-	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data resources.ServerModel
+	var data serverModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -238,7 +252,7 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data resources.ServerModel
+	var data serverModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -255,7 +269,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 }
 
 func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data resources.ServerModel
+	var data serverModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
