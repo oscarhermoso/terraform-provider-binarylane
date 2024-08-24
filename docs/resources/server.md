@@ -23,9 +23,13 @@ Provides a Binary Lane Server resource. This can be used to create and delete se
 
 ### Optional
 
-- `backups` (Boolean) If true this will enable two daily backups for the server. Options.daily_backups will override this value if provided. Setting this to false has no effect.
+- `backups` (Boolean) If true this will enable two daily backups for the server. `options.daily_backups` will override this value if provided. Setting this to false has no effect.
 - `id` (Number) The ID of the server to fetch.
 - `name` (String) The hostname of your server, such as vps01.yourcompany.com. If not provided, the server will be created with a random name.
 - `password` (String, Sensitive) If this is provided the specified or default remote user's account password will be set to this value. Only valid if the server supports password change actions (check server.password_change_supported via the servers endpoint). If omitted and the server supports password change actions a random password will be generated and emailed to the account email address.
+- `private_ipv4_addresses` (List of String) The private IPv4 addresses assigned to the server.
+- `public_ipv4_addresses` (List of String) The public IPv4 addresses assigned to the server.
+- `public_ipv4_count` (Number) The number of public IPv4 addresses to assign to the server. If this is not provided, the server will be created with the default number of public IPv4 addresses.
 - `user_data` (String) If provided this will be used to initialise the new server. This must be left null if the Image does not support UserData, see DistributionInfo.Features for more information.
+- `vpc_id` (Number) Leave null to use default (public) network for the selected region.
 - `wait_for_create` (Number) The number of seconds to wait for the server to be created, after which, a timeout error will be reported. If `wait_seconds` is left empty or set to 0, Terraform will succeed without waiting for the server creation to complete.

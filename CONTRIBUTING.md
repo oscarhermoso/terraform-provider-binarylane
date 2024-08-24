@@ -63,11 +63,12 @@ tfplugingen-framework scaffold data-source \
 
 4. Populate the template scaffolding:
 
-Define the interfaces that the resource/data source should implement:
+#### Resource
+
+Define the interfaces that the resource should implement:
 
 ```diff
 - var _ resource.Resource = (*exampleResource)(nil)
-+ // Ensure the implementation satisfies the expected interfaces.
 + var (
 + 	_ resource.Resource              = &exampleResource{}
 + 	_ resource.ResourceWithConfigure = &exampleResource{}
@@ -75,13 +76,23 @@ Define the interfaces that the resource/data source should implement:
 + )
 ```
 
-Pass the API client to the resource:
+Add the API client to the resource:
 
 ```diff
 - type exampleResource struct{}
 + type exampleResource struct {
 + 	bc *BinarylaneClient
 + }
+```
+
+Extend the resource model from the generated `resources.*Model`.
+
+```diff
+  type exampleResourceModel struct {
+- 	Id types.String `tfsdk:"id"`
++ 	resources.ExampleModel
++   // Add any additional fields here
+  }
 ```
 
 Add a `Configure` method to the resource:
@@ -106,21 +117,80 @@ Add a `Configure` method to the resource:
 + }
 ```
 
-Extend the resource model from the generated `resources.*Model`.
-
-```diff
-  type exampleResourceModel struct {
-- 	Id types.String `tfsdk:"id"`
-+ 	*resources.ExampleModel
-+   // Add any additional fields here
-  }
-```
-
 Add the new data source/resource to `provider.go`:
 
 ```diff
   return []func() resource.Resource{
     # ...
 +   NewExampleResource,
+  }
+```
+
+#### Data Source
+
+Define the interfaces that the data source should implement:
+
+```diff
+- var _ resource.Resource = (*exampleDataSource)(nil)
++ var (
++ 	_ datasource.DataSource              = &exampleDataSource{}
++ 	_ datasource.DataSourceWithConfigure = &exampleDataSource{}
++ )
+
+Add the API client to the data source:
+
+```diff
+- type exampleResource struct{}
++ type exampleResource struct {
++ 	bc *BinarylaneClient
++ }
+```
+
+Derive the data source model from the generated `resources.*Model`.
+
+```diff
+  type exampleDataSourceModel struct {
+- 	Id types.String `tfsdk:"id"`
++ 	resources.ExampleModel
+  }
+```
+
+Add a `Configure` method to the data source.
+
+```diff
++ func (d *vpcDataSource) Configure(
++   _ context.Context,
++   req datasource.ConfigureRequest,
++   resp *datasource.ConfigureResponse,
++ ) {
++ 	if req.ProviderData == nil {
++ 		return
++ 	}
++
++ 	bc, ok := req.ProviderData.(BinarylaneClient)
++ 	if !ok {
++ 		resp.Diagnostics.AddError(
++ 			"Unexpected Data Source Configure Type",
++ 			fmt.Sprintf("Expected *BinarylaneClient, got: %T.", req.ProviderData))
++ 		return
++ 	}
++
++ 	d.bc = &bc
++ }
+```
+
+Use the generated schema to define the data source schema.
+
+```diff
+  func (d *vpcDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+- 	resp.Schema = schema.Schema{
+- 		Attributes: map[string]schema.Attribute{
+- 			"id": schema.StringAttribute{
+- 				Computed: true,
+- 			},
+- 		},
+- 	}
++ 	resp.Schema = *convertResourceSchemaToDataSourceSchema(ctx, resources.ExampleResourceSchema(ctx))
++ 	resp.Schema.Description = "TODO"
   }
 ```

@@ -48,7 +48,12 @@ func (d *serverDataSource) Metadata(ctx context.Context, req datasource.Metadata
 }
 
 func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = *convertResourceSchemaToDataSourceSchema(ctx, resources.ServerResourceSchema(ctx))
+	ds, err := convertResourceSchemaToDataSourceSchema(resources.ServerResourceSchema(ctx))
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to convert resource schema to data source schema", err.Error())
+		return
+	}
+	resp.Schema = *ds
 	resp.Schema.Description = "TODO"
 
 	// Overrides

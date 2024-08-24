@@ -11,7 +11,7 @@
 						"name": "backups",
 						"bool": {
 							"computed_optional_required": "computed_optional",
-							"description": "If true this will enable two daily backups for the server. Options.daily_backups will override this value if provided. Setting this to false has no effect.\n"
+							"description": "If true this will enable two daily backups for the server. `options.daily_backups` will override this value if provided. Setting this to false has no effect.\n"
 						}
 					},
 					{
@@ -93,6 +93,13 @@
 						}
 					},
 					{
+						"name": "vpc_id",
+						"int64": {
+							"computed_optional_required": "computed_optional",
+							"description": "Leave null to use default (public) network for the selected region."
+						}
+					},
+					{
 						"name": "id",
 						"int64": {
 							"computed_optional_required": "computed_optional",
@@ -156,6 +163,128 @@
 						"int64": {
 							"computed_optional_required": "computed_optional",
 							"description": "The ID or fingerprint of the SSH Key to fetch."
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "vpc",
+			"schema": {
+				"attributes": [
+					{
+						"name": "ip_range",
+						"string": {
+							"computed_optional_required": "computed_optional",
+							"description": "A private address range that you select during creation, such as the default value of 10.240.0.0/16. Because the virtual network is dedicated to your use, you may use whatever IP address range you like."
+						}
+					},
+					{
+						"name": "name",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "A name to help identify this VPC.",
+							"validators": [
+								{
+									"custom": {
+										"imports": [
+											{
+												"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+											}
+										],
+										"schema_definition": "stringvalidator.LengthBetween(0, 250)"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "id",
+						"int64": {
+							"computed_optional_required": "computed_optional",
+							"description": "The target vpc id."
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "vpc_route_entries",
+			"schema": {
+				"attributes": [
+					{
+						"name": "route_entries",
+						"list_nested": {
+							"computed_optional_required": "computed_optional",
+							"nested_object": {
+								"attributes": [
+									{
+										"name": "description",
+										"string": {
+											"computed_optional_required": "computed_optional",
+											"description": "An optional description for the route.",
+											"validators": [
+												{
+													"custom": {
+														"imports": [
+															{
+																"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+															}
+														],
+														"schema_definition": "stringvalidator.LengthAtMost(250)"
+													}
+												}
+											]
+										}
+									},
+									{
+										"name": "destination",
+										"string": {
+											"computed_optional_required": "required",
+											"description": "The destination address for this route entry. This may be in CIDR format.",
+											"validators": [
+												{
+													"custom": {
+														"imports": [
+															{
+																"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+															}
+														],
+														"schema_definition": "stringvalidator.LengthAtLeast(1)"
+													}
+												}
+											]
+										}
+									},
+									{
+										"name": "router",
+										"string": {
+											"computed_optional_required": "required",
+											"description": "The server that will receive traffic sent to the destination property in this VPC.",
+											"validators": [
+												{
+													"custom": {
+														"imports": [
+															{
+																"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+															}
+														],
+														"schema_definition": "stringvalidator.LengthAtLeast(1)"
+													}
+												}
+											]
+										}
+									}
+								]
+							},
+							"description": "Submit null to leave unaltered, submit an empty list to clear all route entries. It is not possible to PATCH individual route entries, to alter a route entry submit the entire list of route entries you wish to save."
+						}
+					},
+					{
+						"name": "vpc_id",
+						"int64": {
+							"computed_optional_required": "computed_optional",
+							"description": "The target vpc id."
 						}
 					}
 				]

@@ -2349,13 +2349,13 @@ type RouteEntry struct {
 // RouteEntryRequest defines model for RouteEntryRequest.
 type RouteEntryRequest struct {
 	// Description An optional description for the route.
-	Description *string `json:"description"`
+	Description *string `json:"description" tfsdk:"description"`
 
 	// Destination The destination address for this route entry. This may be in CIDR format.
-	Destination string `json:"destination"`
+	Destination string `json:"destination" tfsdk:"destination"`
 
 	// Router The server that will receive traffic sent to the destination property in this VPC.
-	Router string `json:"router"`
+	Router string `json:"router" tfsdk:"router"`
 }
 
 // Sample defines model for Sample.

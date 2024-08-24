@@ -8,12 +8,14 @@ import (
 	"terraform-provider-binarylane/internal/resources"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -36,7 +38,10 @@ type serverResource struct {
 
 type serverModel struct {
 	resources.ServerModel
-	WaitForCreateSeconds int32 `tfsdk:"wait_for_create"`
+	WaitForCreateSeconds int32       `tfsdk:"wait_for_create"`
+	PublicIpv4Count      types.Int32 `tfsdk:"public_ipv4_count"`
+	PublicIpv4Addresses  types.List  `tfsdk:"public_ipv4_addresses"`
+	PrivateIPv4Addresses types.List  `tfsdk:"private_ipv4_addresses"`
 }
 
 func (d *serverResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -79,8 +84,8 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 	resp.Schema.Attributes["backups"] = &schema.BoolAttribute{
 		Description:         backups.GetDescription(),
 		MarkdownDescription: backups.GetMarkdownDescription(),
-		Optional:            backups.IsComputed(),
-		Computed:            backups.IsOptional(),
+		Optional:            backups.IsOptional(),
+		Computed:            backups.IsComputed(),
 		Default:             booldefault.StaticBool(false), // Add default to backups
 	}
 
@@ -88,11 +93,19 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 	resp.Schema.Attributes["user_data"] = &schema.StringAttribute{
 		Description:         user_data.GetDescription(),
 		MarkdownDescription: user_data.GetMarkdownDescription(),
-		Optional:            user_data.IsComputed(),
-		Computed:            user_data.IsOptional(),
+		Optional:            true,  // Optional as not all servers have an initialization script
+		Computed:            false, // User defined
 		PlanModifiers: []planmodifier.String{
-			stringplanmodifier.RequiresReplace(),
+			stringplanmodifier.RequiresReplace(), // If user changes init script, assume they want to replace server
 		},
+	}
+
+	vpc_id := resp.Schema.Attributes["vpc_id"]
+	resp.Schema.Attributes["vpc_id"] = &schema.Int64Attribute{
+		Description:         vpc_id.GetDescription(),
+		MarkdownDescription: vpc_id.GetMarkdownDescription(),
+		Computed:            false,
+		Optional:            true,
 	}
 
 	// Additional attributes
@@ -105,6 +118,36 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Optional:            true,
 		Computed:            true,
 		Default:             int32default.StaticInt32(0),
+	}
+
+	publicIpv4CountDescription := "The number of public IPv4 addresses to assign to the server. If this is not provided, the " +
+		"server will be created with the default number of public IPv4 addresses."
+	resp.Schema.Attributes["public_ipv4_count"] = &schema.Int32Attribute{
+		Description:         publicIpv4CountDescription,
+		MarkdownDescription: publicIpv4CountDescription,
+		Optional:            true,
+		Computed:            true,
+		Validators: []validator.Int32{
+			int32validator.AtLeast(0),
+		},
+	}
+
+	publicIpv4AddressesDescription := "The public IPv4 addresses assigned to the server."
+	resp.Schema.Attributes["public_ipv4_addresses"] = &schema.ListAttribute{
+		Description:         publicIpv4AddressesDescription,
+		MarkdownDescription: publicIpv4AddressesDescription,
+		Optional:            true,
+		Computed:            true,
+		ElementType:         types.StringType,
+	}
+
+	privateIpv4AddressesDescription := "The private IPv4 addresses assigned to the server."
+	resp.Schema.Attributes["private_ipv4_addresses"] = &schema.ListAttribute{
+		Description:         privateIpv4AddressesDescription,
+		MarkdownDescription: privateIpv4AddressesDescription,
+		Optional:            true,
+		Computed:            true,
+		ElementType:         types.StringType,
 	}
 }
 
@@ -127,6 +170,10 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 		Region:   data.Region.ValueString(),
 		Size:     data.Size.ValueString(),
 		UserData: data.UserData.ValueStringPointer(),
+		VpcId:    data.VpcId.ValueInt64Pointer(),
+		Options: &binarylane.SizeOptionsRequest{
+			Ipv4Addresses: data.PublicIpv4Count.ValueInt32Pointer(),
+		},
 	}
 
 	if data.Password.IsNull() {
@@ -157,6 +204,24 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	data.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
 	data.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
 	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
+
+	publicV4AddressCount := 0
+	var publicIpv4Addresses []string
+	var privateIpv4Addresses []string
+
+	for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
+		if v4address.Type == "public" {
+			publicV4AddressCount++
+			publicIpv4Addresses = append(publicIpv4Addresses, v4address.IpAddress)
+		} else {
+			privateIpv4Addresses = append(privateIpv4Addresses, v4address.IpAddress)
+		}
+	}
+	data.PublicIpv4Count = types.Int32Value(int32(publicV4AddressCount))
+	data.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, publicIpv4Addresses)
+	resp.Diagnostics.Append(diags...)
+	data.PrivateIPv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, privateIpv4Addresses)
+	resp.Diagnostics.Append(diags...)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
