@@ -4,14 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"terraform-provider-binarylane/internal/binarylane"
 	"terraform-provider-binarylane/internal/resources"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 var (
@@ -92,41 +88,13 @@ func (d *vpcDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 	data.IpRange = types.StringValue(*vpcResp.JSON200.Vpc.IpRange)
 	data.Name = types.StringValue(*vpcResp.JSON200.Vpc.Name)
 
-	routeEntries, routeEntriesDiags := GetRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
-	resp.Diagnostics.Append(routeEntriesDiags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	data.RouteEntries = routeEntries
+	// routeEntries, routeEntriesDiags := GetRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
+	// resp.Diagnostics.Append(routeEntriesDiags...)
+	// if resp.Diagnostics.HasError() {
+	// 	return
+	// }
+	// data.RouteEntries = routeEntries
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func GetRouteEntriesState(ctx context.Context, routeEntries *[]binarylane.RouteEntry) (basetypes.ListValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	routeEntriesValue := resources.RouteEntriesValue{}
-	var routeEntriesValues []resources.RouteEntriesValue
-
-	if *routeEntries == nil || len(*routeEntries) == 0 {
-		routeEntriesValue = resources.RouteEntriesValue{}
-	} else {
-		for _, route := range *routeEntries {
-			r := resources.NewRouteEntriesValueMust(routeEntriesValue.AttributeTypes(ctx), map[string]attr.Value{
-				"description": types.StringValue(*route.Description),
-				"destination": types.StringValue(*route.Destination),
-				"router":      types.StringValue(*route.Router),
-			})
-			routeEntriesValues = append(routeEntriesValues, r)
-		}
-	}
-
-	routeEntriesListValue, diag := types.ListValueFrom(ctx, routeEntriesValue.Type(ctx), routeEntriesValues)
-	diags.Append(diag...)
-	if diags.HasError() {
-		return basetypes.NewListUnknown(routeEntriesValue.Type(ctx)), diags
-	}
-
-	return routeEntriesListValue, diags
 }

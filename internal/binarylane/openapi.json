@@ -12765,18 +12765,27 @@
           "router": {
             "minLength": 1,
             "type": "string",
-            "description": "The server that will receive traffic sent to the destination property in this VPC."
+            "description": "The server that will receive traffic sent to the destination property in this VPC.",
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "router"
+            }
           },
           "destination": {
             "minLength": 1,
             "type": "string",
-            "description": "The destination address for this route entry. This may be in CIDR format."
+            "description": "The destination address for this route entry. This may be in CIDR format.",
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "destination"
+            }
           },
           "description": {
             "maxLength": 250,
             "type": "string",
             "description": "An optional description for the route.",
-            "nullable": true
+            "nullable": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "description"
+            }
           }
         }
       },

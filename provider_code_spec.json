@@ -93,6 +93,13 @@
 						}
 					},
 					{
+						"name": "vpc_id",
+						"int64": {
+							"computed_optional_required": "computed_optional",
+							"description": "Leave null to use default (public) network for the selected region."
+						}
+					},
+					{
 						"name": "id",
 						"int64": {
 							"computed_optional_required": "computed_optional",
@@ -192,6 +199,20 @@
 						}
 					},
 					{
+						"name": "id",
+						"int64": {
+							"computed_optional_required": "computed_optional",
+							"description": "The target vpc id."
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "vpc_route_entries",
+			"schema": {
+				"attributes": [
+					{
 						"name": "route_entries",
 						"list_nested": {
 							"computed_optional_required": "computed_optional",
@@ -256,11 +277,11 @@
 									}
 								]
 							},
-							"description": "The route entries that control how network traffic is directed through the VPC environment."
+							"description": "Submit null to leave unaltered, submit an empty list to clear all route entries. It is not possible to PATCH individual route entries, to alter a route entry submit the entire list of route entries you wish to save."
 						}
 					},
 					{
-						"name": "id",
+						"name": "vpc_id",
 						"int64": {
 							"computed_optional_required": "computed_optional",
 							"description": "The target vpc id."

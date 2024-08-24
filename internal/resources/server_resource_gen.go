@@ -68,6 +68,12 @@ func ServerResourceSchema(ctx context.Context) schema.Schema {
 					stringvalidator.LengthAtMost(65536),
 				},
 			},
+			"vpc_id": schema.Int64Attribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         "Leave null to use default (public) network for the selected region.",
+				MarkdownDescription: "Leave null to use default (public) network for the selected region.",
+			},
 		},
 	}
 }
@@ -81,4 +87,5 @@ type ServerModel struct {
 	Region   types.String `tfsdk:"region"`
 	Size     types.String `tfsdk:"size"`
 	UserData types.String `tfsdk:"user_data"`
+	VpcId    types.Int64  `tfsdk:"vpc_id"`
 }

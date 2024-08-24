@@ -27,6 +27,7 @@ resources:
       attributes:
         aliases:
           server_id: id
+          ipv4_addresses: options.ipv4_addresses
         overrides:
           backups:
             type: bool
@@ -54,11 +55,10 @@ resources:
         - ipv6
         - licenses
         - links
-        - options
         - server
         - ssh_keys
-        - vpc_id
         - port_blocking
+        - options
   ssh_key:
     create:
       path: /account/keys
@@ -84,7 +84,7 @@ resources:
       method: GET
     update:
       path: /vpcs/{vpc_id}
-      method: PUT
+      method: PATCH
     delete:
       path: /vpcs/{vpc_id}
       method: DELETE
@@ -93,6 +93,24 @@ resources:
         aliases:
           vpc_id: id
       ignores:
+        - route_entries
+        - vpc
+  vpc_route_entries:
+    create:
+      path: /vpcs/{vpc_id}
+      method: PATCH
+    read:
+      path: /vpcs/{vpc_id}
+      method: GET
+    update:
+      path: /vpcs/{vpc_id}
+      method: PATCH
+    delete:
+      path: /vpcs/{vpc_id}
+      method: DELETE
+    schema:
+      ignores:
+        - name
         - vpc
 # data_sources:
 # Currently, don't need to generate data sources as they use the same schema as resources

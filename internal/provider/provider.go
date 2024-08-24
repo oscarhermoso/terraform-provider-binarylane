@@ -153,5 +153,6 @@ func (p *binarylaneProvider) Resources(_ context.Context) []func() resource.Reso
 		NewServerResource,
 		NewSshKeyResource,
 		NewVpcResource,
+		NewVpcRouteEntriesResource,
 	}
 }
