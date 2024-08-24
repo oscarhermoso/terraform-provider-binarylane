@@ -1,15 +1,15 @@
 package provider
 
 import (
-	"context"
+	"fmt"
+	"strings"
 
 	d_schema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	r_schema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-func convertResourceSchemaToDataSourceSchema(ctx context.Context, rs r_schema.Schema) *d_schema.Schema {
+func convertResourceSchemaToDataSourceSchema(rs r_schema.Schema) (*d_schema.Schema, error) {
 	ds := d_schema.Schema{
 		Attributes:          make(map[string]d_schema.Attribute, len(rs.Attributes)),
 		Blocks:              make(map[string]d_schema.Block),
@@ -92,12 +92,22 @@ func convertResourceSchemaToDataSourceSchema(ctx context.Context, rs r_schema.Sc
 				DeprecationMessage:  attr.GetDeprecationMessage(),
 			}
 		default:
-			tflog.Error(ctx, "Failed to convert resource schema attribute to data source schema attribute", map[string]interface{}{
-				"attribute": name,
-				"type":      attr.GetType(),
-			})
+			// Feel free to to raise a PR and remove this hack
+			if strings.HasPrefix(attr.GetType().String(), "types.ListType") {
+				ds.Attributes[name] = d_schema.ListAttribute{
+					ElementType:         attr.GetType().(types.ListType).ElemType,
+					Description:         attr.GetDescription(),
+					Optional:            attr.IsOptional(),
+					Computed:            true,
+					Sensitive:           attr.IsSensitive(),
+					MarkdownDescription: attr.GetMarkdownDescription(),
+					DeprecationMessage:  attr.GetDeprecationMessage(),
+				}
+			} else {
+				return nil, fmt.Errorf("failed to convert resource schema attribute to data source schema attribute: name=%s, type=%s", name, attr.GetType())
+			}
 		}
 	}
 
-	return &ds
+	return &ds, nil
 }

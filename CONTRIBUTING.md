@@ -90,7 +90,7 @@ Extend the resource model from the generated `resources.*Model`.
 ```diff
   type exampleResourceModel struct {
 - 	Id types.String `tfsdk:"id"`
-+ 	*resources.ExampleModel
++ 	resources.ExampleModel
 +   // Add any additional fields here
   }
 ```

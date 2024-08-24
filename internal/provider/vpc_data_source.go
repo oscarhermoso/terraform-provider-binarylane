@@ -54,7 +54,13 @@ func (d *vpcDataSource) Metadata(ctx context.Context, req datasource.MetadataReq
 }
 
 func (d *vpcDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = *convertResourceSchemaToDataSourceSchema(ctx, resources.VpcResourceSchema(ctx))
+	ds, err := convertResourceSchemaToDataSourceSchema(resources.VpcResourceSchema(ctx))
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to convert resource schema to data source schema", err.Error())
+		return
+	}
+
+	resp.Schema = *ds
 	resp.Schema.Description = "TODO"
 }
 
@@ -62,8 +68,8 @@ func (d *vpcDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 	var data vpcDataSourceModel
 
 	// Read Terraform configuration data into the model
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
+	diags := req.Config.Get(ctx, &data)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

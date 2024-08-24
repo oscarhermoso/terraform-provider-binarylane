@@ -27,7 +27,7 @@ type vpcResource struct {
 }
 
 type vpcResourceModel struct {
-	*resources.VpcModel
+	resources.VpcModel
 }
 
 func (r *vpcResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -59,8 +59,8 @@ func (r *vpcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	var data vpcResourceModel
 
 	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-
+	diags := req.Plan.Get(ctx, &data)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -68,9 +68,17 @@ func (r *vpcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	// Create API call logic
 	tflog.Debug(ctx, fmt.Sprintf("Creating VPC: name=%s", data.Name.ValueString()))
 
+	var routeEntries []binarylane.RouteEntryRequest
+	diags = data.VpcModel.RouteEntries.ElementsAs(ctx, &routeEntries, true)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	body := binarylane.CreateVpcRequest{
-		Name:    data.Name.ValueString(),
-		IpRange: data.IpRange.ValueStringPointer(),
+		Name:         data.Name.ValueString(),
+		IpRange:      data.IpRange.ValueStringPointer(),
+		RouteEntries: &routeEntries,
 	}
 
 	vpcResp, err := r.bc.client.PostVpcsWithResponse(ctx, body)
@@ -92,12 +100,12 @@ func (r *vpcResource) Create(ctx context.Context, req resource.CreateRequest, re
 	data.Id = types.Int64Value(*vpcResp.JSON200.Vpc.Id)
 	data.Name = types.StringValue(*vpcResp.JSON200.Vpc.Name)
 
-	routeEntries, routeEntriesDiags := GetRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
-	resp.Diagnostics.Append(routeEntriesDiags...)
+	routeEntriesState, diags := GetRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.RouteEntries = routeEntries
+	data.RouteEntries = routeEntriesState
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -146,21 +154,21 @@ func (r *vpcResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	var data vpcResourceModel
 
 	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var routeEntries []binarylane.RouteEntryRequest
-
-	diags := data.VpcModel.RouteEntries.Elements()
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append()
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Update API call logic
 	tflog.Debug(ctx, fmt.Sprintf("Updating VPC: id=%d", data.Id.ValueInt64()))
+
+	var routeEntries []binarylane.RouteEntryRequest
+	diags := data.VpcModel.RouteEntries.ElementsAs(ctx, &routeEntries, true)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	vpcResp, err := r.bc.client.PutVpcsVpcIdWithResponse(ctx, data.Id.ValueInt64(), binarylane.UpdateVpcRequest{
 		Name:         data.Name.ValueString(),
 		RouteEntries: &routeEntries,
@@ -183,18 +191,12 @@ func (r *vpcResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	data.Id = types.Int64Value(*vpcResp.JSON200.Vpc.Id)
 	data.Name = types.StringValue(*vpcResp.JSON200.Vpc.Name)
 
-	routeEntriesState, routeEntriesDiags := GetRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
-	resp.Diagnostics.Append(routeEntriesDiags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var updatedRouteEntries []binarylane.RouteEntryRequest
-	diags = routeEntriesState.ElementsAs(ctx, &updatedRouteEntries, false)
+	routeEntriesState, diags := GetRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	data.RouteEntries = routeEntriesState
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
