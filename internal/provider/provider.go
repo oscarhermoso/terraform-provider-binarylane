@@ -145,6 +145,7 @@ func (p *binarylaneProvider) DataSources(_ context.Context) []func() datasource.
 		NewServerDataSource,
 		NewSshKeyDataSource,
 		NewVpcDataSource,
+		NewVpcRouteEntriesDataSource,
 	}
 }
 

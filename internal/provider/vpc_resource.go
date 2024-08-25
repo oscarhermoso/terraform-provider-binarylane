@@ -4,18 +4,21 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"reflect"
+	"strconv"
 	"terraform-provider-binarylane/internal/binarylane"
 	"terraform-provider-binarylane/internal/resources"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 var (
-	_ resource.Resource              = &vpcResource{}
-	_ resource.ResourceWithConfigure = &vpcResource{}
-	// _ resource.ResourceWithImportState = &exampleResource{}
+	_ resource.Resource                = &vpcResource{}
+	_ resource.ResourceWithConfigure   = &vpcResource{}
+	_ resource.ResourceWithImportState = &vpcResource{}
 )
 
 func NewVpcResource() resource.Resource {
@@ -121,6 +124,7 @@ func (r *vpcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 			fmt.Sprintf("Received %s reading VPC: id=%d. Details: %s", vpcResp.Status(), data.Id.ValueInt64(), vpcResp.Body))
 		return
 	}
+	data.Id = types.Int64Value(*vpcResp.JSON200.Vpc.Id)
 	data.IpRange = types.StringValue(*vpcResp.JSON200.Vpc.IpRange)
 	data.Name = types.StringValue(*vpcResp.JSON200.Vpc.Name)
 
@@ -129,23 +133,31 @@ func (r *vpcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 }
 
 func (r *vpcResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data vpcResourceModel
+	var plan, state vpcResourceModel
 
 	// Read Terraform plan data into the model
-	resp.Diagnostics.Append()
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Update API call logic
-	tflog.Debug(ctx, fmt.Sprintf("Updating VPC: id=%d", data.Id.ValueInt64()))
+	patchRequest := binarylane.PatchVpcRequest{}
 
-	vpcResp, err := r.bc.client.PutVpcsVpcIdWithResponse(ctx, data.Id.ValueInt64(), binarylane.UpdateVpcRequest{
-		Name: data.Name.ValueString(),
-	})
+	if !plan.Name.Equal(state.Name) {
+		patchRequest.Name = plan.Name.ValueStringPointer()
+	}
+
+	if reflect.ValueOf(plan).NumField() == 0 {
+		return
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("Updating VPC: id=%d", state.Id.ValueInt64()))
+	vpcResp, err := r.bc.client.PatchVpcsVpcIdWithResponse(ctx, state.Id.ValueInt64(), patchRequest)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error updating VPC: id=%d", data.Id.ValueInt64()),
+			fmt.Sprintf("Error updating VPC: id=%d", state.Id.ValueInt64()),
 			err.Error(),
 		)
 		return
@@ -154,15 +166,15 @@ func (r *vpcResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	if vpcResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code updating VPC",
-			fmt.Sprintf("Received %s updating VPC: id=%d. Details: %s", vpcResp.Status(), data.Id.ValueInt64(), vpcResp.Body))
+			fmt.Sprintf("Received %s updating VPC: id=%d. Details: %s", vpcResp.Status(), state.Id.ValueInt64(), vpcResp.Body))
 		return
 	}
 
-	data.Id = types.Int64Value(*vpcResp.JSON200.Vpc.Id)
-	data.Name = types.StringValue(*vpcResp.JSON200.Vpc.Name)
+	state.Id = types.Int64Value(*vpcResp.JSON200.Vpc.Id)
+	state.Name = types.StringValue(*vpcResp.JSON200.Vpc.Name)
 
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *vpcResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -191,4 +203,17 @@ func (r *vpcResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 			fmt.Sprintf("Received %s deleting VPC: id=%d. Details: %s", vpcResp.Status(), data.Id.ValueInt64(), vpcResp.Body))
 		return
 	}
+}
+
+func (r *vpcResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	id, err := strconv.ParseInt(req.ID, 10, 64)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error importing VPC",
+			fmt.Sprintf("Could not import VPC, unable to parse ID (should be an integer): %s ", err.Error()),
+		)
+		return
+	}
+	diags := resp.State.SetAttribute(ctx, path.Root("id"), id)
+	resp.Diagnostics.Append(diags...)
 }
