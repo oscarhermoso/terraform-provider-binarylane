@@ -4,21 +4,25 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"terraform-provider-binarylane/internal/binarylane"
 	"terraform-provider-binarylane/internal/resources"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 var (
-	_ resource.Resource              = &vpcRouteEntriesResource{}
-	_ resource.ResourceWithConfigure = &vpcRouteEntriesResource{}
-	// _ resource.ResourceWithImportState = &vpcRouteEntriesResource{}
+	_ resource.Resource                = &vpcRouteEntriesResource{}
+	_ resource.ResourceWithConfigure   = &vpcRouteEntriesResource{}
+	_ resource.ResourceWithImportState = &vpcRouteEntriesResource{}
 )
 
 func NewVpcRouteEntriesResource() resource.Resource {
@@ -47,6 +51,9 @@ func (r *vpcRouteEntriesResource) Schema(ctx context.Context, req resource.Schem
 		Description:         vpcId.GetDescription(),
 		MarkdownDescription: vpcId.GetMarkdownDescription(),
 		Required:            true, // VPC ID is required to define the route entries
+		Validators: []validator.Int64{
+			int64validator.AtLeast(1),
+		},
 	}
 }
 
@@ -86,7 +93,7 @@ func (r *vpcRouteEntriesResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	routeEntriesState, diags := getRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
+	routeEntriesState, diags := GetRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -111,19 +118,19 @@ func (r *vpcRouteEntriesResource) Read(ctx context.Context, req resource.ReadReq
 	vpcResp, err := r.bc.client.GetVpcsVpcIdWithResponse(ctx, data.VpcId.ValueInt64())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error reading VPC: vpc_id=%d", data.VpcId.ValueInt64()),
+			fmt.Sprintf("Error reading VPC route entries: vpc_id=%d", data.VpcId.ValueInt64()),
 			err.Error(),
 		)
 		return
 	}
 	if vpcResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
-			"Unexpected HTTP status code reading VPC",
-			fmt.Sprintf("Received %s reading VPC: vpc_id=%d. Details: %s", vpcResp.Status(), data.VpcId.ValueInt64(), vpcResp.Body))
+			"Unexpected HTTP status code reading VPC route entries",
+			fmt.Sprintf("Received %s reading VPC route entries: vpc_id=%d. Details: %s", vpcResp.Status(), data.VpcId.ValueInt64(), vpcResp.Body))
 		return
 	}
 
-	routeEntries, routeEntriesDiags := getRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
+	routeEntries, routeEntriesDiags := GetRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
 	resp.Diagnostics.Append(routeEntriesDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -156,7 +163,7 @@ func (r *vpcRouteEntriesResource) Update(ctx context.Context, req resource.Updat
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error creating VPC route entries: vpc_id=%d", data.VpcId.ValueInt64()),
+			fmt.Sprintf("Error updating VPC route entries: vpc_id=%d", data.VpcId.ValueInt64()),
 			err.Error(),
 		)
 		return
@@ -164,12 +171,12 @@ func (r *vpcRouteEntriesResource) Update(ctx context.Context, req resource.Updat
 
 	if vpcResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
-			"Unexpected HTTP status code creating VPC route entries",
-			fmt.Sprintf("Received %s creating VPC route entries: vpc_id=%d. Details: %s", vpcResp.Status(), data.VpcId.ValueInt64(), vpcResp.Body))
+			"Unexpected HTTP status code updating VPC route entries",
+			fmt.Sprintf("Received %s updating VPC route entries: vpc_id=%d. Details: %s", vpcResp.Status(), data.VpcId.ValueInt64(), vpcResp.Body))
 		return
 	}
 
-	routeEntriesState, diags := getRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
+	routeEntriesState, diags := GetRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -226,7 +233,7 @@ func (d *vpcRouteEntriesResource) Configure(_ context.Context, req resource.Conf
 	d.bc = &bc
 }
 
-func getRouteEntriesState(ctx context.Context, routeEntries *[]binarylane.RouteEntry) (basetypes.ListValue, diag.Diagnostics) {
+func GetRouteEntriesState(ctx context.Context, routeEntries *[]binarylane.RouteEntry) (basetypes.ListValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	routeEntriesValue := resources.RouteEntriesValue{}
@@ -252,4 +259,19 @@ func getRouteEntriesState(ctx context.Context, routeEntries *[]binarylane.RouteE
 	}
 
 	return routeEntriesListValue, diags
+}
+
+func (r *vpcRouteEntriesResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	id, err := strconv.ParseInt(req.ID, 10, 64)
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error importing VPC route entries",
+			"Could not import VPC route entries, unexpected error (ID should be an integer): "+err.Error(),
+		)
+		return
+	}
+
+	diags := resp.State.SetAttribute(ctx, path.Root("vpc_id"), id)
+	resp.Diagnostics.Append(diags...)
 }

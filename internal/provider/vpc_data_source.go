@@ -88,13 +88,6 @@ func (d *vpcDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 	data.IpRange = types.StringValue(*vpcResp.JSON200.Vpc.IpRange)
 	data.Name = types.StringValue(*vpcResp.JSON200.Vpc.Name)
 
-	// routeEntries, routeEntriesDiags := GetRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
-	// resp.Diagnostics.Append(routeEntriesDiags...)
-	// if resp.Diagnostics.HasError() {
-	// 	return
-	// }
-	// data.RouteEntries = routeEntries
-
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

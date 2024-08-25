@@ -158,7 +158,7 @@ Derive the data source model from the generated `resources.*Model`.
 Add a `Configure` method to the data source.
 
 ```diff
-+ func (d *vpcDataSource) Configure(
++ func (d *exampleDataSource) Configure(
 +   _ context.Context,
 +   req datasource.ConfigureRequest,
 +   resp *datasource.ConfigureResponse,
@@ -182,7 +182,7 @@ Add a `Configure` method to the data source.
 Use the generated schema to define the data source schema.
 
 ```diff
-  func (d *vpcDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+  func (d *exampleDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 - 	resp.Schema = schema.Schema{
 - 		Attributes: map[string]schema.Attribute{
 - 			"id": schema.StringAttribute{
@@ -190,7 +190,12 @@ Use the generated schema to define the data source schema.
 - 			},
 - 		},
 - 	}
-+ 	resp.Schema = *convertResourceSchemaToDataSourceSchema(ctx, resources.ExampleResourceSchema(ctx))
++   ds, err := convertResourceSchemaToDataSourceSchema(resources.ExampleResourceSchema(ctx))
++ 	if err != nil {
++ 		resp.Diagnostics.AddError("Failed to convert resource schema to data source schema", err.Error())
++ 		return
++ 	}
++ 	resp.Schema = *ds
 + 	resp.Schema.Description = "TODO"
   }
 ```
