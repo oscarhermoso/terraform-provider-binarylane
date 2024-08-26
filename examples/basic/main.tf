@@ -7,7 +7,6 @@ terraform {
 }
 
 provider "binarylane" {
-  # api_url   = "" # Defaults to "https://api.binarylane.com"
   # api_token = "" # Recommend setting with environment variable BINARYLANE_API_TOKEN
 }
 

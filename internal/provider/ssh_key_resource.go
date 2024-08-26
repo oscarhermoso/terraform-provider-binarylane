@@ -38,7 +38,7 @@ func (d *sshKeyResource) Configure(_ context.Context, req resource.ConfigureRequ
 	bc, ok := req.ProviderData.(BinarylaneClient)
 	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
+			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *BinarylaneClient, got: %T.", req.ProviderData),
 		)
 

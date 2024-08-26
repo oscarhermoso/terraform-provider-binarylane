@@ -57,8 +57,24 @@ resources:
         - links
         - server
         - ssh_keys
-        - port_blocking
         - options
+  server_firewall_rules:
+    create:
+      path: /servers/{server_id}/actions#ChangeAdvancedFirewallRules
+      method: POST
+    read:
+      path: /servers/{server_id}/advanced_firewall_rules
+      method: GET
+    update:
+      path: /servers/{server_id}/actions#ChangeAdvancedFirewallRules
+      method: POST
+    delete:
+      path: /servers/{server_id}/actions#ChangeAdvancedFirewallRules
+      method: POST
+    schema:
+      ignores:
+        - type
+        - action
   ssh_key:
     create:
       path: /account/keys

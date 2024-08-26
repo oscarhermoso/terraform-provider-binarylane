@@ -593,22 +593,22 @@ type AdvancedFeature string
 // AdvancedFirewallRule defines model for AdvancedFirewallRule.
 type AdvancedFirewallRule struct {
 	// Action The action to take when there is a match on this rule.
-	Action AdvancedFirewallRuleAction `json:"action"`
+	Action AdvancedFirewallRuleAction `json:"action" tfsdk:"action"`
 
 	// Description A description to assist in identifying this rule. Commonly used to record the reason for the rule or the intent behind it, e.g. "Block access to RDP" or "Allow access from HQ".
-	Description *string `json:"description"`
+	Description *string `json:"description" tfsdk:"description"`
 
 	// DestinationAddresses The destination addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.
-	DestinationAddresses []string `json:"destination_addresses"`
+	DestinationAddresses []string `json:"destination_addresses" tfsdk:"destination_addresses"`
 
 	// DestinationPorts The destination ports to match for this rule. Leave null or empty to match on all ports.
-	DestinationPorts *[]string `json:"destination_ports"`
+	DestinationPorts *[]string `json:"destination_ports" tfsdk:"destination_ports"`
 
 	// Protocol The protocol to match for this rule.
-	Protocol AdvancedFirewallRuleProtocol `json:"protocol"`
+	Protocol AdvancedFirewallRuleProtocol `json:"protocol" tfsdk:"protocol"`
 
 	// SourceAddresses The source addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.
-	SourceAddresses []string `json:"source_addresses"`
+	SourceAddresses []string `json:"source_addresses" tfsdk:"source_addresses"`
 }
 
 // AdvancedFirewallRuleAction

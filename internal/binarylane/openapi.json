@@ -8811,7 +8811,10 @@
               "type": "string"
             },
             "description": "The source addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.",
-            "x-cli-format": 1
+            "x-cli-format": 1,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "source_addresses"
+            }
           },
           "destination_addresses": {
             "minItems": 1,
@@ -8820,7 +8823,10 @@
               "type": "string"
             },
             "description": "The destination addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.",
-            "x-cli-format": 2
+            "x-cli-format": 2,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "destination_addresses"
+            }
           },
           "destination_ports": {
             "type": "array",
@@ -8829,7 +8835,10 @@
             },
             "description": "The destination ports to match for this rule. Leave null or empty to match on all ports.",
             "nullable": true,
-            "x-cli-format": 4
+            "x-cli-format": 4,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "destination_ports"
+            }
           },
           "protocol": {
             "allOf": [
@@ -8838,7 +8847,10 @@
               }
             ],
             "description": "The protocol to match for this rule.",
-            "x-cli-format": 3
+            "x-cli-format": 3,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "protocol"
+            }
           },
           "action": {
             "allOf": [
@@ -8847,7 +8859,10 @@
               }
             ],
             "description": "The action to take when there is a match on this rule.",
-            "x-cli-format": 5
+            "x-cli-format": 5,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "action"
+            }
           },
           "description": {
             "maxLength": 250,
@@ -8855,7 +8870,10 @@
             "type": "string",
             "description": "A description to assist in identifying this rule. Commonly used to record the reason for the rule or the intent behind it, e.g. \"Block access to RDP\" or \"Allow access from HQ\".",
             "nullable": true,
-            "x-cli-format": 6
+            "x-cli-format": 6,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "description"
+            }
           }
         }
       },
