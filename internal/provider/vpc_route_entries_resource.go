@@ -68,7 +68,7 @@ func (r *vpcRouteEntriesResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	// Create API call logic
-	var routeEntries []binarylane.RouteEntryRequest
+	routeEntries := []binarylane.RouteEntryRequest{}
 	diags := data.VpcRouteEntriesModel.RouteEntries.ElementsAs(ctx, &routeEntries, true)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -142,28 +142,29 @@ func (r *vpcRouteEntriesResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *vpcRouteEntriesResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data vpcRouteEntriesResourceModel
+	var plan, state vpcRouteEntriesResourceModel
 
 	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Update API call logic
-	var routeEntries []binarylane.RouteEntryRequest
-	diags := data.VpcRouteEntriesModel.RouteEntries.ElementsAs(ctx, &routeEntries, true)
+	routeEntries := []binarylane.RouteEntryRequest{}
+	diags := plan.VpcRouteEntriesModel.RouteEntries.ElementsAs(ctx, &routeEntries, true)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	vpcResp, err := r.bc.client.PatchVpcsVpcIdWithResponse(ctx, data.VpcId.ValueInt64(), binarylane.PatchVpcRequest{
+	vpcResp, err := r.bc.client.PatchVpcsVpcIdWithResponse(ctx, state.VpcId.ValueInt64(), binarylane.PatchVpcRequest{
 		RouteEntries: &routeEntries,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error updating VPC route entries: vpc_id=%d", data.VpcId.ValueInt64()),
+			fmt.Sprintf("Error updating VPC route entries: vpc_id=%d", state.VpcId.ValueInt64()),
 			err.Error(),
 		)
 		return
@@ -172,7 +173,7 @@ func (r *vpcRouteEntriesResource) Update(ctx context.Context, req resource.Updat
 	if vpcResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code updating VPC route entries",
-			fmt.Sprintf("Received %s updating VPC route entries: vpc_id=%d. Details: %s", vpcResp.Status(), data.VpcId.ValueInt64(), vpcResp.Body))
+			fmt.Sprintf("Received %s updating VPC route entries: vpc_id=%d. Details: %s", vpcResp.Status(), state.VpcId.ValueInt64(), vpcResp.Body))
 		return
 	}
 
@@ -181,10 +182,10 @@ func (r *vpcRouteEntriesResource) Update(ctx context.Context, req resource.Updat
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.RouteEntries = routeEntriesState
+	state.RouteEntries = routeEntriesState
 
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *vpcRouteEntriesResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -225,7 +226,7 @@ func (d *vpcRouteEntriesResource) Configure(_ context.Context, req resource.Conf
 	bc, ok := req.ProviderData.(BinarylaneClient)
 	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
+			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *BinarylaneClient, got: %T.", req.ProviderData),
 		)
 		return
@@ -240,7 +241,7 @@ func GetRouteEntriesState(ctx context.Context, routeEntries *[]binarylane.RouteE
 	var routeEntriesValues []resources.RouteEntriesValue
 
 	if *routeEntries == nil || len(*routeEntries) == 0 {
-		routeEntriesValue = resources.RouteEntriesValue{}
+		routeEntriesValues = []resources.RouteEntriesValue{}
 	} else {
 		for _, route := range *routeEntries {
 			r := resources.NewRouteEntriesValueMust(routeEntriesValue.AttributeTypes(ctx), map[string]attr.Value{

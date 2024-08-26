@@ -15,8 +15,9 @@ resource "binarylane_server" "example" {
 If somehow you use this in production I would be pretty impressed.
 
 - [x] Create/delete a server when runing locally
-- [x] [Publish to Terraform Registry](https://registry.terraform.io/providers/oscarhermoso/binarylane/latest/docs/resources/server)
-  - [ ] (and maybe OpenTofu?)
+- [x] Publish
+  - [x] [Terraform Registry](https://registry.terraform.io/providers/oscarhermoso/binarylane/latest/docs/resources/server)
+  - [x] OpenTofu
 - [ ] Deploy the rest of the owl
 
 ## Parameters

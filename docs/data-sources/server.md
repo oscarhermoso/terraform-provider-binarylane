@@ -24,6 +24,7 @@ TODO
 - `backups` (Boolean) If true this will enable two daily backups for the server. `options.daily_backups` will override this value if provided. Setting this to false has no effect.
 - `name` (String) The hostname of your server, such as vps01.yourcompany.com. If not provided, the server will be created with a random name.
 - `password` (String) If this is provided the specified or default remote user's account password will be set to this value. Only valid if the server supports password change actions (check server.password_change_supported via the servers endpoint). If omitted and the server supports password change actions a random password will be generated and emailed to the account email address.
+- `port_blocking` (Boolean) Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.
 - `user_data` (String) If provided this will be used to initialise the new server. This must be left null if the Image does not support UserData, see DistributionInfo.Features for more information.
 - `vpc_id` (Number) Leave null to use default (public) network for the selected region.
 

@@ -43,6 +43,12 @@ func ServerResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "If this is provided the specified or default remote user's account password will be set to this value. Only valid if the server supports password change actions (check server.password_change_supported via the servers endpoint). If omitted and the server supports password change actions a random password will be generated and emailed to the account email address.\n",
 				MarkdownDescription: "If this is provided the specified or default remote user's account password will be set to this value. Only valid if the server supports password change actions (check server.password_change_supported via the servers endpoint). If omitted and the server supports password change actions a random password will be generated and emailed to the account email address.\n",
 			},
+			"port_blocking": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         "Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.",
+				MarkdownDescription: "Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.",
+			},
 			"region": schema.StringAttribute{
 				Required:            true,
 				Description:         "The slug of the selected region.",
@@ -79,13 +85,14 @@ func ServerResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type ServerModel struct {
-	Backups  types.Bool   `tfsdk:"backups"`
-	Id       types.Int64  `tfsdk:"id"`
-	Image    types.String `tfsdk:"image"`
-	Name     types.String `tfsdk:"name"`
-	Password types.String `tfsdk:"password"`
-	Region   types.String `tfsdk:"region"`
-	Size     types.String `tfsdk:"size"`
-	UserData types.String `tfsdk:"user_data"`
-	VpcId    types.Int64  `tfsdk:"vpc_id"`
+	Backups      types.Bool   `tfsdk:"backups"`
+	Id           types.Int64  `tfsdk:"id"`
+	Image        types.String `tfsdk:"image"`
+	Name         types.String `tfsdk:"name"`
+	Password     types.String `tfsdk:"password"`
+	PortBlocking types.Bool   `tfsdk:"port_blocking"`
+	Region       types.String `tfsdk:"region"`
+	Size         types.String `tfsdk:"size"`
+	UserData     types.String `tfsdk:"user_data"`
+	VpcId        types.Int64  `tfsdk:"vpc_id"`
 }

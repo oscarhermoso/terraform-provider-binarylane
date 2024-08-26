@@ -52,7 +52,7 @@ func (d *serverResource) Configure(_ context.Context, req resource.ConfigureRequ
 	bc, ok := req.ProviderData.(BinarylaneClient)
 	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
+			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *BinarylaneClient, got: %T.", req.ProviderData),
 		)
 
@@ -100,12 +100,21 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		},
 	}
 
-	vpc_id := resp.Schema.Attributes["vpc_id"]
+	vpcId := resp.Schema.Attributes["vpc_id"]
 	resp.Schema.Attributes["vpc_id"] = &schema.Int64Attribute{
-		Description:         vpc_id.GetDescription(),
-		MarkdownDescription: vpc_id.GetMarkdownDescription(),
-		Computed:            false,
-		Optional:            true,
+		Description:         vpcId.GetDescription(),
+		MarkdownDescription: vpcId.GetMarkdownDescription(),
+		Optional:            vpcId.IsOptional(),
+		Computed:            false, // VPC ID is not computed, defined at creation
+	}
+
+	portBlocking := resp.Schema.Attributes["port_blocking"]
+	resp.Schema.Attributes["port_blocking"] = &schema.BoolAttribute{
+		Description:         portBlocking.GetDescription(),
+		MarkdownDescription: portBlocking.GetMarkdownDescription(),
+		Optional:            portBlocking.IsOptional(),
+		Computed:            portBlocking.IsComputed(),
+		Default:             booldefault.StaticBool(true), // Add default to port_blocking
 	}
 
 	// Additional attributes
@@ -136,18 +145,20 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 	resp.Schema.Attributes["public_ipv4_addresses"] = &schema.ListAttribute{
 		Description:         publicIpv4AddressesDescription,
 		MarkdownDescription: publicIpv4AddressesDescription,
-		Optional:            true,
-		Computed:            true,
 		ElementType:         types.StringType,
+		Optional:            false,
+		Required:            false,
+		Computed:            true, // "read only" with computed=true and required/optional=false
 	}
 
 	privateIpv4AddressesDescription := "The private IPv4 addresses assigned to the server."
 	resp.Schema.Attributes["private_ipv4_addresses"] = &schema.ListAttribute{
 		Description:         privateIpv4AddressesDescription,
 		MarkdownDescription: privateIpv4AddressesDescription,
-		Optional:            true,
-		Computed:            true,
 		ElementType:         types.StringType,
+		Optional:            false,
+		Required:            false,
+		Computed:            true, // "read only" with computed=true and required/optional=false
 	}
 }
 
@@ -284,12 +295,12 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	// Read API call logic
-	tflog.Debug(ctx, fmt.Sprintf("Reading server: name=%s", data.Id.String()))
+	tflog.Debug(ctx, fmt.Sprintf("Reading server: id=%s, name=%s", data.Id.String(), data.Name.ValueString()))
 
 	serverResp, err := r.bc.client.GetServersServerIdWithResponse(ctx, data.Id.ValueInt64())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error reading server: name=%s", data.Id.String()),
+			fmt.Sprintf("Error reading server: id=%s, name=%s", data.Id.String(), data.Name.ValueString()),
 			err.Error(),
 		)
 		return
@@ -298,7 +309,7 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 	if serverResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code reading server",
-			fmt.Sprintf("Received %s reading server: name=%s. Details: %s", serverResp.Status(), data.Id.String(), serverResp.Body))
+			fmt.Sprintf("Received %s reading server: id=%s, name=%s. Details: %s", serverResp.Status(), data.Name.ValueString(), data.Id.String(), serverResp.Body))
 		return
 	}
 

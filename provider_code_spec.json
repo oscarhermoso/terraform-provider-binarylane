@@ -36,6 +36,13 @@
 						}
 					},
 					{
+						"name": "port_blocking",
+						"bool": {
+							"computed_optional_required": "computed_optional",
+							"description": "Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts."
+						}
+					},
+					{
 						"name": "region",
 						"string": {
 							"computed_optional_required": "required",
@@ -104,6 +111,142 @@
 						"int64": {
 							"computed_optional_required": "computed_optional",
 							"description": "The ID of the server to fetch."
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "server_firewall_rules",
+			"schema": {
+				"attributes": [
+					{
+						"name": "firewall_rules",
+						"list_nested": {
+							"computed_optional_required": "required",
+							"nested_object": {
+								"attributes": [
+									{
+										"name": "action",
+										"string": {
+											"computed_optional_required": "required",
+											"description": "The action to take when there is a match on this rule.",
+											"validators": [
+												{
+													"custom": {
+														"imports": [
+															{
+																"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+															}
+														],
+														"schema_definition": "stringvalidator.OneOf(\n\"drop\",\n\"accept\",\n)"
+													}
+												}
+											]
+										}
+									},
+									{
+										"name": "description",
+										"string": {
+											"computed_optional_required": "computed_optional",
+											"description": "A description to assist in identifying this rule. Commonly used to record the reason for the rule or the intent behind it, e.g. \"Block access to RDP\" or \"Allow access from HQ\".",
+											"validators": [
+												{
+													"custom": {
+														"imports": [
+															{
+																"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+															}
+														],
+														"schema_definition": "stringvalidator.LengthBetween(0, 250)"
+													}
+												}
+											]
+										}
+									},
+									{
+										"name": "destination_addresses",
+										"list": {
+											"computed_optional_required": "required",
+											"element_type": {
+												"string": {}
+											},
+											"description": "The destination addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.",
+											"validators": [
+												{
+													"custom": {
+														"imports": [
+															{
+																"path": "github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+															}
+														],
+														"schema_definition": "listvalidator.SizeAtLeast(1)"
+													}
+												}
+											]
+										}
+									},
+									{
+										"name": "destination_ports",
+										"list": {
+											"computed_optional_required": "computed_optional",
+											"element_type": {
+												"string": {}
+											},
+											"description": "The destination ports to match for this rule. Leave null or empty to match on all ports."
+										}
+									},
+									{
+										"name": "protocol",
+										"string": {
+											"computed_optional_required": "required",
+											"description": "The protocol to match for this rule.",
+											"validators": [
+												{
+													"custom": {
+														"imports": [
+															{
+																"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+															}
+														],
+														"schema_definition": "stringvalidator.OneOf(\n\"all\",\n\"icmp\",\n\"tcp\",\n\"udp\",\n)"
+													}
+												}
+											]
+										}
+									},
+									{
+										"name": "source_addresses",
+										"list": {
+											"computed_optional_required": "required",
+											"element_type": {
+												"string": {}
+											},
+											"description": "The source addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.",
+											"validators": [
+												{
+													"custom": {
+														"imports": [
+															{
+																"path": "github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+															}
+														],
+														"schema_definition": "listvalidator.SizeAtLeast(1)"
+													}
+												}
+											]
+										}
+									}
+								]
+							},
+							"description": "A list of rules for the server. NB: that any existing rules that are not included will be removed. Submit an empty list to clear all rules."
+						}
+					},
+					{
+						"name": "server_id",
+						"int64": {
+							"computed_optional_required": "computed_optional",
+							"description": "The ID of the server for which firewall rules should be listed."
 						}
 					}
 				]

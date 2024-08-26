@@ -70,9 +70,9 @@ Define the interfaces that the resource should implement:
 ```diff
 - var _ resource.Resource = (*exampleResource)(nil)
 + var (
-+ 	_ resource.Resource              = &exampleResource{}
-+ 	_ resource.ResourceWithConfigure = &exampleResource{}
-+ 	// _ resource.ResourceWithImportState = &exampleResource{}
++ 	_ resource.Resource                = &exampleResource{}
++ 	_ resource.ResourceWithConfigure   = &exampleResource{}
++ 	_ resource.ResourceWithImportState = &exampleResource{}
 + )
 ```
 
@@ -106,7 +106,7 @@ Add a `Configure` method to the resource:
 + 	bc, ok := req.ProviderData.(BinarylaneClient)
 + 	if !ok {
 + 		resp.Diagnostics.AddError(
-+ 			"Unexpected Data Source Configure Type",
++ 			"Unexpected Resource Configure Type",
 + 			fmt.Sprintf("Expected *BinarylaneClient, got: %T.", req.ProviderData),
 + 		)
 
@@ -114,6 +114,14 @@ Add a `Configure` method to the resource:
 + 	}
 
 + 	d.bc = &bc
++ }
+```
+
+```diff
++ func (r *exampleResource) ImportState(
++   ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
++ ) {
++ 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 + }
 ```
 

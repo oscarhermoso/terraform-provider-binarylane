@@ -21,12 +21,12 @@ func TestServerResource(t *testing.T) {
 			{
 				Config: providerConfig + `
 resource "binarylane_vpc" "test" {
-	name     = "tf-server-resource-test"
+	name     = "tf-test-server-resource"
 	ip_range = "10.240.0.0/16"
 }
 
 resource "binarylane_server" "test" {
-	name   = "tf-server-resource-test"
+	name   = "tf-test-server-resource"
   region = "per"
   image  = "debian-12"
   size   = "std-min"
@@ -48,7 +48,7 @@ data "binarylane_server" "test" {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify resource values
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "id"),
-					resource.TestCheckResourceAttr("binarylane_server.test", "name", "tf-server-resource-test"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "name", "tf-test-server-resource"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "region", "per"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "image", "debian-12"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "size", "std-min"),
@@ -60,10 +60,11 @@ echo "Hello World" > /var/tmp/output.txt
 `),
 					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_addresses.#", "0"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "private_ipv4_addresses.0"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "port_blocking", "true"),
 
 					// Verify data source values
 					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "id"),
-					resource.TestCheckResourceAttr("data.binarylane_server.test", "name", "tf-server-resource-test"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "name", "tf-test-server-resource"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "region", "per"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "image", "debian-12"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "size", "std-min"),
