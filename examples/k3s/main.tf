@@ -95,16 +95,12 @@ resource "binarylane_server_firewall_rules" "example" {
 
   firewall_rules = [
     {
-      description = "K3s supervisor and Kubernetes API Server"
-      protocol    = "tcp"
-      source_addresses = flatten([ # agents
-        for _, agent in binarylane_server.agent : agent.private_ipv4_addresses
-      ])
-      destination_addresses = flatten([ # server_ips
-        for _, server in binarylane_server.server : server.private_ipv4_addresses
-      ])
-      destination_ports = ["6443"]
-      action            = "accept"
+      description           = "K3s supervisor and Kubernetes API Server"
+      protocol              = "tcp"
+      source_addresses      = flatten([for _, a in binarylane_server.agent : a.private_ipv4_addresses])
+      destination_addresses = flatten([for _, s in binarylane_server.server : s.private_ipv4_addresses])
+      destination_ports     = ["6443"]
+      action                = "accept"
     },
     {
       description           = "Flannel VXLAN"

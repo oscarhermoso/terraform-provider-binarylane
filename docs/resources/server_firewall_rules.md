@@ -18,9 +18,6 @@ TODO
 ### Required
 
 - `firewall_rules` (Attributes List) A list of rules for the server. NB: that any existing rules that are not included will be removed. Submit an empty list to clear all rules. (see [below for nested schema](#nestedatt--firewall_rules))
-
-### Optional
-
 - `server_id` (Number) The ID of the server for which firewall rules should be listed.
 
 <a id="nestedatt--firewall_rules"></a>
