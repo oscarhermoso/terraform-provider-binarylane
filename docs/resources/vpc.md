@@ -21,5 +21,8 @@ TODO
 
 ### Optional
 
-- `id` (Number) The target vpc id.
 - `ip_range` (String) A private address range that you select during creation, such as the default value of 10.240.0.0/16. Because the virtual network is dedicated to your use, you may use whatever IP address range you like.
+
+### Read-Only
+
+- `id` (Number) The target vpc id.

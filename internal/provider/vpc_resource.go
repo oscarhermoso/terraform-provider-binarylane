@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -56,6 +57,17 @@ func (r *vpcResource) Metadata(ctx context.Context, req resource.MetadataRequest
 func (r *vpcResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = resources.VpcResourceSchema(ctx)
 	resp.Schema.Description = "TODO"
+
+	// Overrides
+	id := resp.Schema.Attributes["id"]
+	resp.Schema.Attributes["id"] = &schema.Int64Attribute{
+		Description:         id.GetDescription(),
+		MarkdownDescription: id.GetMarkdownDescription(),
+		// read only
+		Optional: false,
+		Required: false,
+		Computed: true,
+	}
 }
 
 func (r *vpcResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

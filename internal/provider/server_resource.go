@@ -71,6 +71,16 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 	resp.Schema.Description = "Provides a Binary Lane Server resource. This can be used to create and delete servers."
 
 	// Overrides
+	id := resp.Schema.Attributes["id"]
+	resp.Schema.Attributes["id"] = &schema.Int64Attribute{
+		Description:         id.GetDescription(),
+		MarkdownDescription: id.GetMarkdownDescription(),
+		// read only
+		Optional: false,
+		Required: false,
+		Computed: true,
+	}
+
 	pw := resp.Schema.Attributes["password"]
 	resp.Schema.Attributes["password"] = &schema.StringAttribute{
 		Description:         pw.GetDescription(),
@@ -146,9 +156,10 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Description:         publicIpv4AddressesDescription,
 		MarkdownDescription: publicIpv4AddressesDescription,
 		ElementType:         types.StringType,
-		Optional:            false,
-		Required:            false,
-		Computed:            true, // "read only" with computed=true and required/optional=false
+		// read only
+		Optional: false,
+		Required: false,
+		Computed: true,
 	}
 
 	privateIpv4AddressesDescription := "The private IPv4 addresses assigned to the server."
@@ -156,9 +167,10 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Description:         privateIpv4AddressesDescription,
 		MarkdownDescription: privateIpv4AddressesDescription,
 		ElementType:         types.StringType,
-		Optional:            false,
-		Required:            false,
-		Computed:            true, // "read only" with computed=true and required/optional=false
+		// read only
+		Optional: false,
+		Required: false,
+		Computed: true,
 	}
 }
 
@@ -379,7 +391,19 @@ func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-// func (r *serverResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-// 	// Retrieve import ID and save to id attribute
-// 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+// func (r *serverResource) ImportState(
+// 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
+// ) {
+// 	id, err := strconv.ParseInt(req.ID, 10, 32)
+
+// 	if err != nil {
+// 		resp.Diagnostics.AddError(
+// 			"Error importing server",
+// 			"Could not import server, unexpected error (ID should be an integer): "+err.Error(),
+// 		)
+// 		return
+// 	}
+
+// 	diags := resp.State.SetAttribute(ctx, path.Root("id"), int32(id))
+// 	resp.Diagnostics.Append(diags...)
 // }

@@ -8,10 +8,13 @@ import (
 	"terraform-provider-binarylane/internal/binarylane"
 	"terraform-provider-binarylane/internal/resources"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -57,6 +60,17 @@ func (r *serverFirewallRulesResource) Metadata(ctx context.Context, req resource
 func (r *serverFirewallRulesResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = resources.ServerFirewallRulesResourceSchema(ctx)
 	resp.Schema.Description = "TODO"
+
+	// Overrides
+	serverId := resp.Schema.Attributes["server_id"]
+	resp.Schema.Attributes["server_id"] = &schema.Int64Attribute{
+		Description:         serverId.GetDescription(),
+		MarkdownDescription: serverId.GetMarkdownDescription(),
+		Required:            true, // Server ID is required to define the firewall rules
+		Validators: []validator.Int64{
+			int64validator.AtLeast(1),
+		},
+	}
 }
 
 func (r *serverFirewallRulesResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -227,23 +241,6 @@ func (r *serverFirewallRulesResource) Delete(ctx context.Context, req resource.D
 	}
 }
 
-func (r *serverFirewallRulesResource) ImportState(
-	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
-) {
-	id, err := strconv.ParseInt(req.ID, 10, 64)
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error importing VPC route entries",
-			"Could not import VPC route entries, unexpected error (ID should be an integer): "+err.Error(),
-		)
-		return
-	}
-
-	diags := resp.State.SetAttribute(ctx, path.Root("server_id"), id)
-	resp.Diagnostics.Append(diags...)
-}
-
 func GetFirewallRulesState(ctx context.Context, firewallRules *[]binarylane.AdvancedFirewallRule) (basetypes.ListValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
@@ -289,4 +286,21 @@ func GetFirewallRulesState(ctx context.Context, firewallRules *[]binarylane.Adva
 	}
 
 	return firewallRulesListValue, diags
+}
+
+func (r *serverFirewallRulesResource) ImportState(
+	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
+) {
+	id, err := strconv.ParseInt(req.ID, 10, 32)
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error importing server firewall rules",
+			"Could not import server firewall rules, unexpected error (ID should be an integer): "+err.Error(),
+		)
+		return
+	}
+
+	diags := resp.State.SetAttribute(ctx, path.Root("server_id"), id)
+	resp.Diagnostics.Append(diags...)
 }
