@@ -227,13 +227,14 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	body := binarylane.CreateServerRequest{
-		Name:     data.Name.ValueStringPointer(),
-		Image:    data.Image.ValueString(),
-		Region:   data.Region.ValueString(),
-		Size:     data.Size.ValueString(),
-		UserData: data.UserData.ValueStringPointer(),
-		VpcId:    data.VpcId.ValueInt64Pointer(),
-		SshKeys:  &sshKeys,
+		Name:         data.Name.ValueStringPointer(),
+		Image:        data.Image.ValueString(),
+		Region:       data.Region.ValueString(),
+		Size:         data.Size.ValueString(),
+		UserData:     data.UserData.ValueStringPointer(),
+		VpcId:        data.VpcId.ValueInt64Pointer(),
+		PortBlocking: data.PortBlocking.ValueBoolPointer(),
+		SshKeys:      &sshKeys,
 		Options: &binarylane.SizeOptionsRequest{
 			Ipv4Addresses: data.PublicIpv4Count.ValueInt32Pointer(),
 		},
