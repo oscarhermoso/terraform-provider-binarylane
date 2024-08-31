@@ -65,6 +65,13 @@ func ServerResourceSchema(ctx context.Context) schema.Schema {
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
+			"ssh_keys": schema.ListAttribute{
+				ElementType:         types.Int64Type,
+				Optional:            true,
+				Computed:            true,
+				Description:         "This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys.",
+				MarkdownDescription: "This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys.",
+			},
 			"user_data": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
@@ -93,6 +100,7 @@ type ServerModel struct {
 	PortBlocking types.Bool   `tfsdk:"port_blocking"`
 	Region       types.String `tfsdk:"region"`
 	Size         types.String `tfsdk:"size"`
+	SshKeys      types.List   `tfsdk:"ssh_keys"`
 	UserData     types.String `tfsdk:"user_data"`
 	VpcId        types.Int64  `tfsdk:"vpc_id"`
 }

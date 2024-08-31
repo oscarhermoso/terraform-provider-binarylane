@@ -27,7 +27,6 @@ resources:
       attributes:
         aliases:
           server_id: id
-          ipv4_addresses: options.ipv4_addresses
         overrides:
           backups:
             type: bool
@@ -56,7 +55,6 @@ resources:
         - licenses
         - links
         - server
-        - ssh_keys
         - options
   server_firewall_rules:
     create:

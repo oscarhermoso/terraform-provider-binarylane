@@ -11,7 +11,11 @@ import (
 func TestServerResource(t *testing.T) {
 	// Must assign a password to the server or Binary Lane will send emails
 	pw_bytes := make([]byte, 12)
-	rand.Read(pw_bytes)
+	_, err := rand.Read(pw_bytes)
+	if err != nil {
+		t.Errorf("Failed to generate password: %s", err)
+		return
+	}
 	password := base64.URLEncoding.EncodeToString(pw_bytes)
 
 	resource.Test(t, resource.TestCase{
@@ -23,6 +27,18 @@ func TestServerResource(t *testing.T) {
 resource "binarylane_vpc" "test" {
 	name     = "tf-test-server-resource"
 	ip_range = "10.240.0.0/16"
+}
+
+resource "binarylane_ssh_key" "test" {
+  name       = "tf-test-server-resource"
+  public_key = "` + GeneratePublicKey(t) + `"
+  default    = true
+}
+
+resource "binarylane_ssh_key" "unused" {
+  name       = "tf-test-server-resource-unused"
+  public_key = "` + GeneratePublicKey(t) + `"
+  default    = true
 }
 
 resource "binarylane_server" "test" {
@@ -37,6 +53,7 @@ resource "binarylane_server" "test" {
 #cloud-config
 echo "Hello World" > /var/tmp/output.txt
 EOT
+	ssh_keys = [binarylane_ssh_key.test.id]
 }
 
 data "binarylane_server" "test" {
@@ -61,9 +78,11 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_addresses.#", "0"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "private_ipv4_addresses.0"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "port_blocking", "true"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "ssh_keys.#", "1"), // Only the test SSH key should be registered
+					resource.TestCheckResourceAttrPair("binarylane_server.test", "ssh_keys.0", "binarylane_ssh_key.test", "id"),
 
 					// Verify data source values
-					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "id"),
+					resource.TestCheckResourceAttrPair("data.binarylane_server.test", "id", "binarylane_server.test", "id"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "name", "tf-test-server-resource"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "region", "per"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "image", "debian-12"),
