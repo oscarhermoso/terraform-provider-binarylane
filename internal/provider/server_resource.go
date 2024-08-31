@@ -459,31 +459,31 @@ func (r *serverResource) ImportState(
 		diags := resp.State.SetAttribute(ctx, path.Root("id"), int32(id))
 		resp.Diagnostics.Append(diags...)
 	} else {
-		hostname := req.ID
+		name := req.ID
 		params := binarylane.GetServersParams{
-			Hostname: &hostname,
+			Hostname: &name,
 		}
 
 		serverResp, err := r.bc.client.GetServersWithResponse(ctx, &params)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Error getting server: hostname=%s", hostname), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Error getting server: hostname=%s", name), err.Error())
 			return
 		}
 
 		if serverResp.StatusCode() != http.StatusOK {
 			resp.Diagnostics.AddError(
 				"Unexpected HTTP status code getting server",
-				fmt.Sprintf("Received %s reading server: hostname=%s. Details: %s", serverResp.Status(), hostname,
+				fmt.Sprintf("Received %s reading server: hostname=%s. Details: %s", serverResp.Status(), name,
 					serverResp.Body))
 			return
 		}
 
 		servers := *serverResp.JSON200.Servers
-		idx := slices.IndexFunc(servers, func(s binarylane.Server) bool { return *s.Name == hostname })
+		idx := slices.IndexFunc(servers, func(s binarylane.Server) bool { return *s.Name == name })
 		if idx == -1 {
 			resp.Diagnostics.AddError(
 				"Could not find server by hostname",
-				fmt.Sprintf("Error finding server: hostname=%s", hostname),
+				fmt.Sprintf("Error finding server: hostname=%s", name),
 			)
 			return
 		}
