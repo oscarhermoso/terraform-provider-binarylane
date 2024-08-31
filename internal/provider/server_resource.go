@@ -9,10 +9,13 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -127,6 +130,19 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Default:             booldefault.StaticBool(true), // Add default to port_blocking
 	}
 
+	sshKeys := resp.Schema.Attributes["ssh_keys"]
+	resp.Schema.Attributes["ssh_keys"] = &schema.ListAttribute{
+		ElementType:         types.Int64Type,
+		Description:         sshKeys.GetMarkdownDescription(),
+		MarkdownDescription: sshKeys.GetDescription(),
+		Optional:            sshKeys.IsOptional(),
+		Computed:            false,                                                   // SSH keys are not computed, defined at creation
+		PlanModifiers:       []planmodifier.List{listplanmodifier.RequiresReplace()}, // Cannot update SSH keys with API
+		Validators: []validator.List{
+			listvalidator.ValueInt64sAre(int64validator.AtLeast(1)),
+		},
+	}
+
 	// Additional attributes
 	waitDescription := "The number of seconds to wait for the server to be created, after which, a timeout error will " +
 		"be reported. If `wait_seconds` is left empty or set to 0, Terraform will succeed without waiting for the " +
@@ -187,6 +203,13 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	// Create API call logic
 	tflog.Debug(ctx, fmt.Sprintf("Creating server: name=%s", data.Name.ValueString()))
 
+	sshKeys := []int{}
+	diags = data.SshKeys.ElementsAs(ctx, &sshKeys, true)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	body := binarylane.CreateServerRequest{
 		Name:     data.Name.ValueStringPointer(),
 		Image:    data.Image.ValueString(),
@@ -194,6 +217,7 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 		Size:     data.Size.ValueString(),
 		UserData: data.UserData.ValueStringPointer(),
 		VpcId:    data.VpcId.ValueInt64Pointer(),
+		SshKeys:  &sshKeys,
 		Options: &binarylane.SizeOptionsRequest{
 			Ipv4Addresses: data.PublicIpv4Count.ValueInt32Pointer(),
 		},

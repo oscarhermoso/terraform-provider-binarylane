@@ -81,6 +81,16 @@
 						}
 					},
 					{
+						"name": "ssh_keys",
+						"list": {
+							"computed_optional_required": "computed_optional",
+							"element_type": {
+								"int64": {}
+							},
+							"description": "This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys."
+						}
+					},
+					{
 						"name": "user_data",
 						"string": {
 							"computed_optional_required": "computed_optional",

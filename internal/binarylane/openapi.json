@@ -10100,17 +10100,10 @@
           "ssh_keys": {
             "type": "array",
             "items": {
-              "oneOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "string"
-                }
-              ],
-              "example": 5
+              "example": 5,
+              "type": "integer"
             },
-            "description": "This may be either the SSH keys Ids or fingerprints. If this is null or not provided any SSH keys that have been marked as default will be deployed (if the operating system supports SSH keys). Submit an empty array to disable deployment of default keys.",
+            "description": "This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys.",
             "nullable": true
           },
           "options": {

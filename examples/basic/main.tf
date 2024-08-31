@@ -16,5 +16,5 @@ resource "binarylane_server" "example" {
   image  = "ubuntu-24.04"
   size   = "std-min" # 1 VPCU, 1 GB Memory,  20 GB NVME Storage, 1000 GB Data Transfer
 
-  # password will be generated automatically and mailed to the account holder
+  # Password will be generated automatically and mailed to the account holder
 }

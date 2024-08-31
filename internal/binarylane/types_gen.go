@@ -1184,25 +1184,14 @@ type CreateServerRequest struct {
 	// Size The slug of the selected size.
 	Size string `json:"size"`
 
-	// SshKeys This may be either the SSH keys Ids or fingerprints. If this is null or not provided any SSH keys that have been marked as default will be deployed (if the operating system supports SSH keys). Submit an empty array to disable deployment of default keys.
-	SshKeys *[]CreateServerRequest_SshKeys_Item `json:"ssh_keys"`
+	// SshKeys This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys.
+	SshKeys *[]int `json:"ssh_keys"`
 
 	// UserData If provided this will be used to initialise the new server. This must be left null if the Image does not support UserData, see DistributionInfo.Features for more information.
 	UserData *string `json:"user_data"`
 
 	// VpcId Leave null to use default (public) network for the selected region.
 	VpcId *int64 `json:"vpc_id"`
-}
-
-// CreateServerRequestSshKeys0 defines model for .
-type CreateServerRequestSshKeys0 = int
-
-// CreateServerRequestSshKeys1 defines model for .
-type CreateServerRequestSshKeys1 = string
-
-// CreateServerRequest_SshKeys_Item defines model for CreateServerRequest.ssh_keys.Item.
-type CreateServerRequest_SshKeys_Item struct {
-	union json.RawMessage
 }
 
 // CreateServerResponse defines model for CreateServerResponse.
@@ -4016,68 +4005,6 @@ func (t ChangeImage_Image) MarshalJSON() ([]byte, error) {
 }
 
 func (t *ChangeImage_Image) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
-
-// AsCreateServerRequestSshKeys0 returns the union data inside the CreateServerRequest_SshKeys_Item as a CreateServerRequestSshKeys0
-func (t CreateServerRequest_SshKeys_Item) AsCreateServerRequestSshKeys0() (CreateServerRequestSshKeys0, error) {
-	var body CreateServerRequestSshKeys0
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromCreateServerRequestSshKeys0 overwrites any union data inside the CreateServerRequest_SshKeys_Item as the provided CreateServerRequestSshKeys0
-func (t *CreateServerRequest_SshKeys_Item) FromCreateServerRequestSshKeys0(v CreateServerRequestSshKeys0) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeCreateServerRequestSshKeys0 performs a merge with any union data inside the CreateServerRequest_SshKeys_Item, using the provided CreateServerRequestSshKeys0
-func (t *CreateServerRequest_SshKeys_Item) MergeCreateServerRequestSshKeys0(v CreateServerRequestSshKeys0) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsCreateServerRequestSshKeys1 returns the union data inside the CreateServerRequest_SshKeys_Item as a CreateServerRequestSshKeys1
-func (t CreateServerRequest_SshKeys_Item) AsCreateServerRequestSshKeys1() (CreateServerRequestSshKeys1, error) {
-	var body CreateServerRequestSshKeys1
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromCreateServerRequestSshKeys1 overwrites any union data inside the CreateServerRequest_SshKeys_Item as the provided CreateServerRequestSshKeys1
-func (t *CreateServerRequest_SshKeys_Item) FromCreateServerRequestSshKeys1(v CreateServerRequestSshKeys1) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeCreateServerRequestSshKeys1 performs a merge with any union data inside the CreateServerRequest_SshKeys_Item, using the provided CreateServerRequestSshKeys1
-func (t *CreateServerRequest_SshKeys_Item) MergeCreateServerRequestSshKeys1(v CreateServerRequestSshKeys1) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t CreateServerRequest_SshKeys_Item) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *CreateServerRequest_SshKeys_Item) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }
