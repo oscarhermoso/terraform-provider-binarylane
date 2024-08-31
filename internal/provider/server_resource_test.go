@@ -89,6 +89,12 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "size", "std-min"),
 				),
 			},
+			{
+				ResourceName:            "binarylane_server.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "user_data", "wait_for_create", "public_ipv4_count"},
+			},
 		},
 	})
 }

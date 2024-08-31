@@ -78,7 +78,6 @@ func (r *serverFirewallRulesResource) Create(ctx context.Context, req resource.C
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}

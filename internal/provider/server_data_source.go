@@ -81,15 +81,15 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	serverResp, err := d.bc.client.GetServersServerIdWithResponse(ctx, data.Id.ValueInt64())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error reading server: name=%s", data.Id.String()),
+			fmt.Sprintf("Error reading server: name=%s, id=%s", data.Name.ValueString(), data.Id.String()),
 			err.Error(),
 		)
 		return
 	}
 	if serverResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Unexpected HTTP status code reading server: name=%s", data.Id.String()),
-			fmt.Sprintf("Unexpected HTTP status code reading server: %s", serverResp.Body),
+			fmt.Sprintf("Unexpected HTTP status code reading server: name=%s, id=%s", data.Name.ValueString(), data.Id.String()),
+			string(serverResp.Body),
 		)
 		return
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"terraform-provider-binarylane/internal/binarylane"
 	"terraform-provider-binarylane/internal/resources"
 	"time"
@@ -11,10 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -41,7 +44,7 @@ type serverResource struct {
 
 type serverModel struct {
 	resources.ServerModel
-	WaitForCreateSeconds int32       `tfsdk:"wait_for_create"`
+	WaitForCreateSeconds types.Int32 `tfsdk:"wait_for_create"`
 	PublicIpv4Count      types.Int32 `tfsdk:"public_ipv4_count"`
 	PublicIpv4Addresses  types.List  `tfsdk:"public_ipv4_addresses"`
 	PrivateIPv4Addresses types.List  `tfsdk:"private_ipv4_addresses"`
@@ -82,6 +85,9 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Optional: false,
 		Required: false,
 		Computed: true,
+		PlanModifiers: []planmodifier.Int64{
+			int64planmodifier.UseStateForUnknown(),
+		},
 	}
 
 	pw := resp.Schema.Attributes["password"]
@@ -151,8 +157,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Description:         waitDescription,
 		MarkdownDescription: waitDescription,
 		Optional:            true,
-		Computed:            true,
-		Default:             int32default.StaticInt32(0),
+		Computed:            false,
 	}
 
 	publicIpv4CountDescription := "The number of public IPv4 addresses to assign to the server. If this is not provided, the " +
@@ -162,9 +167,13 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		MarkdownDescription: publicIpv4CountDescription,
 		Optional:            true,
 		Computed:            true,
+		Default:             int32default.StaticInt32(1),
 		Validators: []validator.Int32{
 			int32validator.AtLeast(0),
 		},
+		// PlanModifiers: []planmodifier.Int32{
+		// 	int32planmodifier.UseStateForUnknown(),
+		// },
 	}
 
 	publicIpv4AddressesDescription := "The public IPv4 addresses assigned to the server."
@@ -176,6 +185,9 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Optional: false,
 		Required: false,
 		Computed: true,
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.UseStateForUnknown(),
+		},
 	}
 
 	privateIpv4AddressesDescription := "The private IPv4 addresses assigned to the server."
@@ -187,6 +199,9 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Optional: false,
 		Required: false,
 		Computed: true,
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.UseStateForUnknown(),
+		},
 	}
 }
 
@@ -251,20 +266,19 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	data.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
 	data.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
 	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
+	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
+	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
 
-	publicV4AddressCount := 0
 	var publicIpv4Addresses []string
 	var privateIpv4Addresses []string
 
 	for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
 		if v4address.Type == "public" {
-			publicV4AddressCount++
 			publicIpv4Addresses = append(publicIpv4Addresses, v4address.IpAddress)
 		} else {
 			privateIpv4Addresses = append(privateIpv4Addresses, v4address.IpAddress)
 		}
 	}
-	data.PublicIpv4Count = types.Int32Value(int32(publicV4AddressCount))
 	data.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, publicIpv4Addresses)
 	resp.Diagnostics.Append(diags...)
 	data.PrivateIPv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, privateIpv4Addresses)
@@ -273,7 +287,7 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
-	if data.WaitForCreateSeconds <= 0 {
+	if data.WaitForCreateSeconds.ValueInt32() <= 0 {
 		return
 	}
 
@@ -292,7 +306,7 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	timeLimit := time.Now().Add(time.Duration(data.WaitForCreateSeconds) * time.Second)
+	timeLimit := time.Now().Add(time.Duration(data.WaitForCreateSeconds.ValueInt32()) * time.Second)
 	for {
 		tflog.Info(ctx, "Waiting for server to be ready...")
 
@@ -325,7 +339,8 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 	var data serverModel
 
 	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	diags := req.State.Get(ctx, &data)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -344,8 +359,9 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	if serverResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
-			"Unexpected HTTP status code reading server",
-			fmt.Sprintf("Received %s reading server: id=%s, name=%s. Details: %s", serverResp.Status(), data.Name.ValueString(), data.Id.String(), serverResp.Body))
+			fmt.Sprintf("Unexpected HTTP status code %s reading server: name=%s, id=%s", serverResp.Status(), data.Name.ValueString(), data.Id.String()),
+			string(serverResp.Body),
+		)
 		return
 	}
 
@@ -354,6 +370,24 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 	data.Image = types.StringValue(*serverResp.JSON200.Server.Image.Slug)
 	data.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
 	data.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
+	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
+	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
+	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
+
+	var publicIpv4Addresses []string
+	var privateIpv4Addresses []string
+
+	for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
+		if v4address.Type == "public" {
+			publicIpv4Addresses = append(publicIpv4Addresses, v4address.IpAddress)
+		} else {
+			privateIpv4Addresses = append(privateIpv4Addresses, v4address.IpAddress)
+		}
+	}
+	data.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, publicIpv4Addresses)
+	resp.Diagnostics.Append(diags...)
+	data.PrivateIPv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, privateIpv4Addresses)
+	resp.Diagnostics.Append(diags...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -415,19 +449,19 @@ func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-// func (r *serverResource) ImportState(
-// 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
-// ) {
-// 	id, err := strconv.ParseInt(req.ID, 10, 32)
+func (r *serverResource) ImportState(
+	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
+) {
+	id, err := strconv.ParseInt(req.ID, 10, 32)
 
-// 	if err != nil {
-// 		resp.Diagnostics.AddError(
-// 			"Error importing server",
-// 			"Could not import server, unexpected error (ID should be an integer): "+err.Error(),
-// 		)
-// 		return
-// 	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error importing server",
+			"Could not import server, unexpected error (ID should be an integer): "+err.Error(),
+		)
+		return
+	}
 
-// 	diags := resp.State.SetAttribute(ctx, path.Root("id"), int32(id))
-// 	resp.Diagnostics.Append(diags...)
-// }
+	diags := resp.State.SetAttribute(ctx, path.Root("id"), int32(id))
+	resp.Diagnostics.Append(diags...)
+}
