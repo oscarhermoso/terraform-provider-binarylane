@@ -12,6 +12,13 @@ resource "random_password" "cluster_token" {
   special = false
 }
 
+# SSH Key
+# -------
+resource "binarylane_ssh_key" "example" {
+  name       = "tf-example-k8s"
+  public_key = file("~/.ssh/id_ed25519.pub")
+}
+
 # Virtual Private Cloud
 # ---------------------
 resource "binarylane_vpc" "example" {
@@ -42,9 +49,11 @@ resource "binarylane_server" "server" {
   image             = "ubuntu-24.04"
   size              = "std-min"
   password          = random_password.binarylane.result
+  ssh_keys          = [binarylane_ssh_key.example.id]
   vpc_id            = binarylane_vpc.example.id
   public_ipv4_count = 1
   user_data         = sensitive(data.cloudinit_config.server.rendered)
+  wait_for_create   = 60 # Must wait for the server to be ready before creating firewall rules
 }
 
 # k3s Agents
@@ -70,9 +79,11 @@ resource "binarylane_server" "agent" {
   image             = "ubuntu-24.04"
   size              = "std-min"
   password          = random_password.binarylane.result
+  ssh_keys          = [binarylane_ssh_key.example.id]
   vpc_id            = binarylane_vpc.example.id
   public_ipv4_count = 1
   user_data         = sensitive(data.cloudinit_config.agent.rendered)
+  wait_for_create   = 60 # Must wait for the server to be ready before creating firewall rules
 }
 
 # Virtual Private Cloud Routing
@@ -88,8 +99,13 @@ resource "binarylane_vpc_route_entries" "example" {
   ]
 }
 
+locals {
+  agent_ips  = flatten([for _, a in binarylane_server.agent : a.private_ipv4_addresses])
+  server_ips = flatten([for _, s in binarylane_server.server : s.private_ipv4_addresses])
+}
+
 resource "binarylane_server_firewall_rules" "example" {
-  for_each = { for server in flatten([binarylane_server.server, binarylane_server.agent]) : server.id => server }
+  for_each = { for server in concat(binarylane_server.server, binarylane_server.agent) : server.name => server }
 
   server_id = each.value.id
 
@@ -97,8 +113,8 @@ resource "binarylane_server_firewall_rules" "example" {
     {
       description           = "K3s supervisor and Kubernetes API Server"
       protocol              = "tcp"
-      source_addresses      = flatten([for _, a in binarylane_server.agent : a.private_ipv4_addresses])
-      destination_addresses = flatten([for _, s in binarylane_server.server : s.private_ipv4_addresses])
+      source_addresses      = local.agent_ips
+      destination_addresses = local.server_ips
       destination_ports     = ["6443"]
       action                = "accept"
     },
