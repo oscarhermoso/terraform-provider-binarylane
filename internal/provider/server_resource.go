@@ -29,9 +29,9 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource              = &serverResource{}
-	_ resource.ResourceWithConfigure = &serverResource{}
-	// _ resource.ResourceWithImportState = &serverResource{}
+	_ resource.Resource                = &serverResource{}
+	_ resource.ResourceWithConfigure   = &serverResource{}
+	_ resource.ResourceWithImportState = &serverResource{}
 )
 
 // Helper function to simplify the provider implementation.
@@ -45,10 +45,11 @@ type serverResource struct {
 
 type serverModel struct {
 	resources.ServerModel
-	WaitForCreateSeconds types.Int32 `tfsdk:"wait_for_create"`
-	PublicIpv4Count      types.Int32 `tfsdk:"public_ipv4_count"`
-	PublicIpv4Addresses  types.List  `tfsdk:"public_ipv4_addresses"`
-	PrivateIPv4Addresses types.List  `tfsdk:"private_ipv4_addresses"`
+	WaitForCreateSeconds types.Int32  `tfsdk:"wait_for_create"`
+	PublicIpv4Count      types.Int32  `tfsdk:"public_ipv4_count"`
+	PublicIpv4Addresses  types.List   `tfsdk:"public_ipv4_addresses"`
+	PrivateIPv4Addresses types.List   `tfsdk:"private_ipv4_addresses"`
+	Permalink            types.String `tfsdk:"permalink"`
 }
 
 func (d *serverResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -172,9 +173,6 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Validators: []validator.Int32{
 			int32validator.AtLeast(0),
 		},
-		// PlanModifiers: []planmodifier.Int32{
-		// 	int32planmodifier.UseStateForUnknown(),
-		// },
 	}
 
 	publicIpv4AddressesDescription := "The public IPv4 addresses assigned to the server."
@@ -203,6 +201,15 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		PlanModifiers: []planmodifier.List{
 			listplanmodifier.UseStateForUnknown(),
 		},
+	}
+
+	resp.Schema.Attributes["permalink"] = &schema.StringAttribute{
+		Description:         "TODO",
+		MarkdownDescription: "TODO",
+		// read only
+		Optional: false,
+		Required: false,
+		Computed: true,
 	}
 }
 
@@ -270,6 +277,7 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
 	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
 	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
+	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
 
 	var publicIpv4Addresses []string
 	var privateIpv4Addresses []string
@@ -375,6 +383,7 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
 	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
 	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
+	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
 
 	var publicIpv4Addresses []string
 	var privateIpv4Addresses []string

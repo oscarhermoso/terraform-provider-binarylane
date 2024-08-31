@@ -110,14 +110,15 @@ resource "binarylane_server_firewall_rules" "example" {
   server_id = each.value.id
 
   firewall_rules = [
-    {
-      description           = "K3s supervisor and Kubernetes API Server"
-      protocol              = "tcp"
-      source_addresses      = local.agent_ips
-      destination_addresses = local.server_ips
-      destination_ports     = ["6443"]
-      action                = "accept"
-    },
+    # TODO: This only works if you uncomment AFTER creating servers
+    # {
+    #   description           = "K3s supervisor and Kubernetes API Server"
+    #   protocol              = "tcp"
+    #   source_addresses      = ["0.0.0.0/0"]
+    #   destination_addresses = local.server_ips
+    #   destination_ports     = ["6443"]
+    #   action                = "accept"
+    # },
     {
       description           = "Flannel VXLAN"
       protocol              = "udp"

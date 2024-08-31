@@ -80,6 +80,7 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("binarylane_server.test", "port_blocking", "true"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "ssh_keys.#", "1"), // Only the test SSH key should be registered
 					resource.TestCheckResourceAttrPair("binarylane_server.test", "ssh_keys.0", "binarylane_ssh_key.test", "id"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "permalink"),
 
 					// Verify data source values
 					resource.TestCheckResourceAttrPair("data.binarylane_server.test", "id", "binarylane_server.test", "id"),
@@ -87,6 +88,7 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "region", "per"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "image", "debian-12"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "size", "std-min"),
+					resource.TestCheckResourceAttrPair("data.binarylane_server.test", "permalink", "binarylane_server.test", "permalink"),
 				),
 			},
 			{

@@ -7,6 +7,7 @@ import (
 	"terraform-provider-binarylane/internal/binarylane"
 	"terraform-provider-binarylane/internal/resources"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -17,9 +18,9 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource              = &sshKeyResource{}
-	_ resource.ResourceWithConfigure = &sshKeyResource{}
-	// _ resource.ResourceWithImportState = &serverResource{}
+	_ resource.Resource                = &sshKeyResource{}
+	_ resource.ResourceWithConfigure   = &sshKeyResource{}
+	_ resource.ResourceWithImportState = &serverResource{}
 )
 
 func NewSshKeyResource() resource.Resource {
@@ -217,7 +218,7 @@ func (r *sshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-// func (r *sshKeyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-// 	// Retrieve import ID and save to id attribute
-// 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-// }
+func (r *sshKeyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Retrieve import ID and save to id attribute
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
