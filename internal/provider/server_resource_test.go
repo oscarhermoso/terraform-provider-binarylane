@@ -95,6 +95,13 @@ echo "Hello World" > /var/tmp/output.txt
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "user_data", "wait_for_create", "public_ipv4_count"},
 			},
+			{
+				ResourceName:            "binarylane_server.test",
+				ImportState:             true,
+				ImportStateId:           "tf-test-server-resource",
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "user_data", "wait_for_create", "public_ipv4_count"},
+			},
 		},
 	})
 }

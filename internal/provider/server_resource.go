@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"terraform-provider-binarylane/internal/binarylane"
 	"terraform-provider-binarylane/internal/resources"
@@ -453,15 +454,41 @@ func (r *serverResource) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
 	id, err := strconv.ParseInt(req.ID, 10, 32)
+	if err == nil {
+		diags := resp.State.SetAttribute(ctx, path.Root("id"), int32(id))
+		resp.Diagnostics.Append(diags...)
+	} else {
+		hostname := req.ID
+		params := binarylane.GetServersParams{
+			Hostname: &hostname,
+		}
 
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error importing server",
-			"Could not import server, unexpected error (ID should be an integer): "+err.Error(),
-		)
-		return
+		serverResp, err := r.bc.client.GetServersWithResponse(ctx, &params)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error getting server: hostname=%s", hostname), err.Error())
+			return
+		}
+
+		if serverResp.StatusCode() != http.StatusOK {
+			resp.Diagnostics.AddError(
+				"Unexpected HTTP status code getting server",
+				fmt.Sprintf("Received %s reading server: hostname=%s. Details: %s", serverResp.Status(), hostname,
+					serverResp.Body))
+			return
+		}
+
+		servers := *serverResp.JSON200.Servers
+		idx := slices.IndexFunc(servers, func(s binarylane.Server) bool { return *s.Name == hostname })
+		if idx == -1 {
+			resp.Diagnostics.AddError(
+				"Could not find server by hostname",
+				fmt.Sprintf("Error finding server: hostname=%s", hostname),
+			)
+			return
+		}
+		server := servers[idx]
+
+		diags := resp.State.SetAttribute(ctx, path.Root("id"), int32(*server.Id))
+		resp.Diagnostics.Append(diags...)
 	}
-
-	diags := resp.State.SetAttribute(ctx, path.Root("id"), int32(id))
-	resp.Diagnostics.Append(diags...)
 }
