@@ -10,4 +10,7 @@ curl -sfL https://get.k3s.io | sh -s - agent \
 unset K3S_TOKEN
 unset K3S_URL
 
+# Disable firewall recommended
+ufw disable
+
 echo "K3s Node Join Completed"

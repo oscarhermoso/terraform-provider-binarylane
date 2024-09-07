@@ -35,7 +35,13 @@ terraform apply
 
 
 ```sh
-TF_ACC=1 go test -v ./...
+TF_DEBUG=1 BINARYLANE_API_TOKEN=********* TF_ACC=1 go test -v ./...
+```
+
+### Update modules
+
+```sh
+go get -u && go mod tidy && go generate
 ```
 
 ### Adding resources/data sources to the provider

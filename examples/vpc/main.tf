@@ -9,13 +9,13 @@ terraform {
 provider "binarylane" {}
 
 resource "binarylane_vpc" "example" {
-  name     = "tf-example"
+  name     = "tf-example-vpc"
   ip_range = "10.240.0.0/16"
 }
 
 # Web & NAT server
 resource "binarylane_server" "web" {
-  name              = "tf-vpc-example-web"
+  name              = "tf-example-vpc-web"
   region            = "per"
   image             = "ubuntu-24.04"
   size              = "std-min"
@@ -25,7 +25,7 @@ resource "binarylane_server" "web" {
 
 # Database server
 resource "binarylane_server" "db" {
-  name              = "tf-vpc-example-db"
+  name              = "tf-example-vpc-db"
   region            = "per"
   image             = "ubuntu-24.04"
   size              = "std-min"
@@ -35,7 +35,7 @@ resource "binarylane_server" "db" {
 
 # VPN server
 resource "binarylane_server" "vpn" {
-  name              = "tf-vpc-example-vpn"
+  name              = "tf-example-vpc-vpn"
   region            = "per"
   image             = "ubuntu-24.04"
   size              = "std-min"

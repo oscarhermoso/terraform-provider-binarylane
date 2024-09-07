@@ -56,6 +56,30 @@ resource "binarylane_server" "server" {
   wait_for_create   = 60 # Must wait for the server to be ready before creating firewall rules
 }
 
+data "external" "kubeconfig" {
+  program = [
+    "/usr/bin/ssh",
+    "-o UserKnownHostsFile=/dev/null",
+    "-o StrictHostKeyChecking=no",
+    "root@${binarylane_server.server.0.permalink}",
+    "echo '{\"kubeconfig\":\"'$(cat /etc/rancher/k3s/k3s.yaml | base64)'\"}'",
+  ]
+}
+
+resource "local_sensitive_file" "kubeconfig" {
+  depends_on = [binarylane_server.server]
+
+  content = replace(
+    base64decode(
+      replace(data.external.kubeconfig.result.kubeconfig, " ", "")
+    ),
+    "server: https://127.0.0.1:6443",
+    "server: https://${binarylane_server.server.0.permalink}:6443",
+  )
+  filename        = "${path.module}/.kube/config"
+  file_permission = "0600"
+}
+
 # k3s Agents
 # ----------
 data "cloudinit_config" "agent" {
@@ -110,14 +134,15 @@ resource "binarylane_server_firewall_rules" "example" {
   server_id = each.value.id
 
   firewall_rules = [
-    {
-      description           = "K3s supervisor and Kubernetes API Server"
-      protocol              = "tcp"
-      source_addresses      = local.agent_ips
-      destination_addresses = local.server_ips
-      destination_ports     = ["6443"]
-      action                = "accept"
-    },
+    # TODO: Due to a bug, this only works if you uncomment AFTER creating servers
+    # {
+    #   description           = "K3s supervisor and Kubernetes API Server"
+    #   protocol              = "tcp"
+    #   source_addresses      = ["0.0.0.0/0"]
+    #   destination_addresses = local.server_ips
+    #   destination_ports     = ["6443"]
+    #   action                = "accept"
+    # },
     {
       description           = "Flannel VXLAN"
       protocol              = "udp"
@@ -132,6 +157,22 @@ resource "binarylane_server_firewall_rules" "example" {
       source_addresses      = [binarylane_vpc.example.ip_range]
       destination_addresses = [binarylane_vpc.example.ip_range]
       destination_ports     = ["10250"]
+      action                = "accept"
+    },
+    {
+      description           = "SSH"
+      protocol              = "udp"
+      source_addresses      = ["0.0.0.0/0"]
+      destination_addresses = [binarylane_vpc.example.ip_range]
+      destination_ports     = ["22"]
+      action                = "accept"
+    },
+    {
+      description           = "HTTP"
+      protocol              = "tcp"
+      source_addresses      = ["0.0.0.0/0"]
+      destination_addresses = [binarylane_vpc.example.ip_range]
+      destination_ports     = ["80"]
       action                = "accept"
     },
   ]

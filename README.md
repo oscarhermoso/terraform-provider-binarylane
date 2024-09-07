@@ -1,6 +1,6 @@
 # terraform-provider-binarylane
 
-See the examples in the [examples directory](./examples/basic/main.tf).
+See the examples in the [examples directory](./examples/basic/README.md).
 
 ```terraform
 resource "binarylane_server" "example" {
@@ -10,15 +10,33 @@ resource "binarylane_server" "example" {
 }
 ```
 
-## WIP
+## Progress
 
-If somehow you use this in production I would be pretty impressed.
+Planned features:
 
-- [x] Create/delete a server when runing locally
-- [x] Publish
-  - [x] [Terraform Registry](https://registry.terraform.io/providers/oscarhermoso/binarylane/latest/docs/resources/server)
-  - [x] OpenTofu
-- [ ] Deploy the rest of the owl
+- [x] Servers
+  - [x] Firewall Rules
+  - [x] Cloud Init
+  - [ ] Updating server properties
+  - [ ] Backups
+  - [ ] Software
+  - [ ] IPV6
+  - [ ] Alerts
+- [x] SSH Keys
+- [x] Virtual Private Cloud
+- [ ] Images
+- [ ] Load Balancers
+- [ ] DNS
+- [x] Docs
+  - [x] Generated docs
+  - [ ] Review & fill out remaining descriptions
+  - [ ] Include examples in docs
+- [x] Examples
+  - [x] Basic
+  - [x] Cloud Init
+  - [ ] NixOS
+  - [ ] Virtual Private Cloud
+  - [ ] Kubernetes
 
 ## Parameters
 
@@ -78,7 +96,10 @@ jq '[ .regions[] | .slug ] | sort' tmp/regions.json
 ]
 ```
 
-Sizes (not all sizes are available in all regions):
+### Sizes
+
+<details>
+<summary>VM size</summary>
 
 ```sh
 curl -X GET "https://api.binarylane.com.au/v2/sizes" \
@@ -86,6 +107,7 @@ curl -X GET "https://api.binarylane.com.au/v2/sizes" \
 
 jq '[ .sizes[] | .slug ] | sort' tmp/sizes.json
 ```
+</details>
 
 ```json
 [
