@@ -3,31 +3,25 @@ terraform {
     binarylane = {
       source = "oscarhermoso/binarylane"
     }
+    kubectl = {
+      source  = "alekc/kubectl"
+      version = ">= 2.0.0"
+    }
   }
 }
 
 provider "binarylane" {}
 
-output "permalink" {
-  value = "${binarylane_server.server.0.permalink}:6443"
-}
-
 provider "helm" {
   kubernetes {
-    host = "${binarylane_server.server.0.permalink}:6443"
-    # token    = random_password.cluster_token.result # TODO: This token doesn't work, use client certificate instead
-    insecure = true # TODO
+    host        = "${binarylane_server.server.0.permalink}:6443"
+    config_path = local_sensitive_file.kubeconfig.filename
+    insecure    = true # TODO
   }
 }
 
-resource "helm_release" "nginx_ingress" {
-  name = "nginx-ingress-controller"
-
-  repository = "https://charts.bitnami.com/bitnami"
-  chart      = "nginx-ingress-controller"
-
-  set {
-    name  = "service.type"
-    value = binarylane_server.server.0.private_ipv4_addresses.0
-  }
+provider "kubectl" {
+  host        = "${binarylane_server.server.0.permalink}:6443"
+  config_path = local_sensitive_file.kubeconfig.filename
+  insecure    = true # TODO
 }

@@ -10,7 +10,7 @@ curl -sfL https://get.k3s.io | sh -s - server \
 # --disable-cloud-controller \
 # --disable servicelb \
 # --disable local-storage \
-# --disable traefik \
+# --disable traefik
 
 unset INSTALL_K3S_NAME
 unset K3S_TOKEN
