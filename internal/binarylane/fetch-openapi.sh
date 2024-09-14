@@ -21,9 +21,6 @@ cat <<<$(jq '.paths["/account/keys/{key_id}"].delete.parameters[0].schema |= del
 # Remove the "/paths/{image_id}" path because its duplicated by "/images/{image_id_or_slug}"
 cat <<<$(jq 'del(.paths."/images/{image_id}")' $OPENAPI_FILE) >$OPENAPI_FILE
 
-# Override descriptions
-cat <<<$(jq '.components.schemas.CreateServerRequest.properties.ssh_keys.description |= "This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys."' $OPENAPI_FILE) >$OPENAPI_FILE
-
 # Add x-oapi-codegen-extra-tags so Go structs can be reflected
 
 ## RouteEntryRequest

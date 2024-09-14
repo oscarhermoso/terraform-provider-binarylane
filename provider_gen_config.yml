@@ -29,27 +29,21 @@ resources:
           server_id: id
         overrides:
           backups:
-            type: bool
             description: >
               If true this will enable two daily backups for the server. `options.daily_backups` will override this
               value if provided. Setting this to false has no effect.
-            optional: true
-            default:
-              static: false
-            computed: false
           image:
-            type: string
             description: The slug of the selected operating system.
-            example: 'ubuntu-24.04'
           password:
-            type: string
             description: >
               If this is provided the specified or default remote user's account password will be set to this value.
-              Only valid if the server supports password change actions (check server.password_change_supported via the
-              servers endpoint). If omitted and the server supports password change actions a random password will be
-              generated and emailed to the account email address.
-            sensitive: true
-            optional_required: optional
+              Only valid if the server supports password change actions. If omitted and the server supports password
+              change actions a random password will be generated and emailed to the account email address.
+          ssh_keys:
+            description: >
+              This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as
+              default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to
+              disable deployment of default keys.
       ignores:
         - ipv6
         - licenses

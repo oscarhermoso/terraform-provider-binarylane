@@ -3,12 +3,12 @@
 page_title: "binarylane_vpc Resource - terraform-provider-binarylane"
 subcategory: ""
 description: |-
-  TODO
+  
 ---
 
 # binarylane_vpc (Resource)
 
-TODO
+
 
 
 

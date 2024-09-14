@@ -1184,7 +1184,7 @@ type CreateServerRequest struct {
 	// Size The slug of the selected size.
 	Size string `json:"size"`
 
-	// SshKeys This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys.
+	// SshKeys This may be either the SSH keys Ids or fingerprints. If this is null or not provided any SSH keys that have been marked as default will be deployed (if the operating system supports SSH keys). Submit an empty array to disable deployment of default keys.
 	SshKeys *[]int `json:"ssh_keys"`
 
 	// UserData If provided this will be used to initialise the new server. This must be left null if the Image does not support UserData, see DistributionInfo.Features for more information.
@@ -1363,6 +1363,9 @@ type DistributionSurcharges struct {
 type Domain struct {
 	// CurrentNameservers The current authoritative name servers for this domain.
 	CurrentNameservers *[]string `json:"current_nameservers,omitempty"`
+
+	// Id The ID of this domain.
+	Id *int64 `json:"id,omitempty"`
 
 	// Name The name of the domain.
 	Name *string `json:"name,omitempty"`
@@ -3176,6 +3179,18 @@ type GetDomainsParams struct {
 // PostDomainsJSONBody defines parameters for PostDomains.
 type PostDomainsJSONBody = DomainRequest
 
+// DeleteDomainsDomainNameParamsDomainName0 defines parameters for DeleteDomainsDomainName.
+type DeleteDomainsDomainNameParamsDomainName0 = int
+
+// DeleteDomainsDomainNameParamsDomainName1 defines parameters for DeleteDomainsDomainName.
+type DeleteDomainsDomainNameParamsDomainName1 = string
+
+// GetDomainsDomainNameParamsDomainName0 defines parameters for GetDomainsDomainName.
+type GetDomainsDomainNameParamsDomainName0 = int
+
+// GetDomainsDomainNameParamsDomainName1 defines parameters for GetDomainsDomainName.
+type GetDomainsDomainNameParamsDomainName1 = string
+
 // GetDomainsDomainNameRecordsParams defines parameters for GetDomainsDomainNameRecords.
 type GetDomainsDomainNameRecordsParams struct {
 	// Type
@@ -3203,11 +3218,41 @@ type GetDomainsDomainNameRecordsParams struct {
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
+// GetDomainsDomainNameRecordsParamsDomainName0 defines parameters for GetDomainsDomainNameRecords.
+type GetDomainsDomainNameRecordsParamsDomainName0 = int
+
+// GetDomainsDomainNameRecordsParamsDomainName1 defines parameters for GetDomainsDomainNameRecords.
+type GetDomainsDomainNameRecordsParamsDomainName1 = string
+
 // PostDomainsDomainNameRecordsJSONBody defines parameters for PostDomainsDomainNameRecords.
 type PostDomainsDomainNameRecordsJSONBody = DomainRecordRequest
 
+// PostDomainsDomainNameRecordsParamsDomainName0 defines parameters for PostDomainsDomainNameRecords.
+type PostDomainsDomainNameRecordsParamsDomainName0 = int
+
+// PostDomainsDomainNameRecordsParamsDomainName1 defines parameters for PostDomainsDomainNameRecords.
+type PostDomainsDomainNameRecordsParamsDomainName1 = string
+
+// DeleteDomainsDomainNameRecordsRecordIdParamsDomainName0 defines parameters for DeleteDomainsDomainNameRecordsRecordId.
+type DeleteDomainsDomainNameRecordsRecordIdParamsDomainName0 = int
+
+// DeleteDomainsDomainNameRecordsRecordIdParamsDomainName1 defines parameters for DeleteDomainsDomainNameRecordsRecordId.
+type DeleteDomainsDomainNameRecordsRecordIdParamsDomainName1 = string
+
+// GetDomainsDomainNameRecordsRecordIdParamsDomainName0 defines parameters for GetDomainsDomainNameRecordsRecordId.
+type GetDomainsDomainNameRecordsRecordIdParamsDomainName0 = int
+
+// GetDomainsDomainNameRecordsRecordIdParamsDomainName1 defines parameters for GetDomainsDomainNameRecordsRecordId.
+type GetDomainsDomainNameRecordsRecordIdParamsDomainName1 = string
+
 // PutDomainsDomainNameRecordsRecordIdJSONBody defines parameters for PutDomainsDomainNameRecordsRecordId.
 type PutDomainsDomainNameRecordsRecordIdJSONBody = DomainRecordRequest
+
+// PutDomainsDomainNameRecordsRecordIdParamsDomainName0 defines parameters for PutDomainsDomainNameRecordsRecordId.
+type PutDomainsDomainNameRecordsRecordIdParamsDomainName0 = int
+
+// PutDomainsDomainNameRecordsRecordIdParamsDomainName1 defines parameters for PutDomainsDomainNameRecordsRecordId.
+type PutDomainsDomainNameRecordsRecordIdParamsDomainName1 = string
 
 // GetFailoverIpsServerIdParams defines parameters for GetFailoverIpsServerId.
 type GetFailoverIpsServerIdParams struct {

@@ -32,13 +32,18 @@ func (d *vpcRouteEntriesDataSource) Metadata(ctx context.Context, req datasource
 }
 
 func (d *vpcRouteEntriesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	ds, err := convertResourceSchemaToDataSourceSchema(resources.VpcRouteEntriesResourceSchema(ctx))
+	ds, err := convertResourceSchemaToDataSourceSchema(
+		resources.VpcRouteEntriesResourceSchema(ctx),
+		AttributeConfig{
+			RequiredAttributes: &[]string{"vpc_id"},
+		},
+	)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to convert resource schema to data source schema", err.Error())
 		return
 	}
 	resp.Schema = *ds
-	resp.Schema.Description = "TODO"
+	// resp.Schema.Description = "TODO"
 
 	// Overrides
 	vpcId := resp.Schema.Attributes["vpc_id"]

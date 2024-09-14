@@ -3,12 +3,12 @@
 page_title: "binarylane_vpc_route_entries Data Source - terraform-provider-binarylane"
 subcategory: ""
 description: |-
-  TODO
+  
 ---
 
 # binarylane_vpc_route_entries (Data Source)
 
-TODO
+
 
 
 
@@ -19,14 +19,14 @@ TODO
 
 - `vpc_id` (Number) The target vpc id.
 
-### Optional
+### Read-Only
 
 - `route_entries` (List of Object) Submit null to leave unaltered, submit an empty list to clear all route entries. It is not possible to PATCH individual route entries, to alter a route entry submit the entire list of route entries you wish to save. (see [below for nested schema](#nestedatt--route_entries))
 
 <a id="nestedatt--route_entries"></a>
 ### Nested Schema for `route_entries`
 
-Optional:
+Read-Only:
 
 - `description` (String)
 - `destination` (String)
