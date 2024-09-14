@@ -3,12 +3,12 @@
 page_title: "binarylane_server_firewall_rules Resource - terraform-provider-binarylane"
 subcategory: ""
 description: |-
-  TODO
+  
 ---
 
 # binarylane_server_firewall_rules (Resource)
 
-TODO
+
 
 
 

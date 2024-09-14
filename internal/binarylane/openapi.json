@@ -8,7 +8,7 @@
       "url": "https://support.binarylane.com.au",
       "email": "support@binarylane.com.au"
     },
-    "version": "0.24.4",
+    "version": "0.25.0",
     "x-logo": {
       "url": "https://www.binarylane.com.au/res/images/binarylane/logo.png",
       "backgroundColor": "#000000",
@@ -695,10 +695,18 @@
           {
             "name": "domain_name",
             "in": "path",
-            "description": "The name of the domain to fetch.",
+            "description": "The name or domain ID of the domain to fetch.",
             "required": true,
             "schema": {
-              "type": "string"
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "example": 5
             }
           }
         ],
@@ -744,10 +752,18 @@
           {
             "name": "domain_name",
             "in": "path",
-            "description": "The name of the domain to delete.",
+            "description": "The name or domain ID of the domain to delete.",
             "required": true,
             "schema": {
-              "type": "string"
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "example": 5
             }
           }
         ],
@@ -788,10 +804,18 @@
           {
             "name": "domain_name",
             "in": "path",
-            "description": "The domain name for which records should be listed.",
+            "description": "The domain name or domain ID for for which records should be listed.",
             "required": true,
             "schema": {
-              "type": "string"
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "example": 5
             }
           },
           {
@@ -883,10 +907,18 @@
           {
             "name": "domain_name",
             "in": "path",
-            "description": "The domain name for which the record should be created.",
+            "description": "The domain name or domain ID for for which the record should be created.",
             "required": true,
             "schema": {
-              "type": "string"
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "example": 5
             }
           }
         ],
@@ -958,10 +990,18 @@
           {
             "name": "domain_name",
             "in": "path",
-            "description": "The domain name for which the record should be fetched.",
+            "description": "The domain name or domain ID for for which the record should be fetched.",
             "required": true,
             "schema": {
-              "type": "string"
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "example": 5
             }
           },
           {
@@ -1017,10 +1057,18 @@
           {
             "name": "domain_name",
             "in": "path",
-            "description": "The domain name for which the record should be updated.",
+            "description": "The domain name or domain ID for for which the record should be updated.",
             "required": true,
             "schema": {
-              "type": "string"
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "example": 5
             }
           },
           {
@@ -1100,10 +1148,18 @@
           {
             "name": "domain_name",
             "in": "path",
-            "description": "The domain name for which the record should be deleted.",
+            "description": "The domain name or domain ID for which the record should be deleted.",
             "required": true,
             "schema": {
-              "type": "string"
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "example": 5
             }
           },
           {
@@ -10103,7 +10159,7 @@
               "example": 5,
               "type": "integer"
             },
-            "description": "This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys.",
+            "description": "This may be either the SSH keys Ids or fingerprints. If this is null or not provided any SSH keys that have been marked as default will be deployed (if the operating system supports SSH keys). Submit an empty array to disable deployment of default keys.",
             "nullable": true
           },
           "options": {
@@ -10517,11 +10573,18 @@
       "Domain": {
         "required": [
           "current_nameservers",
+          "id",
           "name",
           "zone_file"
         ],
         "type": "object",
         "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The ID of this domain.",
+            "format": "int64",
+            "readOnly": true
+          },
           "name": {
             "minLength": 1,
             "type": "string",

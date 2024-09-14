@@ -32,7 +32,12 @@ func (d *serverFirewallRulesDataSource) Metadata(ctx context.Context, req dataso
 }
 
 func (d *serverFirewallRulesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	ds, err := convertResourceSchemaToDataSourceSchema(resources.ServerFirewallRulesResourceSchema(ctx))
+	ds, err := convertResourceSchemaToDataSourceSchema(
+		resources.ServerFirewallRulesResourceSchema(ctx),
+		AttributeConfig{
+			RequiredAttributes: &[]string{"server_id"},
+		},
+	)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to convert resource schema to data source schema", err.Error())
 		return

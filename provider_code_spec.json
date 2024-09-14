@@ -32,7 +32,7 @@
 						"name": "password",
 						"string": {
 							"computed_optional_required": "computed_optional",
-							"description": "If this is provided the specified or default remote user's account password will be set to this value. Only valid if the server supports password change actions (check server.password_change_supported via the servers endpoint). If omitted and the server supports password change actions a random password will be generated and emailed to the account email address.\n"
+							"description": "If this is provided the specified or default remote user's account password will be set to this value. Only valid if the server supports password change actions. If omitted and the server supports password change actions a random password will be generated and emailed to the account email address.\n"
 						}
 					},
 					{
@@ -87,7 +87,7 @@
 							"element_type": {
 								"int64": {}
 							},
-							"description": "This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys."
+							"description": "This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys.\n"
 						}
 					},
 					{

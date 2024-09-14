@@ -50,14 +50,19 @@ func (d *vpcDataSource) Metadata(ctx context.Context, req datasource.MetadataReq
 }
 
 func (d *vpcDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	ds, err := convertResourceSchemaToDataSourceSchema(resources.VpcResourceSchema(ctx))
+	ds, err := convertResourceSchemaToDataSourceSchema(
+		resources.VpcResourceSchema(ctx),
+		AttributeConfig{
+			RequiredAttributes: &[]string{"id"},
+		},
+	)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to convert resource schema to data source schema", err.Error())
 		return
 	}
 
 	resp.Schema = *ds
-	resp.Schema.Description = "TODO"
+	// resp.Schema.Description = "TODO"
 }
 
 func (d *vpcDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

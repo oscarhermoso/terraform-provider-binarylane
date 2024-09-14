@@ -43,7 +43,7 @@ func (r *vpcRouteEntriesResource) Metadata(ctx context.Context, req resource.Met
 
 func (r *vpcRouteEntriesResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = resources.VpcRouteEntriesResourceSchema(ctx)
-	resp.Schema.Description = "TODO"
+	// resp.Schema.Description = "TODO"
 
 	// Overrides
 	vpcId := resp.Schema.Attributes["vpc_id"]

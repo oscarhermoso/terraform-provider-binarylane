@@ -55,7 +55,7 @@ func (r *sshKeyResource) Metadata(ctx context.Context, req resource.MetadataRequ
 
 func (r *sshKeyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = resources.SshKeyResourceSchema(ctx)
-	resp.Schema.Description = "TODO"
+	// resp.Schema.Description = "TODO"
 
 	// Overrides
 	default_ := resp.Schema.Attributes["default"]

@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	d_schema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -9,7 +10,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func convertResourceSchemaToDataSourceSchema(rs r_schema.Schema) (*d_schema.Schema, error) {
+type AttributeConfig struct {
+	RequiredAttributes *[]string
+	OptionalAttributes *[]string
+	ExcludedAttributes *[]string
+}
+
+func convertResourceSchemaToDataSourceSchema(rs r_schema.Schema, cfg AttributeConfig) (*d_schema.Schema, error) {
 	ds := d_schema.Schema{
 		Attributes:          make(map[string]d_schema.Attribute, len(rs.Attributes)),
 		Blocks:              make(map[string]d_schema.Block),
@@ -18,12 +25,19 @@ func convertResourceSchemaToDataSourceSchema(rs r_schema.Schema) (*d_schema.Sche
 		DeprecationMessage:  rs.GetDeprecationMessage(),
 	}
 	for name, attr := range rs.Attributes {
+		if cfg.ExcludedAttributes != nil && slices.Contains(*cfg.ExcludedAttributes, name) {
+			continue
+		}
+
+		required := cfg.RequiredAttributes != nil && slices.Contains(*cfg.RequiredAttributes, name)
+		optional := cfg.OptionalAttributes != nil && slices.Contains(*cfg.OptionalAttributes, name)
 		switch attr.GetType() {
 		case types.BoolType:
 			ds.Attributes[name] = d_schema.BoolAttribute{
 				Description:         attr.GetDescription(),
-				Optional:            attr.IsOptional(),
-				Computed:            true,
+				Required:            required,
+				Optional:            optional,
+				Computed:            !required,
 				Sensitive:           attr.IsSensitive(),
 				MarkdownDescription: attr.GetMarkdownDescription(),
 				DeprecationMessage:  attr.GetDeprecationMessage(),
@@ -31,8 +45,9 @@ func convertResourceSchemaToDataSourceSchema(rs r_schema.Schema) (*d_schema.Sche
 		case types.DynamicType:
 			ds.Attributes[name] = d_schema.DynamicAttribute{
 				Description:         attr.GetDescription(),
-				Optional:            attr.IsOptional(),
-				Computed:            true,
+				Required:            required,
+				Optional:            optional,
+				Computed:            !required,
 				Sensitive:           attr.IsSensitive(),
 				MarkdownDescription: attr.GetMarkdownDescription(),
 				DeprecationMessage:  attr.GetDeprecationMessage(),
@@ -40,8 +55,9 @@ func convertResourceSchemaToDataSourceSchema(rs r_schema.Schema) (*d_schema.Sche
 		case types.Float32Type:
 			ds.Attributes[name] = d_schema.Float32Attribute{
 				Description:         attr.GetDescription(),
-				Optional:            attr.IsOptional(),
-				Computed:            true,
+				Required:            required,
+				Optional:            optional,
+				Computed:            !required,
 				Sensitive:           attr.IsSensitive(),
 				MarkdownDescription: attr.GetMarkdownDescription(),
 				DeprecationMessage:  attr.GetDeprecationMessage(),
@@ -49,8 +65,9 @@ func convertResourceSchemaToDataSourceSchema(rs r_schema.Schema) (*d_schema.Sche
 		case types.Float64Type:
 			ds.Attributes[name] = d_schema.Float64Attribute{
 				Description:         attr.GetDescription(),
-				Optional:            attr.IsOptional(),
-				Computed:            true,
+				Required:            required,
+				Optional:            optional,
+				Computed:            !required,
 				Sensitive:           attr.IsSensitive(),
 				MarkdownDescription: attr.GetMarkdownDescription(),
 				DeprecationMessage:  attr.GetDeprecationMessage(),
@@ -58,8 +75,9 @@ func convertResourceSchemaToDataSourceSchema(rs r_schema.Schema) (*d_schema.Sche
 		case types.Int32Type:
 			ds.Attributes[name] = d_schema.Int32Attribute{
 				Description:         attr.GetDescription(),
-				Optional:            attr.IsOptional(),
-				Computed:            true,
+				Required:            required,
+				Optional:            optional,
+				Computed:            !required,
 				Sensitive:           attr.IsSensitive(),
 				MarkdownDescription: attr.GetMarkdownDescription(),
 				DeprecationMessage:  attr.GetDeprecationMessage(),
@@ -67,8 +85,9 @@ func convertResourceSchemaToDataSourceSchema(rs r_schema.Schema) (*d_schema.Sche
 		case types.Int64Type:
 			ds.Attributes[name] = d_schema.Int64Attribute{
 				Description:         attr.GetDescription(),
-				Optional:            attr.IsOptional(),
-				Computed:            true,
+				Required:            required,
+				Optional:            optional,
+				Computed:            !required,
 				Sensitive:           attr.IsSensitive(),
 				MarkdownDescription: attr.GetMarkdownDescription(),
 				DeprecationMessage:  attr.GetDeprecationMessage(),
@@ -76,8 +95,9 @@ func convertResourceSchemaToDataSourceSchema(rs r_schema.Schema) (*d_schema.Sche
 		case types.NumberType:
 			ds.Attributes[name] = d_schema.NumberAttribute{
 				Description:         attr.GetDescription(),
-				Optional:            attr.IsOptional(),
-				Computed:            true,
+				Required:            required,
+				Optional:            optional,
+				Computed:            !required,
 				Sensitive:           attr.IsSensitive(),
 				MarkdownDescription: attr.GetMarkdownDescription(),
 				DeprecationMessage:  attr.GetDeprecationMessage(),
@@ -85,8 +105,9 @@ func convertResourceSchemaToDataSourceSchema(rs r_schema.Schema) (*d_schema.Sche
 		case types.StringType:
 			ds.Attributes[name] = d_schema.StringAttribute{
 				Description:         attr.GetDescription(),
-				Optional:            attr.IsOptional(),
-				Computed:            true,
+				Required:            required,
+				Optional:            optional,
+				Computed:            !required,
 				Sensitive:           attr.IsSensitive(),
 				MarkdownDescription: attr.GetMarkdownDescription(),
 				DeprecationMessage:  attr.GetDeprecationMessage(),
@@ -97,8 +118,9 @@ func convertResourceSchemaToDataSourceSchema(rs r_schema.Schema) (*d_schema.Sche
 				ds.Attributes[name] = d_schema.ListAttribute{
 					ElementType:         attr.GetType().(types.ListType).ElemType,
 					Description:         attr.GetDescription(),
-					Optional:            attr.IsOptional(),
-					Computed:            true,
+					Required:            required,
+					Optional:            optional,
+					Computed:            !required,
 					Sensitive:           attr.IsSensitive(),
 					MarkdownDescription: attr.GetMarkdownDescription(),
 					DeprecationMessage:  attr.GetDeprecationMessage(),

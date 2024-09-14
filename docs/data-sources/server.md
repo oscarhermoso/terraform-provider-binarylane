@@ -3,12 +3,12 @@
 page_title: "binarylane_server Data Source - terraform-provider-binarylane"
 subcategory: ""
 description: |-
-  TODO
+  Provides a Binary Lane Server data source. This can be used to read existing server details.
 ---
 
 # binarylane_server (Data Source)
 
-TODO
+Provides a Binary Lane Server data source. This can be used to read existing server details.
 
 
 
@@ -19,18 +19,17 @@ TODO
 
 - `id` (Number) The ID of the server to fetch.
 
-### Optional
+### Read-Only
 
 - `backups` (Boolean) If true this will enable two daily backups for the server. `options.daily_backups` will override this value if provided. Setting this to false has no effect.
+- `image` (String) The slug of the selected operating system.
 - `name` (String) The hostname of your server, such as vps01.yourcompany.com. If not provided, the server will be created with a random name.
-- `password` (String) If this is provided the specified or default remote user's account password will be set to this value. Only valid if the server supports password change actions (check server.password_change_supported via the servers endpoint). If omitted and the server supports password change actions a random password will be generated and emailed to the account email address.
+- `permalink` (String) A randomly generated two-word identifier assigned to servers in regions that support this feature
 - `port_blocking` (Boolean) Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.
+- `private_ipv4_addresses` (List of String) The private IPv4 addresses assigned to the server.
+- `public_ipv4_addresses` (List of String) The public IPv4 addresses assigned to the server.
+- `region` (String) The slug of the selected region.
+- `size` (String) The slug of the selected size.
 - `ssh_keys` (List of Number) This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys.
 - `user_data` (String) If provided this will be used to initialise the new server. This must be left null if the Image does not support UserData, see DistributionInfo.Features for more information.
 - `vpc_id` (Number) Leave null to use default (public) network for the selected region.
-
-### Read-Only
-
-- `image` (String) The slug of the selected operating system.
-- `region` (String) The slug of the selected region.
-- `size` (String) The slug of the selected size.

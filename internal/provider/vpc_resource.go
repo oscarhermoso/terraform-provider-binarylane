@@ -56,7 +56,7 @@ func (r *vpcResource) Metadata(ctx context.Context, req resource.MetadataRequest
 
 func (r *vpcResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = resources.VpcResourceSchema(ctx)
-	resp.Schema.Description = "TODO"
+	// resp.Schema.Description = "TODO"
 
 	// Overrides
 	id := resp.Schema.Attributes["id"]

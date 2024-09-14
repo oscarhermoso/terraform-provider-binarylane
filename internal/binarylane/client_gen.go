@@ -155,29 +155,47 @@ type ClientInterface interface {
 	PostDomainsRefreshNameserverCache(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteDomainsDomainName request
-	DeleteDomainsDomainName(ctx context.Context, domainName string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteDomainsDomainName(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetDomainsDomainName request
-	GetDomainsDomainName(ctx context.Context, domainName string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetDomainsDomainName(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetDomainsDomainNameRecords request
-	GetDomainsDomainNameRecords(ctx context.Context, domainName string, params *GetDomainsDomainNameRecordsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetDomainsDomainNameRecords(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, params *GetDomainsDomainNameRecordsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostDomainsDomainNameRecordsWithBody request with any body
-	PostDomainsDomainNameRecordsWithBody(ctx context.Context, domainName string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostDomainsDomainNameRecordsWithBody(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostDomainsDomainNameRecords(ctx context.Context, domainName string, body PostDomainsDomainNameRecordsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostDomainsDomainNameRecords(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, body PostDomainsDomainNameRecordsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteDomainsDomainNameRecordsRecordId request
-	DeleteDomainsDomainNameRecordsRecordId(ctx context.Context, domainName string, recordId int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteDomainsDomainNameRecordsRecordId(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, recordId int64, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetDomainsDomainNameRecordsRecordId request
-	GetDomainsDomainNameRecordsRecordId(ctx context.Context, domainName string, recordId int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetDomainsDomainNameRecordsRecordId(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, recordId int64, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutDomainsDomainNameRecordsRecordIdWithBody request with any body
-	PutDomainsDomainNameRecordsRecordIdWithBody(ctx context.Context, domainName string, recordId int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutDomainsDomainNameRecordsRecordIdWithBody(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, recordId int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PutDomainsDomainNameRecordsRecordId(ctx context.Context, domainName string, recordId int64, body PutDomainsDomainNameRecordsRecordIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutDomainsDomainNameRecordsRecordId(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, recordId int64, body PutDomainsDomainNameRecordsRecordIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetFailoverIpsServerId request
 	GetFailoverIpsServerId(ctx context.Context, serverId int64, params *GetFailoverIpsServerIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -843,7 +861,9 @@ func (c *Client) PostDomainsRefreshNameserverCache(ctx context.Context, reqEdito
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteDomainsDomainName(ctx context.Context, domainName string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) DeleteDomainsDomainName(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteDomainsDomainNameRequest(c.Server, domainName)
 	if err != nil {
 		return nil, err
@@ -855,7 +875,9 @@ func (c *Client) DeleteDomainsDomainName(ctx context.Context, domainName string,
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetDomainsDomainName(ctx context.Context, domainName string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) GetDomainsDomainName(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetDomainsDomainNameRequest(c.Server, domainName)
 	if err != nil {
 		return nil, err
@@ -867,7 +889,9 @@ func (c *Client) GetDomainsDomainName(ctx context.Context, domainName string, re
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetDomainsDomainNameRecords(ctx context.Context, domainName string, params *GetDomainsDomainNameRecordsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) GetDomainsDomainNameRecords(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, params *GetDomainsDomainNameRecordsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetDomainsDomainNameRecordsRequest(c.Server, domainName, params)
 	if err != nil {
 		return nil, err
@@ -879,7 +903,9 @@ func (c *Client) GetDomainsDomainNameRecords(ctx context.Context, domainName str
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostDomainsDomainNameRecordsWithBody(ctx context.Context, domainName string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PostDomainsDomainNameRecordsWithBody(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostDomainsDomainNameRecordsRequestWithBody(c.Server, domainName, contentType, body)
 	if err != nil {
 		return nil, err
@@ -891,7 +917,9 @@ func (c *Client) PostDomainsDomainNameRecordsWithBody(ctx context.Context, domai
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostDomainsDomainNameRecords(ctx context.Context, domainName string, body PostDomainsDomainNameRecordsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PostDomainsDomainNameRecords(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, body PostDomainsDomainNameRecordsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostDomainsDomainNameRecordsRequest(c.Server, domainName, body)
 	if err != nil {
 		return nil, err
@@ -903,7 +931,9 @@ func (c *Client) PostDomainsDomainNameRecords(ctx context.Context, domainName st
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteDomainsDomainNameRecordsRecordId(ctx context.Context, domainName string, recordId int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) DeleteDomainsDomainNameRecordsRecordId(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, recordId int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteDomainsDomainNameRecordsRecordIdRequest(c.Server, domainName, recordId)
 	if err != nil {
 		return nil, err
@@ -915,7 +945,9 @@ func (c *Client) DeleteDomainsDomainNameRecordsRecordId(ctx context.Context, dom
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetDomainsDomainNameRecordsRecordId(ctx context.Context, domainName string, recordId int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) GetDomainsDomainNameRecordsRecordId(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, recordId int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetDomainsDomainNameRecordsRecordIdRequest(c.Server, domainName, recordId)
 	if err != nil {
 		return nil, err
@@ -927,7 +959,9 @@ func (c *Client) GetDomainsDomainNameRecordsRecordId(ctx context.Context, domain
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutDomainsDomainNameRecordsRecordIdWithBody(ctx context.Context, domainName string, recordId int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PutDomainsDomainNameRecordsRecordIdWithBody(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, recordId int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutDomainsDomainNameRecordsRecordIdRequestWithBody(c.Server, domainName, recordId, contentType, body)
 	if err != nil {
 		return nil, err
@@ -939,7 +973,9 @@ func (c *Client) PutDomainsDomainNameRecordsRecordIdWithBody(ctx context.Context
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutDomainsDomainNameRecordsRecordId(ctx context.Context, domainName string, recordId int64, body PutDomainsDomainNameRecordsRecordIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PutDomainsDomainNameRecordsRecordId(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, recordId int64, body PutDomainsDomainNameRecordsRecordIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutDomainsDomainNameRecordsRecordIdRequest(c.Server, domainName, recordId, body)
 	if err != nil {
 		return nil, err
@@ -3512,7 +3548,9 @@ func NewPostDomainsRefreshNameserverCacheRequest(server string) (*http.Request, 
 }
 
 // NewDeleteDomainsDomainNameRequest generates requests for DeleteDomainsDomainName
-func NewDeleteDomainsDomainNameRequest(server string, domainName string) (*http.Request, error) {
+func NewDeleteDomainsDomainNameRequest(server string, domainName struct {
+	union json.RawMessage
+}) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3546,7 +3584,9 @@ func NewDeleteDomainsDomainNameRequest(server string, domainName string) (*http.
 }
 
 // NewGetDomainsDomainNameRequest generates requests for GetDomainsDomainName
-func NewGetDomainsDomainNameRequest(server string, domainName string) (*http.Request, error) {
+func NewGetDomainsDomainNameRequest(server string, domainName struct {
+	union json.RawMessage
+}) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3580,7 +3620,9 @@ func NewGetDomainsDomainNameRequest(server string, domainName string) (*http.Req
 }
 
 // NewGetDomainsDomainNameRecordsRequest generates requests for GetDomainsDomainNameRecords
-func NewGetDomainsDomainNameRecordsRequest(server string, domainName string, params *GetDomainsDomainNameRecordsParams) (*http.Request, error) {
+func NewGetDomainsDomainNameRecordsRequest(server string, domainName struct {
+	union json.RawMessage
+}, params *GetDomainsDomainNameRecordsParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3684,7 +3726,9 @@ func NewGetDomainsDomainNameRecordsRequest(server string, domainName string, par
 }
 
 // NewPostDomainsDomainNameRecordsRequest calls the generic PostDomainsDomainNameRecords builder with application/json body
-func NewPostDomainsDomainNameRecordsRequest(server string, domainName string, body PostDomainsDomainNameRecordsJSONRequestBody) (*http.Request, error) {
+func NewPostDomainsDomainNameRecordsRequest(server string, domainName struct {
+	union json.RawMessage
+}, body PostDomainsDomainNameRecordsJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
@@ -3695,7 +3739,9 @@ func NewPostDomainsDomainNameRecordsRequest(server string, domainName string, bo
 }
 
 // NewPostDomainsDomainNameRecordsRequestWithBody generates requests for PostDomainsDomainNameRecords with any type of body
-func NewPostDomainsDomainNameRecordsRequestWithBody(server string, domainName string, contentType string, body io.Reader) (*http.Request, error) {
+func NewPostDomainsDomainNameRecordsRequestWithBody(server string, domainName struct {
+	union json.RawMessage
+}, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3731,7 +3777,9 @@ func NewPostDomainsDomainNameRecordsRequestWithBody(server string, domainName st
 }
 
 // NewDeleteDomainsDomainNameRecordsRecordIdRequest generates requests for DeleteDomainsDomainNameRecordsRecordId
-func NewDeleteDomainsDomainNameRecordsRecordIdRequest(server string, domainName string, recordId int64) (*http.Request, error) {
+func NewDeleteDomainsDomainNameRecordsRecordIdRequest(server string, domainName struct {
+	union json.RawMessage
+}, recordId int64) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3772,7 +3820,9 @@ func NewDeleteDomainsDomainNameRecordsRecordIdRequest(server string, domainName 
 }
 
 // NewGetDomainsDomainNameRecordsRecordIdRequest generates requests for GetDomainsDomainNameRecordsRecordId
-func NewGetDomainsDomainNameRecordsRecordIdRequest(server string, domainName string, recordId int64) (*http.Request, error) {
+func NewGetDomainsDomainNameRecordsRecordIdRequest(server string, domainName struct {
+	union json.RawMessage
+}, recordId int64) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3813,7 +3863,9 @@ func NewGetDomainsDomainNameRecordsRecordIdRequest(server string, domainName str
 }
 
 // NewPutDomainsDomainNameRecordsRecordIdRequest calls the generic PutDomainsDomainNameRecordsRecordId builder with application/json body
-func NewPutDomainsDomainNameRecordsRecordIdRequest(server string, domainName string, recordId int64, body PutDomainsDomainNameRecordsRecordIdJSONRequestBody) (*http.Request, error) {
+func NewPutDomainsDomainNameRecordsRecordIdRequest(server string, domainName struct {
+	union json.RawMessage
+}, recordId int64, body PutDomainsDomainNameRecordsRecordIdJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
@@ -3824,7 +3876,9 @@ func NewPutDomainsDomainNameRecordsRecordIdRequest(server string, domainName str
 }
 
 // NewPutDomainsDomainNameRecordsRecordIdRequestWithBody generates requests for PutDomainsDomainNameRecordsRecordId with any type of body
-func NewPutDomainsDomainNameRecordsRecordIdRequestWithBody(server string, domainName string, recordId int64, contentType string, body io.Reader) (*http.Request, error) {
+func NewPutDomainsDomainNameRecordsRecordIdRequestWithBody(server string, domainName struct {
+	union json.RawMessage
+}, recordId int64, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -8569,29 +8623,47 @@ type ClientWithResponsesInterface interface {
 	PostDomainsRefreshNameserverCacheWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*PostDomainsRefreshNameserverCacheResponse, error)
 
 	// DeleteDomainsDomainNameWithResponse request
-	DeleteDomainsDomainNameWithResponse(ctx context.Context, domainName string, reqEditors ...RequestEditorFn) (*DeleteDomainsDomainNameResponse, error)
+	DeleteDomainsDomainNameWithResponse(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, reqEditors ...RequestEditorFn) (*DeleteDomainsDomainNameResponse, error)
 
 	// GetDomainsDomainNameWithResponse request
-	GetDomainsDomainNameWithResponse(ctx context.Context, domainName string, reqEditors ...RequestEditorFn) (*GetDomainsDomainNameResponse, error)
+	GetDomainsDomainNameWithResponse(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, reqEditors ...RequestEditorFn) (*GetDomainsDomainNameResponse, error)
 
 	// GetDomainsDomainNameRecordsWithResponse request
-	GetDomainsDomainNameRecordsWithResponse(ctx context.Context, domainName string, params *GetDomainsDomainNameRecordsParams, reqEditors ...RequestEditorFn) (*GetDomainsDomainNameRecordsResponse, error)
+	GetDomainsDomainNameRecordsWithResponse(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, params *GetDomainsDomainNameRecordsParams, reqEditors ...RequestEditorFn) (*GetDomainsDomainNameRecordsResponse, error)
 
 	// PostDomainsDomainNameRecordsWithBodyWithResponse request with any body
-	PostDomainsDomainNameRecordsWithBodyWithResponse(ctx context.Context, domainName string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostDomainsDomainNameRecordsResponse, error)
+	PostDomainsDomainNameRecordsWithBodyWithResponse(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostDomainsDomainNameRecordsResponse, error)
 
-	PostDomainsDomainNameRecordsWithResponse(ctx context.Context, domainName string, body PostDomainsDomainNameRecordsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostDomainsDomainNameRecordsResponse, error)
+	PostDomainsDomainNameRecordsWithResponse(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, body PostDomainsDomainNameRecordsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostDomainsDomainNameRecordsResponse, error)
 
 	// DeleteDomainsDomainNameRecordsRecordIdWithResponse request
-	DeleteDomainsDomainNameRecordsRecordIdWithResponse(ctx context.Context, domainName string, recordId int64, reqEditors ...RequestEditorFn) (*DeleteDomainsDomainNameRecordsRecordIdResponse, error)
+	DeleteDomainsDomainNameRecordsRecordIdWithResponse(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, recordId int64, reqEditors ...RequestEditorFn) (*DeleteDomainsDomainNameRecordsRecordIdResponse, error)
 
 	// GetDomainsDomainNameRecordsRecordIdWithResponse request
-	GetDomainsDomainNameRecordsRecordIdWithResponse(ctx context.Context, domainName string, recordId int64, reqEditors ...RequestEditorFn) (*GetDomainsDomainNameRecordsRecordIdResponse, error)
+	GetDomainsDomainNameRecordsRecordIdWithResponse(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, recordId int64, reqEditors ...RequestEditorFn) (*GetDomainsDomainNameRecordsRecordIdResponse, error)
 
 	// PutDomainsDomainNameRecordsRecordIdWithBodyWithResponse request with any body
-	PutDomainsDomainNameRecordsRecordIdWithBodyWithResponse(ctx context.Context, domainName string, recordId int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutDomainsDomainNameRecordsRecordIdResponse, error)
+	PutDomainsDomainNameRecordsRecordIdWithBodyWithResponse(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, recordId int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutDomainsDomainNameRecordsRecordIdResponse, error)
 
-	PutDomainsDomainNameRecordsRecordIdWithResponse(ctx context.Context, domainName string, recordId int64, body PutDomainsDomainNameRecordsRecordIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutDomainsDomainNameRecordsRecordIdResponse, error)
+	PutDomainsDomainNameRecordsRecordIdWithResponse(ctx context.Context, domainName struct {
+		union json.RawMessage
+	}, recordId int64, body PutDomainsDomainNameRecordsRecordIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutDomainsDomainNameRecordsRecordIdResponse, error)
 
 	// GetFailoverIpsServerIdWithResponse request
 	GetFailoverIpsServerIdWithResponse(ctx context.Context, serverId int64, params *GetFailoverIpsServerIdParams, reqEditors ...RequestEditorFn) (*GetFailoverIpsServerIdResponse, error)
@@ -11955,7 +12027,9 @@ func (c *ClientWithResponses) PostDomainsRefreshNameserverCacheWithResponse(ctx 
 }
 
 // DeleteDomainsDomainNameWithResponse request returning *DeleteDomainsDomainNameResponse
-func (c *ClientWithResponses) DeleteDomainsDomainNameWithResponse(ctx context.Context, domainName string, reqEditors ...RequestEditorFn) (*DeleteDomainsDomainNameResponse, error) {
+func (c *ClientWithResponses) DeleteDomainsDomainNameWithResponse(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, reqEditors ...RequestEditorFn) (*DeleteDomainsDomainNameResponse, error) {
 	rsp, err := c.DeleteDomainsDomainName(ctx, domainName, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -11964,7 +12038,9 @@ func (c *ClientWithResponses) DeleteDomainsDomainNameWithResponse(ctx context.Co
 }
 
 // GetDomainsDomainNameWithResponse request returning *GetDomainsDomainNameResponse
-func (c *ClientWithResponses) GetDomainsDomainNameWithResponse(ctx context.Context, domainName string, reqEditors ...RequestEditorFn) (*GetDomainsDomainNameResponse, error) {
+func (c *ClientWithResponses) GetDomainsDomainNameWithResponse(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, reqEditors ...RequestEditorFn) (*GetDomainsDomainNameResponse, error) {
 	rsp, err := c.GetDomainsDomainName(ctx, domainName, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -11973,7 +12049,9 @@ func (c *ClientWithResponses) GetDomainsDomainNameWithResponse(ctx context.Conte
 }
 
 // GetDomainsDomainNameRecordsWithResponse request returning *GetDomainsDomainNameRecordsResponse
-func (c *ClientWithResponses) GetDomainsDomainNameRecordsWithResponse(ctx context.Context, domainName string, params *GetDomainsDomainNameRecordsParams, reqEditors ...RequestEditorFn) (*GetDomainsDomainNameRecordsResponse, error) {
+func (c *ClientWithResponses) GetDomainsDomainNameRecordsWithResponse(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, params *GetDomainsDomainNameRecordsParams, reqEditors ...RequestEditorFn) (*GetDomainsDomainNameRecordsResponse, error) {
 	rsp, err := c.GetDomainsDomainNameRecords(ctx, domainName, params, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -11982,7 +12060,9 @@ func (c *ClientWithResponses) GetDomainsDomainNameRecordsWithResponse(ctx contex
 }
 
 // PostDomainsDomainNameRecordsWithBodyWithResponse request with arbitrary body returning *PostDomainsDomainNameRecordsResponse
-func (c *ClientWithResponses) PostDomainsDomainNameRecordsWithBodyWithResponse(ctx context.Context, domainName string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostDomainsDomainNameRecordsResponse, error) {
+func (c *ClientWithResponses) PostDomainsDomainNameRecordsWithBodyWithResponse(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostDomainsDomainNameRecordsResponse, error) {
 	rsp, err := c.PostDomainsDomainNameRecordsWithBody(ctx, domainName, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -11990,7 +12070,9 @@ func (c *ClientWithResponses) PostDomainsDomainNameRecordsWithBodyWithResponse(c
 	return ParsePostDomainsDomainNameRecordsResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostDomainsDomainNameRecordsWithResponse(ctx context.Context, domainName string, body PostDomainsDomainNameRecordsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostDomainsDomainNameRecordsResponse, error) {
+func (c *ClientWithResponses) PostDomainsDomainNameRecordsWithResponse(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, body PostDomainsDomainNameRecordsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostDomainsDomainNameRecordsResponse, error) {
 	rsp, err := c.PostDomainsDomainNameRecords(ctx, domainName, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -11999,7 +12081,9 @@ func (c *ClientWithResponses) PostDomainsDomainNameRecordsWithResponse(ctx conte
 }
 
 // DeleteDomainsDomainNameRecordsRecordIdWithResponse request returning *DeleteDomainsDomainNameRecordsRecordIdResponse
-func (c *ClientWithResponses) DeleteDomainsDomainNameRecordsRecordIdWithResponse(ctx context.Context, domainName string, recordId int64, reqEditors ...RequestEditorFn) (*DeleteDomainsDomainNameRecordsRecordIdResponse, error) {
+func (c *ClientWithResponses) DeleteDomainsDomainNameRecordsRecordIdWithResponse(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, recordId int64, reqEditors ...RequestEditorFn) (*DeleteDomainsDomainNameRecordsRecordIdResponse, error) {
 	rsp, err := c.DeleteDomainsDomainNameRecordsRecordId(ctx, domainName, recordId, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -12008,7 +12092,9 @@ func (c *ClientWithResponses) DeleteDomainsDomainNameRecordsRecordIdWithResponse
 }
 
 // GetDomainsDomainNameRecordsRecordIdWithResponse request returning *GetDomainsDomainNameRecordsRecordIdResponse
-func (c *ClientWithResponses) GetDomainsDomainNameRecordsRecordIdWithResponse(ctx context.Context, domainName string, recordId int64, reqEditors ...RequestEditorFn) (*GetDomainsDomainNameRecordsRecordIdResponse, error) {
+func (c *ClientWithResponses) GetDomainsDomainNameRecordsRecordIdWithResponse(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, recordId int64, reqEditors ...RequestEditorFn) (*GetDomainsDomainNameRecordsRecordIdResponse, error) {
 	rsp, err := c.GetDomainsDomainNameRecordsRecordId(ctx, domainName, recordId, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -12017,7 +12103,9 @@ func (c *ClientWithResponses) GetDomainsDomainNameRecordsRecordIdWithResponse(ct
 }
 
 // PutDomainsDomainNameRecordsRecordIdWithBodyWithResponse request with arbitrary body returning *PutDomainsDomainNameRecordsRecordIdResponse
-func (c *ClientWithResponses) PutDomainsDomainNameRecordsRecordIdWithBodyWithResponse(ctx context.Context, domainName string, recordId int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutDomainsDomainNameRecordsRecordIdResponse, error) {
+func (c *ClientWithResponses) PutDomainsDomainNameRecordsRecordIdWithBodyWithResponse(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, recordId int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutDomainsDomainNameRecordsRecordIdResponse, error) {
 	rsp, err := c.PutDomainsDomainNameRecordsRecordIdWithBody(ctx, domainName, recordId, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -12025,7 +12113,9 @@ func (c *ClientWithResponses) PutDomainsDomainNameRecordsRecordIdWithBodyWithRes
 	return ParsePutDomainsDomainNameRecordsRecordIdResponse(rsp)
 }
 
-func (c *ClientWithResponses) PutDomainsDomainNameRecordsRecordIdWithResponse(ctx context.Context, domainName string, recordId int64, body PutDomainsDomainNameRecordsRecordIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutDomainsDomainNameRecordsRecordIdResponse, error) {
+func (c *ClientWithResponses) PutDomainsDomainNameRecordsRecordIdWithResponse(ctx context.Context, domainName struct {
+	union json.RawMessage
+}, recordId int64, body PutDomainsDomainNameRecordsRecordIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutDomainsDomainNameRecordsRecordIdResponse, error) {
 	rsp, err := c.PutDomainsDomainNameRecordsRecordId(ctx, domainName, recordId, body, reqEditors...)
 	if err != nil {
 		return nil, err

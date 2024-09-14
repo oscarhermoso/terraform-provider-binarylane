@@ -204,8 +204,8 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 	}
 
 	resp.Schema.Attributes["permalink"] = &schema.StringAttribute{
-		Description:         "TODO",
-		MarkdownDescription: "TODO",
+		Description:         "A randomly generated two-word identifier assigned to servers in regions that support this feature",
+		MarkdownDescription: "A randomly generated two-word identifier assigned to servers in regions that support this feature",
 		// read only
 		Optional: false,
 		Required: false,

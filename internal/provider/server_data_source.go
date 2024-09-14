@@ -7,8 +7,7 @@ import (
 	"terraform-provider-binarylane/internal/resources"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	d_schema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -56,17 +55,22 @@ func (d *serverDataSource) Metadata(ctx context.Context, req datasource.Metadata
 }
 
 func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	ds, err := convertResourceSchemaToDataSourceSchema(resources.ServerResourceSchema(ctx))
+	ds, err := convertResourceSchemaToDataSourceSchema(
+		resources.ServerResourceSchema(ctx),
+		AttributeConfig{
+			RequiredAttributes: &[]string{"id"},
+			ExcludedAttributes: &[]string{"password"},
+		})
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to convert resource schema to data source schema", err.Error())
 		return
 	}
 	resp.Schema = *ds
-	resp.Schema.Description = "TODO"
+	resp.Schema.Description = "Provides a Binary Lane Server data source. This can be used to read existing server details."
 
 	// Overrides
 	id := resp.Schema.Attributes["id"]
-	resp.Schema.Attributes["id"] = d_schema.Int64Attribute{
+	resp.Schema.Attributes["id"] = schema.Int64Attribute{
 		Description:         id.GetDescription(),
 		MarkdownDescription: id.GetMarkdownDescription(),
 		Required:            true, // ID is required to find the server
@@ -74,9 +78,9 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 
 	// Additional attributes
 	resp.Schema.Attributes["permalink"] = &schema.StringAttribute{
-		Description:         "TODO",
-		MarkdownDescription: "TODO",
-		Optional:            true,
+		Description:         "A randomly generated two-word identifier assigned to servers in regions that support this feature",
+		MarkdownDescription: "A randomly generated two-word identifier assigned to servers in regions that support this feature",
+		Computed:            true,
 	}
 
 	publicIpv4AddressesDescription := "The public IPv4 addresses assigned to the server."
@@ -84,7 +88,7 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 		Description:         publicIpv4AddressesDescription,
 		MarkdownDescription: publicIpv4AddressesDescription,
 		ElementType:         types.StringType,
-		Optional:            true,
+		Computed:            true,
 	}
 
 	privateIpv4AddressesDescription := "The private IPv4 addresses assigned to the server."
@@ -92,7 +96,7 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 		Description:         privateIpv4AddressesDescription,
 		MarkdownDescription: privateIpv4AddressesDescription,
 		ElementType:         types.StringType,
-		Optional:            true,
+		Computed:            true,
 	}
 }
 

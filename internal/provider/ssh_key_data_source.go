@@ -47,13 +47,18 @@ func (d *sshKeyDataSource) Metadata(ctx context.Context, req datasource.Metadata
 }
 
 func (d *sshKeyDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	ds, err := convertResourceSchemaToDataSourceSchema(resources.SshKeyResourceSchema(ctx))
+	ds, err := convertResourceSchemaToDataSourceSchema(
+		resources.SshKeyResourceSchema(ctx),
+		AttributeConfig{
+			RequiredAttributes: &[]string{"id"},
+		},
+	)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to convert resource schema to data source schema", err.Error())
 		return
 	}
 	resp.Schema = *ds
-	resp.Schema.Description = "TODO"
+	// resp.Schema.Description = "TODO"
 }
 
 func (d *sshKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
