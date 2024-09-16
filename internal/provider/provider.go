@@ -147,6 +147,7 @@ func (p *binarylaneProvider) DataSources(_ context.Context) []func() datasource.
 		NewSshKeyDataSource,
 		NewVpcDataSource,
 		NewVpcRouteEntriesDataSource,
+		NewLoadBalancerDataSource,
 	}
 }
 
@@ -157,5 +158,6 @@ func (p *binarylaneProvider) Resources(_ context.Context) []func() resource.Reso
 		NewSshKeyResource,
 		NewVpcResource,
 		NewVpcRouteEntriesResource,
+		NewLoadBalancerResource,
 	}
 }

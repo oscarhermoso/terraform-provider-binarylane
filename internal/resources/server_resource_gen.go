@@ -37,12 +37,6 @@ func ServerResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "The hostname of your server, such as vps01.yourcompany.com. If not provided, the server will be created with a random name.",
 				MarkdownDescription: "The hostname of your server, such as vps01.yourcompany.com. If not provided, the server will be created with a random name.",
 			},
-			"password": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
-				Description:         "If this is provided the specified or default remote user's account password will be set to this value. Only valid if the server supports password change actions. If omitted and the server supports password change actions a random password will be generated and emailed to the account email address.\n",
-				MarkdownDescription: "If this is provided the specified or default remote user's account password will be set to this value. Only valid if the server supports password change actions. If omitted and the server supports password change actions a random password will be generated and emailed to the account email address.\n",
-			},
 			"port_blocking": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
@@ -96,7 +90,6 @@ type ServerModel struct {
 	Id           types.Int64  `tfsdk:"id"`
 	Image        types.String `tfsdk:"image"`
 	Name         types.String `tfsdk:"name"`
-	Password     types.String `tfsdk:"password"`
 	PortBlocking types.Bool   `tfsdk:"port_blocking"`
 	Region       types.String `tfsdk:"region"`
 	Size         types.String `tfsdk:"size"`

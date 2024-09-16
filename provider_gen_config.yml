@@ -34,11 +34,6 @@ resources:
               value if provided. Setting this to false has no effect.
           image:
             description: The slug of the selected operating system.
-          password:
-            description: >
-              If this is provided the specified or default remote user's account password will be set to this value.
-              Only valid if the server supports password change actions. If omitted and the server supports password
-              change actions a random password will be generated and emailed to the account email address.
           ssh_keys:
             description: >
               This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as
@@ -50,6 +45,27 @@ resources:
         - links
         - server
         - options
+        - password
+  load_balancer:
+    create:
+      path: /load_balancers
+      method: POST
+    read:
+      path: /load_balancers/{load_balancer_id}
+      method: GET
+    update:
+      path: /load_balancers/{load_balancer_id}
+      method: PUT
+    delete:
+      path: /load_balancers/{load_balancer_id}
+      method: DELETE
+    schema:
+      attributes:
+        aliases:
+          load_balancer_id: id
+      ignores:
+        - links
+        - load_balancer
   server_firewall_rules:
     create:
       path: /servers/{server_id}/actions#ChangeAdvancedFirewallRules

@@ -21,7 +21,7 @@ cat <<<$(jq '.paths["/account/keys/{key_id}"].delete.parameters[0].schema |= del
 # Remove the "/paths/{image_id}" path because its duplicated by "/images/{image_id_or_slug}"
 cat <<<$(jq 'del(.paths."/images/{image_id}")' $OPENAPI_FILE) >$OPENAPI_FILE
 
-# Add x-oapi-codegen-extra-tags so Go structs can be reflected
+# Add x-oapi-codegen-extra-tags so structs can be reflected
 
 ## RouteEntryRequest
 cat <<<$(jq '.components.schemas.RouteEntryRequest.properties.destination += {"x-oapi-codegen-extra-tags": {"tfsdk": "destination"}}' $OPENAPI_FILE) >$OPENAPI_FILE
@@ -35,3 +35,8 @@ cat <<<$(jq '.components.schemas.AdvancedFirewallRule.properties.action += {"x-o
 cat <<<$(jq '.components.schemas.AdvancedFirewallRule.properties.destination_addresses += {"x-oapi-codegen-extra-tags": {"tfsdk": "destination_addresses"}}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.components.schemas.AdvancedFirewallRule.properties.destination_ports += {"x-oapi-codegen-extra-tags": {"tfsdk": "destination_ports"}}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.components.schemas.AdvancedFirewallRule.properties.source_addresses += {"x-oapi-codegen-extra-tags": {"tfsdk": "source_addresses"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+
+## Load Balancer
+cat <<<$(jq '.components.schemas.CreateLoadBalancerRequest.properties.forwarding_rules += {"x-oapi-codegen-extra-tags": {"tfsdk": "forwarding_rules"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.ForwardingRule.properties.entry_protocol += {"x-oapi-codegen-extra-tags": {"tfsdk": "entry_protocol"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.HealthCheckProtocol |= del(.enum)' $OPENAPI_FILE) >$OPENAPI_FILE

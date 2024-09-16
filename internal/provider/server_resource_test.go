@@ -91,12 +91,14 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttrPair("data.binarylane_server.test", "permalink", "binarylane_server.test", "permalink"),
 				),
 			},
+			// Test import by ID
 			{
 				ResourceName:            "binarylane_server.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "user_data", "wait_for_create", "public_ipv4_count"},
 			},
+			// Test import by name
 			{
 				ResourceName:            "binarylane_server.test",
 				ImportState:             true,
