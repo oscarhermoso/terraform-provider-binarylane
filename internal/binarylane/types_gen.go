@@ -230,13 +230,6 @@ const (
 	EnableIpv6TypeEnableIpv6 EnableIpv6Type = "enable_ipv6"
 )
 
-// Defines values for HealthCheckProtocol.
-const (
-	HealthCheckProtocolBoth  HealthCheckProtocol = "both"
-	HealthCheckProtocolHttp  HealthCheckProtocol = "http"
-	HealthCheckProtocolHttps HealthCheckProtocol = "https"
-)
-
 // Defines values for ImageQueryType.
 const (
 	ImageQueryTypeBackup       ImageQueryType = "backup"
@@ -265,8 +258,8 @@ const (
 
 // Defines values for LoadBalancerRuleProtocol.
 const (
-	LoadBalancerRuleProtocolHttp  LoadBalancerRuleProtocol = "http"
-	LoadBalancerRuleProtocolHttps LoadBalancerRuleProtocol = "https"
+	Http  LoadBalancerRuleProtocol = "http"
+	Https LoadBalancerRuleProtocol = "https"
 )
 
 // Defines values for LoadBalancerStatus.
@@ -1131,7 +1124,7 @@ type ConsoleResponse struct {
 // CreateLoadBalancerRequest defines model for CreateLoadBalancerRequest.
 type CreateLoadBalancerRequest struct {
 	// ForwardingRules The rules that control which traffic the load balancer will forward to servers in the pool. Leave null to accept a default "HTTP" only forwarding rule.
-	ForwardingRules *[]ForwardingRule `json:"forwarding_rules"`
+	ForwardingRules *[]ForwardingRule `json:"forwarding_rules" tfsdk:"forwarding_rules"`
 
 	// HealthCheck The rules that determine which servers are considered 'healthy' and in the server pool for the load balancer. Leave this null to accept appropriate defaults based on the forwarding_rules.
 	HealthCheck *HealthCheck `json:"health_check"`
@@ -1538,7 +1531,7 @@ type FailoverIpsResponse struct {
 // ForwardingRule defines model for ForwardingRule.
 type ForwardingRule struct {
 	// EntryProtocol The protocol that traffic must match for this load balancer to forward traffic according to this rule.
-	EntryProtocol LoadBalancerRuleProtocol `json:"entry_protocol"`
+	EntryProtocol LoadBalancerRuleProtocol `json:"entry_protocol" tfsdk:"entry_protocol"`
 }
 
 // ForwardingRulesRequest defines model for ForwardingRulesRequest.
@@ -1562,7 +1555,7 @@ type HealthCheck struct {
 // | http | The health check will be performed via HTTP. |
 // | https | The health check will be performed via HTTPS. |
 // | both | The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol. |
-type HealthCheckProtocol string
+type HealthCheckProtocol = string
 
 // Host defines model for Host.
 type Host struct {

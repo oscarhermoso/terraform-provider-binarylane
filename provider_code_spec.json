@@ -4,6 +4,124 @@
 	},
 	"resources": [
 		{
+			"name": "load_balancer",
+			"schema": {
+				"attributes": [
+					{
+						"name": "forwarding_rules",
+						"list_nested": {
+							"computed_optional_required": "computed_optional",
+							"nested_object": {
+								"attributes": [
+									{
+										"name": "entry_protocol",
+										"string": {
+											"computed_optional_required": "required",
+											"description": "The protocol that traffic must match for this load balancer to forward traffic according to this rule.",
+											"validators": [
+												{
+													"custom": {
+														"imports": [
+															{
+																"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+															}
+														],
+														"schema_definition": "stringvalidator.OneOf(\n\"http\",\n\"https\",\n)"
+													}
+												}
+											]
+										}
+									}
+								]
+							},
+							"description": "The rules that control which traffic the load balancer will forward to servers in the pool. Leave null to accept a default \"HTTP\" only forwarding rule."
+						}
+					},
+					{
+						"name": "health_check",
+						"single_nested": {
+							"computed_optional_required": "computed_optional",
+							"attributes": [
+								{
+									"name": "path",
+									"string": {
+										"computed_optional_required": "computed_optional",
+										"description": "Leave null to accept the default '/' path.",
+										"validators": [
+											{
+												"custom": {
+													"imports": [
+														{
+															"path": "regexp"
+														},
+														{
+															"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+														}
+													],
+													"schema_definition": "stringvalidator.RegexMatches(regexp.MustCompile(\"/[A-Za-z0-9/.?=\u0026+%_-]*\"), \"\")"
+												}
+											}
+										]
+									}
+								},
+								{
+									"name": "protocol",
+									"string": {
+										"computed_optional_required": "computed_optional",
+										"description": "Leave null to accept the default HTTP protocol."
+									}
+								}
+							],
+							"description": "The rules that determine which servers are considered 'healthy' and in the server pool for the load balancer. Leave this null to accept appropriate defaults based on the forwarding_rules."
+						}
+					},
+					{
+						"name": "name",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "The hostname of the load balancer.",
+							"validators": [
+								{
+									"custom": {
+										"imports": [
+											{
+												"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+											}
+										],
+										"schema_definition": "stringvalidator.LengthAtLeast(1)"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "region",
+						"string": {
+							"computed_optional_required": "computed_optional",
+							"description": "Leave null to create an anycast load balancer."
+						}
+					},
+					{
+						"name": "server_ids",
+						"list": {
+							"computed_optional_required": "computed_optional",
+							"element_type": {
+								"int64": {}
+							},
+							"description": "A list of server IDs to assign to this load balancer."
+						}
+					},
+					{
+						"name": "id",
+						"int64": {
+							"computed_optional_required": "computed_optional",
+							"description": "The ID of the load balancer to fetch."
+						}
+					}
+				]
+			}
+		},
+		{
 			"name": "server",
 			"schema": {
 				"attributes": [
@@ -26,13 +144,6 @@
 						"string": {
 							"computed_optional_required": "computed_optional",
 							"description": "The hostname of your server, such as vps01.yourcompany.com. If not provided, the server will be created with a random name."
-						}
-					},
-					{
-						"name": "password",
-						"string": {
-							"computed_optional_required": "computed_optional",
-							"description": "If this is provided the specified or default remote user's account password will be set to this value. Only valid if the server supports password change actions. If omitted and the server supports password change actions a random password will be generated and emailed to the account email address.\n"
 						}
 					},
 					{

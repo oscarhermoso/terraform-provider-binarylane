@@ -50,6 +50,7 @@ type serverModel struct {
 	PublicIpv4Addresses  types.List   `tfsdk:"public_ipv4_addresses"`
 	PrivateIPv4Addresses types.List   `tfsdk:"private_ipv4_addresses"`
 	Permalink            types.String `tfsdk:"permalink"`
+	Password             types.String `tfsdk:"password"`
 }
 
 func (d *serverResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -90,15 +91,6 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		PlanModifiers: []planmodifier.Int64{
 			int64planmodifier.UseStateForUnknown(),
 		},
-	}
-
-	pw := resp.Schema.Attributes["password"]
-	resp.Schema.Attributes["password"] = &schema.StringAttribute{
-		Description:         pw.GetDescription(),
-		MarkdownDescription: pw.GetMarkdownDescription(),
-		Optional:            pw.IsOptional(),
-		Computed:            false, // Computed must be false to allow server to be created without password
-		Sensitive:           true,  // Mark password as sensitive
 	}
 
 	backups := resp.Schema.Attributes["backups"]
@@ -152,6 +144,18 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 	}
 
 	// Additional attributes
+	pwDescription :=
+		"If this is provided the specified or default remote user's account password will be set to this value." +
+			"Only valid if the server supports password change actions. If omitted and the server supports password" +
+			"change actions a random password will be generated and emailed to the account email address."
+	resp.Schema.Attributes["password"] = &schema.StringAttribute{
+		Description:         pwDescription,
+		MarkdownDescription: pwDescription,
+		Optional:            true,  // Password optional, if not set will be emailed to user
+		Computed:            false, // Computed must be false to allow server to be created without password
+		Sensitive:           true,  // Mark password as sensitive
+	}
+
 	waitDescription := "The number of seconds to wait for the server to be created, after which, a timeout error will " +
 		"be reported. If `wait_seconds` is left empty or set to 0, Terraform will succeed without waiting for the " +
 		"server creation to complete."

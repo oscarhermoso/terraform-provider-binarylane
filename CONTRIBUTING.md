@@ -131,7 +131,7 @@ Add a `Configure` method to the resource:
 + }
 ```
 
-Add the new data source/resource to `provider.go`:
+Add the new resource to `provider.go`:
 
 ```diff
   return []func() resource.Resource{
@@ -204,12 +204,25 @@ Use the generated schema to define the data source schema.
 - 			},
 - 		},
 - 	}
-+   ds, err := convertResourceSchemaToDataSourceSchema(resources.ExampleResourceSchema(ctx))
++   ds, err := convertResourceSchemaToDataSourceSchema(
++     resources.ExampleResourceSchema(ctx)
++ 		AttributeConfig{
++ 			RequiredAttributes: &[]string{"id"},
++ 		},
++ 	)
 + 	if err != nil {
 + 		resp.Diagnostics.AddError("Failed to convert resource schema to data source schema", err.Error())
 + 		return
 + 	}
 + 	resp.Schema = *ds
-+ 	resp.Schema.Description = "TODO"
++ 	// resp.Schema.Description = "TODO"
   }
 ```
+
+Add the data source to `provider.go`:
+
+```diff
+  return []func() datasource.DataSource{
+    # ...
++   NewExampleDataSource,
+  }

@@ -10057,7 +10057,10 @@
               "$ref": "#/components/schemas/ForwardingRule"
             },
             "description": "The rules that control which traffic the load balancer will forward to servers in the pool. Leave null to accept a default \"HTTP\" only forwarding rule.",
-            "nullable": true
+            "nullable": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "forwarding_rules"
+            }
           },
           "health_check": {
             "allOf": [
@@ -10998,7 +11001,10 @@
                 "$ref": "#/components/schemas/LoadBalancerRuleProtocol"
               }
             ],
-            "description": "The protocol that traffic must match for this load balancer to forward traffic according to this rule."
+            "description": "The protocol that traffic must match for this load balancer to forward traffic according to this rule.",
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "entry_protocol"
+            }
           }
         }
       },
@@ -11038,11 +11044,6 @@
         }
       },
       "HealthCheckProtocol": {
-        "enum": [
-          "http",
-          "https",
-          "both"
-        ],
         "type": "string",
         "description": "\n| Value | Description |\n| ----- | ----------- |\n| http | The health check will be performed via HTTP. |\n| https | The health check will be performed via HTTPS. |\n| both | The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol. |\n\n",
         "x-enum-descriptions": [

@@ -24,8 +24,8 @@ Planned features:
   - [ ] Alerts
 - [x] SSH Keys
 - [x] Virtual Private Cloud
+- [x] Load Balancers
 - [ ] Images
-- [ ] Load Balancers
 - [ ] DNS
 - [x] Docs
   - [x] Generated docs
