@@ -145,8 +145,8 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 
 	// Additional attributes
 	pwDescription :=
-		"If this is provided the specified or default remote user's account password will be set to this value." +
-			"Only valid if the server supports password change actions. If omitted and the server supports password" +
+		"If this is provided the specified or default remote user's account password will be set to this value. " +
+			"Only valid if the server supports password change actions. If omitted and the server supports password " +
 			"change actions a random password will be generated and emailed to the account email address."
 	resp.Schema.Attributes["password"] = &schema.StringAttribute{
 		Description:         pwDescription,
