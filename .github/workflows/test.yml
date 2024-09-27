@@ -13,7 +13,6 @@ on:
 permissions:
   # Permission for checking out code
   contents: read
-  cancel-in-progress: true # would be nice if GH offered cancel-pending instead, https://github.com/orgs/community/discussions/63136
 
 jobs:
   acceptance:
@@ -22,6 +21,7 @@ jobs:
     environment: test
     concurrency:
       group: test
+      cancel-in-progress: true # would be nice if GH offered cancel-pending instead, https://github.com/orgs/community/discussions/63136
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
