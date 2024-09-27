@@ -16,7 +16,8 @@ permissions:
 jobs:
   test:
     uses: ./.github/workflows/test.yml
-    secrets: inherit
+    secrets:
+      BINARYLANE_API_TOKEN: ${{ secrets.BINARYLANE_API_TOKEN }}
 
   goreleaser:
     needs: test

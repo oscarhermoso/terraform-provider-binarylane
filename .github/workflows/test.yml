@@ -6,10 +6,14 @@ on:
       - '.github/workflows/test.yml'
       - '**.go'
   workflow_call:
+    secrets:
+      BINARYLANE_API_TOKEN:
+        required: true
 
 permissions:
   # Permission for checking out code
   contents: read
+  cancel-in-progress: true # would be nice if GH offered cancel-pending instead, https://github.com/orgs/community/discussions/63136
 
 jobs:
   acceptance:
