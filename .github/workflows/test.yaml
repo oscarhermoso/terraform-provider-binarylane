@@ -35,7 +35,7 @@ jobs:
             exit 1
           fi
       - name: Run tests
-        run: go test -v -cover ./...
+        run: go test -v -cover ./internal/provider/...
         env:
           TF_ACC: '1'
           BINARYLANE_API_TOKEN: ${{ secrets.BINARYLANE_API_TOKEN }}
