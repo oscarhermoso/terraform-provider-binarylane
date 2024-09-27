@@ -621,11 +621,19 @@ func (v FirewallRulesValue) String() string {
 func (v FirewallRulesValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	destinationAddressesVal, d := types.ListValue(types.StringType, v.DestinationAddresses.Elements())
+	var destinationAddressesVal basetypes.ListValue
+	switch {
+	case v.DestinationAddresses.IsUnknown():
+		destinationAddressesVal = types.ListUnknown(types.StringType)
+	case v.DestinationAddresses.IsNull():
+		destinationAddressesVal = types.ListNull(types.StringType)
+	default:
+		var d diag.Diagnostics
+		destinationAddressesVal, d = types.ListValue(types.StringType, v.DestinationAddresses.Elements())
+		diags.Append(d...)
+	}
 
-	diags.Append(d...)
-
-	if d.HasError() {
+	if diags.HasError() {
 		return types.ObjectUnknown(map[string]attr.Type{
 			"action":      basetypes.StringType{},
 			"description": basetypes.StringType{},
@@ -642,11 +650,19 @@ func (v FirewallRulesValue) ToObjectValue(ctx context.Context) (basetypes.Object
 		}), diags
 	}
 
-	destinationPortsVal, d := types.ListValue(types.StringType, v.DestinationPorts.Elements())
+	var destinationPortsVal basetypes.ListValue
+	switch {
+	case v.DestinationPorts.IsUnknown():
+		destinationPortsVal = types.ListUnknown(types.StringType)
+	case v.DestinationPorts.IsNull():
+		destinationPortsVal = types.ListNull(types.StringType)
+	default:
+		var d diag.Diagnostics
+		destinationPortsVal, d = types.ListValue(types.StringType, v.DestinationPorts.Elements())
+		diags.Append(d...)
+	}
 
-	diags.Append(d...)
-
-	if d.HasError() {
+	if diags.HasError() {
 		return types.ObjectUnknown(map[string]attr.Type{
 			"action":      basetypes.StringType{},
 			"description": basetypes.StringType{},
@@ -663,11 +679,19 @@ func (v FirewallRulesValue) ToObjectValue(ctx context.Context) (basetypes.Object
 		}), diags
 	}
 
-	sourceAddressesVal, d := types.ListValue(types.StringType, v.SourceAddresses.Elements())
+	var sourceAddressesVal basetypes.ListValue
+	switch {
+	case v.SourceAddresses.IsUnknown():
+		sourceAddressesVal = types.ListUnknown(types.StringType)
+	case v.SourceAddresses.IsNull():
+		sourceAddressesVal = types.ListNull(types.StringType)
+	default:
+		var d diag.Diagnostics
+		sourceAddressesVal, d = types.ListValue(types.StringType, v.SourceAddresses.Elements())
+		diags.Append(d...)
+	}
 
-	diags.Append(d...)
-
-	if d.HasError() {
+	if diags.HasError() {
 		return types.ObjectUnknown(map[string]attr.Type{
 			"action":      basetypes.StringType{},
 			"description": basetypes.StringType{},

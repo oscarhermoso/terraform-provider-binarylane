@@ -15,6 +15,8 @@ jobs:
     name: Acceptance Tests
     runs-on: ubuntu-latest
     environment: test
+    concurrency:
+      group: test
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
@@ -24,7 +26,16 @@ jobs:
         with:
           terraform_version: '1.5.*'
           terraform_wrapper: false
-      - run: go test -v -cover ./...
+      - name: Check if generated files are up to date
+        run: |
+          go generate
+          git diff --color --exit-code
+          if [ $? -ne 0 ]; then
+            echo "generated files are not up to date, please run 'go generate' and commit the changes" >&2
+            exit 1
+          fi
+      - name: Run tests
+        run: go test -v -cover ./internal/provider/...
         env:
           TF_ACC: '1'
           BINARYLANE_API_TOKEN: ${{ secrets.BINARYLANE_API_TOKEN }}

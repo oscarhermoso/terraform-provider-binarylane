@@ -8,4 +8,4 @@ package main
 //go:generate mkdir -p internal/resources internal/data_sources
 //go:generate go run github.com/hashicorp/terraform-plugin-codegen-framework/cmd/tfplugingen-framework generate resources --input=./provider_code_spec.json --output=./internal/resources --package=resources
 //go:generate go run github.com/hashicorp/terraform-plugin-codegen-framework/cmd/tfplugingen-framework generate data-sources --input=./provider_code_spec.json --output=./internal/data_sources --package=data_sources
-//go:generate tfplugindocs generate
+//go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate
