@@ -1,6 +1,8 @@
 version: 2
 updates:
   - package-ecosystem: 'github-actions'
+    commit-message:
+      prefix: '🐈 '
     directory: '/'
     schedule:
       interval: 'weekly'
@@ -13,6 +15,8 @@ updates:
           - 'minor'
           - 'patch'
   - package-ecosystem: 'gomod'
+    commit-message:
+      prefix: '🐹 '
     directory: '/'
     schedule:
       interval: 'weekly'
