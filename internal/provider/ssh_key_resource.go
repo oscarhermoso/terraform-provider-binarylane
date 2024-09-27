@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"terraform-provider-binarylane/internal/binarylane"
 	"terraform-provider-binarylane/internal/resources"
 
@@ -29,6 +30,11 @@ func NewSshKeyResource() resource.Resource {
 
 type sshKeyResource struct {
 	bc *BinarylaneClient
+}
+
+type sshKeyModel struct {
+	resources.SshKeyModel
+	Fingerprint types.String `tfsdk:"fingerprint"`
 }
 
 func (d *sshKeyResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -74,10 +80,20 @@ func (r *sshKeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 		MarkdownDescription: public_key.GetMarkdownDescription(),
 		PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 	}
+
+	// Additional attributes
+	fingerprintDescription := "The fingerprint of the SSH key."
+	resp.Schema.Attributes["fingerprint"] = &schema.StringAttribute{
+		Description:         fingerprintDescription,
+		MarkdownDescription: fingerprintDescription,
+		Optional:            false,
+		Required:            false,
+		Computed:            true,
+	}
 }
 
 func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data resources.SshKeyModel
+	var data sshKeyModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -109,6 +125,7 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// Set data values
 	data.Id = types.Int64Value(*sshResp.JSON200.SshKey.Id)
+	data.Fingerprint = types.StringValue(*sshResp.JSON200.SshKey.Fingerprint)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -119,7 +136,7 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 }
 
 func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data resources.SshKeyModel
+	var data sshKeyModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -151,14 +168,15 @@ func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	data.Id = types.Int64Value(*sshResp.JSON200.SshKey.Id)
 	data.Default = types.BoolValue(*sshResp.JSON200.SshKey.Default)
 	data.Name = types.StringValue(*sshResp.JSON200.SshKey.Name)
-	// data.PublicKey = types.StringValue(*sshResp.JSON200.SshKey.PublicKey) // don't set or it will force replacement every time
+	data.PublicKey = types.StringValue(*sshResp.JSON200.SshKey.PublicKey)
+	data.Fingerprint = types.StringValue(*sshResp.JSON200.SshKey.Fingerprint)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *sshKeyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data resources.SshKeyModel
+	var data sshKeyModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -191,7 +209,7 @@ func (r *sshKeyResource) Update(ctx context.Context, req resource.UpdateRequest,
 }
 
 func (r *sshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data resources.SshKeyModel
+	var data sshKeyModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -218,7 +236,67 @@ func (r *sshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-func (r *sshKeyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Retrieve import ID and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r *sshKeyResource) ImportState(
+	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
+) {
+	// Import by ID
+	id, err := strconv.ParseInt(req.ID, 10, 32)
+	if err == nil {
+		diags := resp.State.SetAttribute(ctx, path.Root("id"), int32(id))
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	// Import by name
+	var page int32 = 1
+	perPage := int32(200)
+	var sshKey binarylane.SshKey
+	var nextPage bool = true
+
+	for nextPage { // Need to paginate because the API does not support filtering by fingerprint
+		params := binarylane.GetAccountKeysParams{
+			Page:    &page,
+			PerPage: &perPage,
+		}
+
+		sshResp, err := r.bc.client.GetAccountKeysWithResponse(ctx, &params)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error getting SSH key for import: fingerprint=%s", req.ID), err.Error())
+			return
+		}
+
+		if sshResp.StatusCode() != http.StatusOK {
+			resp.Diagnostics.AddError(
+				"Unexpected HTTP status code getting SSH key for import",
+				fmt.Sprintf("Received %s reading SSH key: fingerprint=%s. Details: %s", sshResp.Status(), req.ID,
+					sshResp.Body))
+			return
+		}
+
+		sshKeys := sshResp.JSON200.SshKeys
+		for _, key := range sshKeys {
+			if *key.Fingerprint == req.ID {
+				sshKey = key
+				nextPage = false
+				break
+			}
+		}
+		if sshResp.JSON200.Links == nil || sshResp.JSON200.Links.Pages == nil || sshResp.JSON200.Links.Pages.Next == nil {
+			nextPage = false
+			break
+		}
+
+		page++
+	}
+
+	if sshKey.Id == nil {
+		resp.Diagnostics.AddError(
+			"Could not find SSH key by fingerprint",
+			fmt.Sprintf("Error finding SSH key: fingerprint=%s", req.ID),
+		)
+		return
+	}
+
+	diags := resp.State.SetAttribute(ctx, path.Root("id"), *sshKey.Id)
+	resp.Diagnostics.Append(diags...)
 }

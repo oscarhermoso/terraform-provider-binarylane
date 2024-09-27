@@ -24,3 +24,7 @@ description: |-
 
 - `default` (Boolean) Optional: If true this will be added to all new server installations (if we support SSH Key injection for the server's operating system).
 - `id` (Number) The ID or fingerprint of the SSH Key to fetch.
+
+### Read-Only
+
+- `fingerprint` (String) The fingerprint of the SSH key.

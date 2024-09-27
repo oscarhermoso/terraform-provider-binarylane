@@ -7,6 +7,7 @@ import (
 	"terraform-provider-binarylane/internal/resources"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -59,10 +60,20 @@ func (d *sshKeyDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 	}
 	resp.Schema = *ds
 	// resp.Schema.Description = "TODO"
+
+	// Additional attributes
+	fingerprintDescription := "The fingerprint of the SSH key."
+	resp.Schema.Attributes["fingerprint"] = &schema.StringAttribute{
+		Description:         fingerprintDescription,
+		MarkdownDescription: fingerprintDescription,
+		Optional:            false,
+		Required:            false,
+		Computed:            true,
+	}
 }
 
 func (d *sshKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data resources.SshKeyModel
+	var data sshKeyModel
 
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -88,11 +99,11 @@ func (d *sshKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	// Example data value setting
 	data.Id = types.Int64Value(*sshResp.JSON200.SshKey.Id)
 	data.Default = types.BoolValue(*sshResp.JSON200.SshKey.Default)
 	data.Name = types.StringValue(*sshResp.JSON200.SshKey.Name)
 	data.PublicKey = types.StringValue(*sshResp.JSON200.SshKey.PublicKey)
+	data.Fingerprint = types.StringValue(*sshResp.JSON200.SshKey.Fingerprint)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
