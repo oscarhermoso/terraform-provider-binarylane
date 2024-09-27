@@ -3,8 +3,9 @@ name: Terraform Provider Tests
 on:
   pull_request:
     paths:
-      - '.github/workflows/test.yaml'
+      - '.github/workflows/test.yml'
       - '**.go'
+  workflow_call:
 
 permissions:
   # Permission for checking out code
