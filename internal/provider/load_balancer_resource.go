@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"terraform-provider-binarylane/internal/binarylane"
 	"terraform-provider-binarylane/internal/resources"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -153,6 +154,49 @@ func (r *loadBalancerResource) Create(ctx context.Context, req resource.CreateRe
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+	// Wait for server to be ready
+	var createActionId int64
+	for _, action := range *lbResp.JSON200.Links.Actions {
+		if *action.Rel == "create_load_balancer" {
+			createActionId = *action.Id
+			break
+		}
+	}
+	if createActionId == 0 {
+		resp.Diagnostics.AddError(
+			"Unable to wait for load balancer to be created, links.actions with rel=create_load_balancer missing from response",
+			fmt.Sprintf("Received %s creating new load balancer: name=%s. Details: %s", lbResp.Status(), data.Name.ValueString(), lbResp.Body))
+		return
+	}
+
+	timeLimit := time.Now().Add(time.Duration(60 * time.Second))
+	for {
+		tflog.Info(ctx, "Waiting for load balancer to be ready...")
+
+		readyResp, err := r.bc.client.GetActionsActionIdWithResponse(ctx, createActionId)
+		if err != nil {
+			resp.Diagnostics.AddError("Error waiting for load balancer to be ready", err.Error())
+			return
+		}
+		if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {
+			tflog.Info(ctx, "Load balancer is ready")
+			break
+		}
+		if time.Now().After(timeLimit) {
+			resp.Diagnostics.AddError(
+				"Timed out waiting for load balancer to be ready",
+				fmt.Sprintf(
+					"Timed out waiting for load balancer to be created, as `wait_for_create` was surpassed without "+
+						"recieving a `completed_at` in response: name=%s, status=%s, details: %s",
+					data.Name.ValueString(), readyResp.Status(), readyResp.Body,
+				),
+			)
+			return
+		}
+		tflog.Debug(ctx, fmt.Sprintf("Waiting for load balancer to be ready: name=%s, status=%s, details: %s", data.Name.ValueString(), readyResp.Status(), readyResp.Body))
+		time.Sleep(time.Second * 5)
+	}
 }
 
 func (r *loadBalancerResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
