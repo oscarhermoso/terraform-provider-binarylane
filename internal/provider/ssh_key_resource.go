@@ -21,7 +21,7 @@ import (
 var (
 	_ resource.Resource                = &sshKeyResource{}
 	_ resource.ResourceWithConfigure   = &sshKeyResource{}
-	_ resource.ResourceWithImportState = &serverResource{}
+	_ resource.ResourceWithImportState = &sshKeyResource{}
 )
 
 func NewSshKeyResource() resource.Resource {
@@ -117,8 +117,8 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 	if sshResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
-			"Unexpected HTTP status code creating server",
-			fmt.Sprintf("Received %s creating new server: name=%s. Details: %s", sshResp.Status(), data.Name.ValueString(), sshResp.Body),
+			"Unexpected HTTP status code creating new SSH key",
+			fmt.Sprintf("Received %s creating new SSH key: name=%s. Details: %s", sshResp.Status(), data.Name.ValueString(), sshResp.Body),
 		)
 		return
 	}
@@ -158,8 +158,8 @@ func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 	if sshResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
-			"Unexpected HTTP status code creating server",
-			fmt.Sprintf("Received %s creating new server: name=%s. Details: %s", sshResp.Status(), data.Name.ValueString(), sshResp.Body),
+			"Unexpected HTTP status code getting SSH key",
+			fmt.Sprintf("Received %s getting SSH key: name=%s. Details: %s", sshResp.Status(), data.Name.ValueString(), sshResp.Body),
 		)
 		return
 	}
@@ -268,7 +268,7 @@ func (r *sshKeyResource) ImportState(
 		if sshResp.StatusCode() != http.StatusOK {
 			resp.Diagnostics.AddError(
 				"Unexpected HTTP status code getting SSH key for import",
-				fmt.Sprintf("Received %s reading SSH key: fingerprint=%s. Details: %s", sshResp.Status(), req.ID,
+				fmt.Sprintf("Received %s getting SSH key for import: fingerprint=%s. Details: %s", sshResp.Status(), req.ID,
 					sshResp.Body))
 			return
 		}
