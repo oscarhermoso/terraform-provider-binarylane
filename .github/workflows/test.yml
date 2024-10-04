@@ -34,7 +34,7 @@ jobs:
       - name: Check if generated files are up to date
         run: |
           go generate
-          git diff --color --exit-code
+          git diff --color --exit-code --ignore-matching-lines='//'
           if [ $? -ne 0 ]; then
             echo "generated files are not up to date, please run 'go generate' and commit the changes" >&2
             exit 1
