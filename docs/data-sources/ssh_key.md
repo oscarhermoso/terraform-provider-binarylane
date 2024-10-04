@@ -22,5 +22,6 @@ description: |-
 ### Read-Only
 
 - `default` (Boolean) Optional: If true this will be added to all new server installations (if we support SSH Key injection for the server's operating system).
+- `fingerprint` (String) The fingerprint of the SSH key.
 - `name` (String) A name to help you identify the key.
 - `public_key` (String) The public key in OpenSSH "authorized_keys" format.

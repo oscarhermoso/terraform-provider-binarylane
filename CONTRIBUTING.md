@@ -35,7 +35,10 @@ terraform apply
 
 
 ```sh
-TF_DEBUG=1 BINARYLANE_API_TOKEN=********* TF_ACC=1 go test -v ./...
+cp .env.example .env
+# Add your API token to .env
+eval export $(cat .env)
+go test -v ./internal/provider/...
 ```
 
 ### Update modules

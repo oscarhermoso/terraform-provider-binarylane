@@ -7,11 +7,13 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestSshKeyResource(t *testing.T) {
 	publicKey := GeneratePublicKey(t)
-	resource.Test(t, resource.TestCase{
+
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -43,13 +45,19 @@ data "binarylane_ssh_key" "test" {
 				),
 			},
 			// ImportState testing
-			// TODO
-			// {
-			// 	ResourceName:            "binarylane_ssh_key.test",
-			// 	ImportState:             true,
-			// 	ImportStateVerify:       true,
-			// 	ImportStateVerifyIgnore: []string{}, // nothing to ignore
-			// },
+			{
+				ResourceName:            "binarylane_ssh_key.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{}, // nothing to ignore
+			},
+			{
+				ResourceName:            "binarylane_ssh_key.test",
+				ImportStateIdFunc:       ImportByFingerprint,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{}, // nothing to ignore
+			},
 			// TODO: Update and Read testing
 			// 			{
 			// 				Config: providerConfig + `
@@ -73,11 +81,28 @@ data "binarylane_ssh_key" "test" {
 func GeneratePublicKey(t *testing.T) string {
 	t.Helper()
 
-	_, pub, err := ed25519.GenerateKey(nil)
+	pub, _, err := ed25519.GenerateKey(nil)
 	if err != nil {
 		t.Fatalf("failed to generate key: %v", err)
 	}
 
 	encoded := base64.StdEncoding.EncodeToString(pub)
 	return fmt.Sprintf("ssh-ed25519 %s test@company.internal", encoded)
+}
+
+func ImportByFingerprint(state *terraform.State) (fingerprint string, err error) {
+	resourceName := "binarylane_ssh_key.test"
+	var rawState map[string]string
+	for _, m := range state.Modules {
+		if len(m.Resources) > 0 {
+			if v, ok := m.Resources[resourceName]; ok {
+				rawState = v.Primary.Attributes
+			}
+		}
+	}
+	if rawState == nil {
+		return "", fmt.Errorf("resource not found: %s", resourceName)
+	}
+
+	return rawState["fingerprint"], nil
 }

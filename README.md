@@ -44,7 +44,7 @@ Images:
 
 ```sh
 curl -X GET "https://api.binarylane.com.au/v2/images?type=distribution&&page=1&per_page=200" \
-  -H "Authorization: Bearer **********" > tmp/images.json
+  -H "Authorization: Bearer $BINARYLANE_API_TOKEN" > tmp/images.json
 
 jq '[ .images[] | .slug ] | sort' tmp/images.json
 ```
@@ -81,7 +81,7 @@ Regions:
 
 ```sh
 curl -X GET "https://api.binarylane.com.au/v2/regions" \
-  -H "Authorization: Bearer **********"" > tmp/regions.json
+  -H "Authorization: Bearer $BINARYLANE_API_TOKEN" > tmp/regions.json
 
 jq '[ .regions[] | .slug ] | sort' tmp/regions.json
 ```
@@ -103,7 +103,7 @@ jq '[ .regions[] | .slug ] | sort' tmp/regions.json
 
 ```sh
 curl -X GET "https://api.binarylane.com.au/v2/sizes" \
-  -H "Authorization: Bearer **********"" > tmp/sizes.json
+  -H "Authorization: Bearer $BINARYLANE_API_TOKEN" > tmp/sizes.json
 
 jq '[ .sizes[] | .slug ] | sort' tmp/sizes.json
 ```
