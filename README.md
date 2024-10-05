@@ -1,6 +1,6 @@
 # terraform-provider-binarylane
 
-See the examples in the [examples directory](./examples/basic/README.md).
+See the examples in the [examples directory](./examples/README.md).
 
 ```terraform
 resource "binarylane_server" "example" {
