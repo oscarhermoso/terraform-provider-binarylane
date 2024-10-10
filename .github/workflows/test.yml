@@ -23,7 +23,7 @@ jobs:
       group: test
       cancel-in-progress: true # would be nice if GH offered cancel-pending instead, https://github.com/orgs/community/discussions/63136
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
@@ -48,7 +48,7 @@ jobs:
   #   name: Unit Tests
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3
+  #     - uses: actions/checkout@v4
   #     - uses: actions/setup-go@v5
   #       with:
   #         go-version-file: 'go.mod'
