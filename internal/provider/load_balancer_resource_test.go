@@ -1,8 +1,15 @@
 package provider
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"strings"
+	"terraform-provider-binarylane/internal/binarylane"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -81,6 +88,72 @@ data "binarylane_load_balancer" "test" {
 				ImportStateId:     "tf-test-lb",
 				ImportStateVerify: true,
 			},
+		},
+	})
+}
+
+func init() {
+	resource.AddTestSweepers("load_balancer", &resource.Sweeper{
+		Name:         "load_balancer",
+		Dependencies: []string{"server"},
+		F: func(_ string) error {
+			endpoint := os.Getenv("BINARYLANE_API_ENDPOINT")
+			if endpoint == "" {
+				endpoint = "https://api.binarylane.com.au/v2"
+			}
+			token := os.Getenv("BINARYLANE_API_TOKEN")
+
+			client, err := binarylane.NewClientWithAuth(
+				endpoint,
+				token,
+			)
+
+			if err != nil {
+				return fmt.Errorf("Error creating Binary Lane API client: %w", err)
+			}
+
+			ctx := context.Background()
+
+			var page int32 = 1
+			perPage := int32(200)
+			var nextPage bool = true
+
+			for nextPage {
+				params := binarylane.GetLoadBalancersParams{
+					Page:    &page,
+					PerPage: &perPage,
+				}
+
+				lbResp, err := client.GetLoadBalancersWithResponse(ctx, &params)
+				if err != nil {
+					return fmt.Errorf("Error getting load balancers for test sweep: %w", err)
+				}
+
+				if lbResp.StatusCode() != http.StatusOK {
+					return fmt.Errorf("Unexpected status code getting load balancers for test sweep: %s", lbResp.Body)
+				}
+
+				loadBalancers := *lbResp.JSON200.LoadBalancers
+				for _, lb := range loadBalancers {
+					if strings.HasPrefix(*lb.Name, "tf-test-") {
+						lbResp, err := client.DeleteLoadBalancersLoadBalancerIdWithResponse(ctx, *lb.Id)
+						if err != nil {
+							return fmt.Errorf("Error deleting load balancer %d for test sweep: %w", *lb.Id, err)
+						}
+						if lbResp.StatusCode() != http.StatusOK {
+							return fmt.Errorf("Unexpected status deleting load balancer %d in test sweep: %s", *lb.Id, lbResp.Body)
+						}
+						log.Println("Deleted load balancer during test sweep:", *lb.Id)
+					}
+				}
+				if lbResp.JSON200.Links == nil || lbResp.JSON200.Links.Pages == nil || lbResp.JSON200.Links.Pages.Next == nil {
+					nextPage = false
+					break
+				}
+
+				page++
+			}
+			return nil
 		},
 	})
 }

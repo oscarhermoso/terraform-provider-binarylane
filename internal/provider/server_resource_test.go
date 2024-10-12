@@ -1,8 +1,15 @@
 package provider
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"strings"
+	"terraform-provider-binarylane/internal/binarylane"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -106,6 +113,73 @@ echo "Hello World" > /var/tmp/output.txt
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "user_data", "wait_for_create", "public_ipv4_count"},
 			},
+		},
+	})
+}
+
+func init() {
+	resource.AddTestSweepers("server", &resource.Sweeper{
+		Name:         "server",
+		Dependencies: []string{},
+		F: func(_ string) error {
+			endpoint := os.Getenv("BINARYLANE_API_ENDPOINT")
+			if endpoint == "" {
+				endpoint = "https://api.binarylane.com.au/v2"
+			}
+			token := os.Getenv("BINARYLANE_API_TOKEN")
+
+			client, err := binarylane.NewClientWithAuth(
+				endpoint,
+				token,
+			)
+
+			if err != nil {
+				return fmt.Errorf("Error creating Binary Lane API client: %w", err)
+			}
+
+			ctx := context.Background()
+
+			var page int32 = 1
+			perPage := int32(200)
+			nextPage := true
+
+			for nextPage {
+				params := binarylane.GetServersParams{
+					Page:    &page,
+					PerPage: &perPage,
+				}
+
+				serverResp, err := client.GetServersWithResponse(ctx, &params)
+				if err != nil {
+					return fmt.Errorf("Error getting servers for test sweep: %w", err)
+				}
+
+				if serverResp.StatusCode() != http.StatusOK {
+					return fmt.Errorf("Unexpected status code getting servers in test sweep: %s", serverResp.Body)
+				}
+
+				servers := *serverResp.JSON200.Servers
+				for _, s := range servers {
+					if strings.HasPrefix(*s.Name, "tf-test-") {
+						serverResp, err := client.DeleteLoadBalancersLoadBalancerIdWithResponse(ctx, *s.Id)
+						if err != nil {
+							return fmt.Errorf("Error deleting server %d during test sweep: %w", *s.Id, err)
+						}
+						if serverResp.StatusCode() != http.StatusOK {
+							return fmt.Errorf("Unexpected status deleting server %d in test sweep: %s", *s.Id, serverResp.Body)
+						}
+						log.Println("Deleted server during test sweep:", *s.Id)
+					}
+				}
+				if serverResp.JSON200.Links == nil || serverResp.JSON200.Links.Pages == nil || serverResp.JSON200.Links.Pages.Next == nil {
+					nextPage = false
+					break
+				}
+
+				page++
+			}
+
+			return nil
 		},
 	})
 }
