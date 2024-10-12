@@ -140,8 +140,8 @@ func init() {
 						if err != nil {
 							return fmt.Errorf("Error deleting load balancer %d for test sweep: %w", *lb.Id, err)
 						}
-						if lbResp.StatusCode() != http.StatusOK {
-							return fmt.Errorf("Unexpected status deleting load balancer %d in test sweep: %s", *lb.Id, lbResp.Body)
+						if lbResp.StatusCode() != http.StatusNoContent {
+							return fmt.Errorf("Unexpected status %d deleting load balancer %d in test sweep: %s", lbResp.StatusCode(), *lb.Id, lbResp.Body)
 						}
 						log.Println("Deleted load balancer during test sweep:", *lb.Id)
 					}

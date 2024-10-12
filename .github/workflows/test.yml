@@ -44,6 +44,12 @@ jobs:
         env:
           TF_ACC: '1'
           BINARYLANE_API_TOKEN: ${{ secrets.BINARYLANE_API_TOKEN }}
+      - name: Run sweepers
+        if: failure()
+        run: go test -v  ./internal/provider/... -sweep=all
+        env:
+          TF_ACC: '1'
+          BINARYLANE_API_TOKEN: ${{ secrets.BINARYLANE_API_TOKEN }}
   # unit:
   #   name: Unit Tests
   #   runs-on: ubuntu-latest

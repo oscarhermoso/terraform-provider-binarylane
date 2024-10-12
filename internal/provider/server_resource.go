@@ -259,11 +259,12 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	const maxRetries = 3
-	var serverResp binarylane.PostServersResponse
+	var serverResp *binarylane.PostServersResponse
 
 retryLoop:
 	for i := 0; i < maxRetries; i++ {
-		serverResp, err := r.bc.client.PostServersWithResponse(ctx, body)
+		var err error
+		serverResp, err = r.bc.client.PostServersWithResponse(ctx, body)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				fmt.Sprintf("Error creating server: name=%s", data.Name.ValueString()),

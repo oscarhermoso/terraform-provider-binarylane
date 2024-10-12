@@ -119,8 +119,7 @@ echo "Hello World" > /var/tmp/output.txt
 
 func init() {
 	resource.AddTestSweepers("server", &resource.Sweeper{
-		Name:         "server",
-		Dependencies: []string{},
+		Name: "server",
 		F: func(_ string) error {
 			endpoint := os.Getenv("BINARYLANE_API_ENDPOINT")
 			if endpoint == "" {
@@ -161,12 +160,17 @@ func init() {
 				servers := *serverResp.JSON200.Servers
 				for _, s := range servers {
 					if strings.HasPrefix(*s.Name, "tf-test-") {
-						serverResp, err := client.DeleteLoadBalancersLoadBalancerIdWithResponse(ctx, *s.Id)
+						reason := "Terraform deletion"
+						params := binarylane.DeleteServersServerIdParams{
+							Reason: &reason,
+						}
+
+						serverResp, err := client.DeleteServersServerIdWithResponse(ctx, *s.Id, &params)
 						if err != nil {
 							return fmt.Errorf("Error deleting server %d during test sweep: %w", *s.Id, err)
 						}
-						if serverResp.StatusCode() != http.StatusOK {
-							return fmt.Errorf("Unexpected status deleting server %d in test sweep: %s", *s.Id, serverResp.Body)
+						if serverResp.StatusCode() != http.StatusNoContent {
+							return fmt.Errorf("Unexpected status %d deleting server %d in test sweep: %s", serverResp.StatusCode(), *s.Id, serverResp.Body)
 						}
 						log.Println("Deleted server during test sweep:", *s.Id)
 					}

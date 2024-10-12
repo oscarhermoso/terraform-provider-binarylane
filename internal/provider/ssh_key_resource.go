@@ -106,11 +106,12 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// Create API call logic
 	const maxRetries = 3
-	var sshResp binarylane.PostAccountKeysResponse
+	var sshResp *binarylane.PostAccountKeysResponse
 
 retryLoop:
 	for i := 0; i < maxRetries; i++ {
-		sshResp, err := r.bc.client.PostAccountKeysWithResponse(ctx, binarylane.SshKeyRequest{
+		var err error
+		sshResp, err = r.bc.client.PostAccountKeysWithResponse(ctx, binarylane.SshKeyRequest{
 			Name:      data.Name.ValueString(),
 			Default:   data.Default.ValueBoolPointer(),
 			PublicKey: data.PublicKey.ValueString(),

@@ -129,11 +129,12 @@ func (r *loadBalancerResource) Create(ctx context.Context, req resource.CreateRe
 	tflog.Info(ctx, fmt.Sprintf("Creating Load Balancer: name=%s", data.Name.ValueString()))
 
 	const maxRetries = 3
-	var lbResp binarylane.PostLoadBalancersResponse
+	var lbResp *binarylane.PostLoadBalancersResponse
 
 retryLoop:
 	for i := 0; i < maxRetries; i++ {
-		lbResp, err := r.bc.client.PostLoadBalancersWithResponse(ctx, body)
+		var err error
+		lbResp, err = r.bc.client.PostLoadBalancersWithResponse(ctx, body)
 		if err != nil {
 			tflog.Info(ctx, fmt.Sprintf("Attempted to create new load balancer: request=%+v", body))
 			resp.Diagnostics.AddError(
@@ -173,6 +174,8 @@ retryLoop:
 		)
 		return
 	}
+
+	data.Id = types.Int64Value(*lbResp.JSON200.LoadBalancer.Id)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
