@@ -5,9 +5,7 @@ import (
 	"os"
 	"terraform-provider-binarylane/internal/binarylane"
 
-	"github.com/deepmap/oapi-codegen/pkg/securityprovider"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -67,60 +65,24 @@ func (p *binarylaneProvider) Configure(ctx context.Context, req provider.Configu
 		return
 	}
 
-	if config.Endpoint.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("api_endpoint"),
-			"Unknown Binary Lane API endpoint",
-			"The provider cannot create the Binary Lane API client as there is an unknown configuration value for the "+
-				"Binary Lane API endpoint. Either target apply the source of the value first, set the value statically in "+
-				"the configuration, or use the BINARYLANE_API_ENDPOINT environment variable.",
-		)
-	}
-	if config.Token.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("api_token"),
-			"Unknown Binary Lane token",
-			"The provider cannot create the Binary Lane API client as there is an unknown configuration value for the "+
-				"Binary Lane API token. Either target apply the source of the value first, set the value statically in the "+
-				"configuration, or use the BINARYLANE_API_TOKEN environment variable.",
-		)
-	}
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Default values to environment variables, but override
-	// with Terraform configuration value if set.
-	endpoint := os.Getenv("BINARYLANE_API_ENDPOINT")
-	token := os.Getenv("BINARYLANE_API_TOKEN")
-	if !config.Endpoint.IsNull() {
-		endpoint = config.Endpoint.ValueString()
-	}
-	if !config.Token.IsNull() {
-		token = config.Token.ValueString()
-	}
+	endpoint := config.Endpoint.ValueString()
 	if endpoint == "" {
-		endpoint = "https://api.binarylane.com.au/v2"
-	}
-	if token == "" {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("api_token"),
-			"Missing Binary Lane API token",
-			"The provider cannot create the Binary Lane API client as there is a missing or empty value for the Binary "+
-				"Lane API token. Set the token value in the configuration or use the BINARYLANE_API_TOKEN environment "+
-				"variable. If either is already set, ensure the value is not empty.",
-		)
-	}
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	auth, err := securityprovider.NewSecurityProviderBearerToken(token)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to create security provider with supplied token", err.Error())
-		return
+		endpoint = os.Getenv("BINARYLANE_API_ENDPOINT")
+		if endpoint == "" {
+			endpoint = "https://api.binarylane.com.au/v2"
+		}
 	}
 
-	client, err := binarylane.NewClientWithResponses(endpoint, binarylane.WithRequestEditorFn(auth.Intercept))
+	token := config.Token.ValueString()
+	if token == "" {
+		token = os.Getenv("BINARYLANE_API_TOKEN")
+	}
+
+	client, err := binarylane.NewClientWithAuth(
+		endpoint,
+		token,
+	)
+
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to create Binary Lane API client", err.Error())
 		return

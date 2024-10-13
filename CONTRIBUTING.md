@@ -41,6 +41,12 @@ eval export $(cat .env)
 go test -v ./internal/provider/...
 ```
 
+To run Sweepers:
+
+```sh
+go test -v  ./internal/provider/... -sweep=all
+```
+
 ### Update modules
 
 ```sh

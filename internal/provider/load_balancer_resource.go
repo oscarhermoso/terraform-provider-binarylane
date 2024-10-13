@@ -128,29 +128,54 @@ func (r *loadBalancerResource) Create(ctx context.Context, req resource.CreateRe
 
 	tflog.Info(ctx, fmt.Sprintf("Creating Load Balancer: name=%s", data.Name.ValueString()))
 
-	lbResp, err := r.bc.client.PostLoadBalancersWithResponse(ctx, body)
-	if err != nil {
-		tflog.Info(ctx, fmt.Sprintf("Attempted to create new load balancer: request=%+v", body))
+	const maxRetries = 3
+	var lbResp *binarylane.PostLoadBalancersResponse
+
+retryLoop:
+	for i := 0; i < maxRetries; i++ {
+		var err error
+		lbResp, err = r.bc.client.PostLoadBalancersWithResponse(ctx, body)
+		if err != nil {
+			tflog.Info(ctx, fmt.Sprintf("Attempted to create new load balancer: request=%+v", body))
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error sending request to create load balancer: name=%s", data.Name.ValueString()),
+				err.Error(),
+			)
+			return
+		}
+
+		switch lbResp.StatusCode() {
+
+		case http.StatusOK:
+			break retryLoop
+
+		case http.StatusInternalServerError:
+			if i < maxRetries-1 {
+				tflog.Warn(ctx, "Received 500 creating load balancer, retrying...")
+				time.Sleep(time.Second * 5)
+				continue
+			}
+
+		default:
+			tflog.Info(ctx, fmt.Sprintf("Attempted to create new load balancer: request=%+v", body))
+			resp.Diagnostics.AddError(
+				"Unexpected HTTP status code creating load balancer",
+				fmt.Sprintf("Received %s creating new load balancer: name=%s. Details: %s", lbResp.Status(), data.Name.ValueString(), lbResp.Body),
+			)
+			return
+		}
+	}
+
+	// Check if retries exceeded
+	if lbResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error sending request to create load balancer: name=%s", data.Name.ValueString()),
-			err.Error(),
+			"Failed to create load balancer after retries",
+			fmt.Sprintf("Final status code: %d", lbResp.StatusCode()),
 		)
 		return
 	}
 
-	if lbResp.StatusCode() != http.StatusOK {
-		tflog.Info(ctx, fmt.Sprintf("Attempted to create new load balancer: request=%+v", body))
-		resp.Diagnostics.AddError(
-			"Unexpected HTTP status code creating load balancer",
-			fmt.Sprintf("Received %s creating new load balancer: name=%s. Details: %s", lbResp.Status(), data.Name.ValueString(), lbResp.Body))
-		return
-	}
-
-	diags = SetLoadBalancerModelState(ctx, &data.LoadBalancerModel, lbResp.JSON200.LoadBalancer)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
-		return
-	}
+	data.Id = types.Int64Value(*lbResp.JSON200.LoadBalancer.Id)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -255,21 +255,51 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 		data.Password = types.StringNull()
 	} else {
 		body.Password = data.Password.ValueStringPointer()
+		ctx = tflog.MaskMessageStrings(ctx, data.Password.String())
 	}
 
-	serverResp, err := r.bc.client.PostServersWithResponse(ctx, body)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error creating server: name=%s", data.Name.ValueString()),
-			err.Error(),
-		)
-		return
+	const maxRetries = 3
+	var serverResp *binarylane.PostServersResponse
+
+retryLoop:
+	for i := 0; i < maxRetries; i++ {
+		var err error
+		serverResp, err = r.bc.client.PostServersWithResponse(ctx, body)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error creating server: name=%s", data.Name.ValueString()),
+				err.Error(),
+			)
+			return
+		}
+
+		switch serverResp.StatusCode() {
+
+		case http.StatusOK:
+			break retryLoop
+
+		case http.StatusInternalServerError:
+			if i < maxRetries-1 {
+				tflog.Warn(ctx, "Received 500 creating server, retrying...")
+				time.Sleep(time.Second * 5)
+				continue
+			}
+
+		default:
+			resp.Diagnostics.AddError(
+				"Unexpected HTTP status code creating server",
+				fmt.Sprintf("Received %s creating new server: name=%s. Details: %s", serverResp.Status(), data.Name.ValueString(), serverResp.Body),
+			)
+			return
+		}
 	}
 
+	// Check if retries exceeded
 	if serverResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
-			"Unexpected HTTP status code creating server",
-			fmt.Sprintf("Received %s creating new server: name=%s. Details: %s", serverResp.Status(), data.Name.ValueString(), serverResp.Body))
+			"Failed to create server after retries",
+			fmt.Sprintf("Final status code: %d", serverResp.StatusCode()),
+		)
 		return
 	}
 
