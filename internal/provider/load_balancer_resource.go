@@ -175,7 +175,11 @@ retryLoop:
 		return
 	}
 
-	data.Id = types.Int64Value(*lbResp.JSON200.LoadBalancer.Id)
+	diags = SetLoadBalancerModelState(ctx, &data.LoadBalancerModel, lbResp.JSON200.LoadBalancer)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
