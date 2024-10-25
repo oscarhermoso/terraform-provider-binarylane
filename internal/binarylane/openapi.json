@@ -11845,7 +11845,10 @@
               }
             ],
             "description": "The rules that determine which servers are considered 'healthy' and in the server pool for the load balancer.",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "health_check"
+            }
           },
           "region": {
             "allOf": [

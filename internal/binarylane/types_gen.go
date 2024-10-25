@@ -1860,7 +1860,7 @@ type LoadBalancer struct {
 	ForwardingRules *[]ForwardingRule `json:"forwarding_rules,omitempty"`
 
 	// HealthCheck The rules that determine which servers are considered 'healthy' and in the server pool for the load balancer.
-	HealthCheck *HealthCheck `json:"health_check,omitempty"`
+	HealthCheck *HealthCheck `json:"health_check,omitempty" tfsdk:"health_check"`
 
 	// Id The ID of the load balancer.
 	Id *int64 `json:"id,omitempty"`

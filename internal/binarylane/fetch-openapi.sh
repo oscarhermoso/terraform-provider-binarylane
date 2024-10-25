@@ -39,4 +39,5 @@ cat <<<$(jq '.components.schemas.AdvancedFirewallRule.properties.source_addresse
 ## Load Balancer
 cat <<<$(jq '.components.schemas.CreateLoadBalancerRequest.properties.forwarding_rules += {"x-oapi-codegen-extra-tags": {"tfsdk": "forwarding_rules"}}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.components.schemas.ForwardingRule.properties.entry_protocol += {"x-oapi-codegen-extra-tags": {"tfsdk": "entry_protocol"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.LoadBalancer.properties.health_check += {"x-oapi-codegen-extra-tags": {"tfsdk": "health_check"}}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.components.schemas.HealthCheckProtocol |= del(.enum)' $OPENAPI_FILE) >$OPENAPI_FILE
