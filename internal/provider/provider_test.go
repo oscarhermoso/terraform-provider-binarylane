@@ -11,6 +11,9 @@ provider "binarylane" {
   # api_token = "test123"
 	# api_endpoint = "https://test.binarylane.internal.au/v2"
 }
+
+# End of provider config
+
 `
 )
 

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -171,9 +170,10 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 	resp.Schema.Attributes["public_ipv4_count"] = &schema.Int32Attribute{
 		Description:         publicIpv4CountDescription,
 		MarkdownDescription: publicIpv4CountDescription,
-		Optional:            true,
-		Computed:            true,
-		Default:             int32default.StaticInt32(1),
+		Required:            true,
+		Optional:            false,
+		Computed:            false,
+		// Default:             int32default.StaticInt32(0), // TODO: Uncomment with 1.0 release (see issue #30)
 		Validators: []validator.Int32{
 			int32validator.AtLeast(0),
 		},
