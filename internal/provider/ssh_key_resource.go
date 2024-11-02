@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"terraform-provider-binarylane/internal/binarylane"
 	"terraform-provider-binarylane/internal/resources"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -104,52 +102,22 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	// Create API call logic
-	const maxRetries = 3
-	var sshResp *binarylane.PostAccountKeysResponse
-
-retryLoop:
-	for i := 0; i < maxRetries; i++ {
-		var err error
-		sshResp, err = r.bc.client.PostAccountKeysWithResponse(ctx, binarylane.SshKeyRequest{
-			Name:      data.Name.ValueString(),
-			Default:   data.Default.ValueBoolPointer(),
-			PublicKey: data.PublicKey.ValueString(),
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				fmt.Sprintf("Error creating SSH Key: name=%s", data.Name.ValueString()),
-				err.Error(),
-			)
-			return
-		}
-
-		switch sshResp.StatusCode() {
-
-		case http.StatusOK:
-			break retryLoop
-
-		case http.StatusInternalServerError:
-			if i < maxRetries-1 {
-				tflog.Warn(ctx, "Received 500 creating SSH key, retrying...")
-				time.Sleep(time.Second * 5)
-				continue
-			}
-
-		default:
-			resp.Diagnostics.AddError(
-				"Unexpected HTTP status code creating SSH key",
-				fmt.Sprintf("Received %s creating SSH key: name=%s. Details: %s", sshResp.Status(), data.Name.ValueString(), sshResp.Body),
-			)
-			return
-		}
+	sshResp, err := r.bc.client.PostAccountKeysWithResponse(ctx, binarylane.SshKeyRequest{
+		Name:      data.Name.ValueString(),
+		Default:   data.Default.ValueBoolPointer(),
+		PublicKey: data.PublicKey.ValueString(),
+	})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Error creating SSH Key: name=%s", data.Name.ValueString()),
+			err.Error(),
+		)
+		return
 	}
-
-	// Check if retries exceeded
 	if sshResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
-			"Failed to create SSH key after retries",
-			fmt.Sprintf("Final status code: %d", sshResp.StatusCode()),
+			"Unexpected HTTP status code creating SSH key",
+			fmt.Sprintf("Received %s creating SSH key: name=%s. Details: %s", sshResp.Status(), data.Name.ValueString(), sshResp.Body),
 		)
 		return
 	}
