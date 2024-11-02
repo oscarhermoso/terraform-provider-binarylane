@@ -25,15 +25,16 @@ func TestSshKeyResource(t *testing.T) {
 			// Create and Read testing
 			{
 				Config: providerConfig + `
+
 resource "binarylane_ssh_key" "test" {
-	name       = "tf-test-key-resource-test"
-	public_key = "` + publicKey + `"
+  name       = "tf-test-key-resource-test"
+  public_key = "` + publicKey + `"
 }
 
 data "binarylane_ssh_key" "test" {
   depends_on = [binarylane_ssh_key.test]
 
-	id = binarylane_ssh_key.test.id
+  id = binarylane_ssh_key.test.id
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(

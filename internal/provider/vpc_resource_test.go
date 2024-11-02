@@ -14,30 +14,31 @@ func TestVpcResource(t *testing.T) {
 			// Create and Read testing
 			{
 				Config: providerConfig + `
+
 resource "binarylane_vpc" "test" {
-	name     = "tf-test-vpc"
-	ip_range = "10.240.0.0/16"
+  name     = "tf-test-vpc"
+  ip_range = "10.240.0.0/16"
 }
 
 data "binarylane_vpc" "test" {
   depends_on = [binarylane_vpc.test]
 
-	id = binarylane_vpc.test.id
+  id = binarylane_vpc.test.id
 }
 
 resource "binarylane_vpc_route_entries" "test" {
-	vpc_id = binarylane_vpc.test.id
-	route_entries = [
-		{
-			description = "test"
-			destination = "0.0.0.0/0"
-			router      = "10.240.0.1"
-		}
-	]
+  vpc_id = binarylane_vpc.test.id
+  route_entries = [
+    {
+      description = "test"
+      destination = "0.0.0.0/0"
+      router      = "10.240.0.1"
+    }
+  ]
 }
 
 data "binarylane_vpc_route_entries" "test" {
-	vpc_id = binarylane_vpc_route_entries.test.vpc_id
+  vpc_id = binarylane_vpc_route_entries.test.vpc_id
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -82,21 +83,23 @@ data "binarylane_vpc_route_entries" "test" {
 			// Update and Read testing
 			{
 				Config: providerConfig + `
+
 resource "binarylane_vpc" "test" {
-	name     = "tf-test-vpc-renamed"
-	ip_range = "10.240.0.0/16"
+  name     = "tf-test-vpc-renamed"
+  ip_range = "10.240.0.0/16"
 }
 
 resource "binarylane_vpc_route_entries" "test" {
-	vpc_id = binarylane_vpc.test.id
-	route_entries = [
-		{
-			description = "test-renamed"
-			destination = "0.0.0.0/0"
-			router      = "10.240.0.2"
-		}
-	]
-}`,
+  vpc_id = binarylane_vpc.test.id
+  route_entries = [
+    {
+      description = "test-renamed"
+      destination = "0.0.0.0/0"
+      router      = "10.240.0.2"
+    }
+  ]
+}
+`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify binarylane_vpc resource values updated
 					resource.TestCheckResourceAttr("binarylane_vpc.test", "name", "tf-test-vpc-renamed"), // Updated name

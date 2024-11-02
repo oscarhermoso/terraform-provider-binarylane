@@ -18,6 +18,7 @@ Provides a Binary Lane Server resource. This can be used to create and delete se
 ### Required
 
 - `image` (String) The slug of the selected operating system.
+- `public_ipv4_count` (Number) The number of public IPv4 addresses to assign to the server. If this is not provided, the server will be created with the default number of public IPv4 addresses.
 - `region` (String) The slug of the selected region.
 - `size` (String) The slug of the selected size.
 
@@ -27,7 +28,6 @@ Provides a Binary Lane Server resource. This can be used to create and delete se
 - `name` (String) The hostname of your server, such as vps01.yourcompany.com. If not provided, the server will be created with a random name.
 - `password` (String, Sensitive) If this is provided the specified or default remote user's account password will be set to this value. Only valid if the server supports password change actions. If omitted and the server supports password change actions a random password will be generated and emailed to the account email address.
 - `port_blocking` (Boolean) Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.
-- `public_ipv4_count` (Number) The number of public IPv4 addresses to assign to the server. If this is not provided, the server will be created with the default number of public IPv4 addresses.
 - `ssh_keys` (List of Number) This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys.
 - `user_data` (String) If provided this will be used to initialise the new server. This must be left null if the Image does not support UserData, see DistributionInfo.Features for more information.
 - `vpc_id` (Number) Leave null to use default (public) network for the selected region.

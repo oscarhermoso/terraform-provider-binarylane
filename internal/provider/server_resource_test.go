@@ -31,9 +31,10 @@ func TestServerResource(t *testing.T) {
 			// Create and Read testing
 			{
 				Config: providerConfig + `
+
 resource "binarylane_vpc" "test" {
-	name     = "tf-test-server-resource"
-	ip_range = "10.240.0.0/16"
+  name     = "tf-test-server-resource"
+  ip_range = "10.240.0.0/16"
 }
 
 resource "binarylane_ssh_key" "test" {
@@ -49,24 +50,24 @@ resource "binarylane_ssh_key" "unused" {
 }
 
 resource "binarylane_server" "test" {
-	name   = "tf-test-server-resource"
-  region = "per"
-  image  = "debian-12"
-  size   = "std-min"
-	password = "` + password + `"
-	vpc_id = binarylane_vpc.test.id
-	public_ipv4_count = 0
-	user_data = <<EOT
+  name              = "tf-test-server-resource"
+  region            = "per"
+  image             = "debian-12"
+  size              = "std-min"
+  password          = "` + password + `"
+  vpc_id            = binarylane_vpc.test.id
+  public_ipv4_count = 0
+  ssh_keys          = [binarylane_ssh_key.test.id]
+  user_data         = <<EOT
 #cloud-config
 echo "Hello World" > /var/tmp/output.txt
 EOT
-	ssh_keys = [binarylane_ssh_key.test.id]
 }
 
 data "binarylane_server" "test" {
   depends_on = [binarylane_server.test]
 
-	id = binarylane_server.test.id
+  id = binarylane_server.test.id
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(

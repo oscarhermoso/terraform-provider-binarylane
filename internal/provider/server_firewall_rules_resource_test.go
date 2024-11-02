@@ -21,27 +21,29 @@ func TestServerFirewallRulesResource(t *testing.T) {
 			// Create and Read testing
 			{
 				Config: providerConfig + `
+
 resource "binarylane_server" "test" {
-	name   = "tf-test-server-fw-rules"
-  region = "per"
-  image  = "debian-12"
-  size   = "std-min"
-	password = "` + password + `"
-	wait_for_create = 60  # Must wait for the server to be ready before creating firewall rules
+  name              = "tf-test-server-fw-rules"
+  region            = "per"
+  image             = "debian-12"
+  size              = "std-min"
+  password          = "` + password + `"
+  wait_for_create   = 60 # Must wait for the server to be ready before creating firewall rules
+  public_ipv4_count = 0
 }
 
 resource "binarylane_server_firewall_rules" "test" {
   server_id = binarylane_server.test.id
-	firewall_rules = [
-		{
-			description = "Allow SSH"
-			protocol = "tcp"
-			source_addresses = ["0.0.0.0/0"]
-			destination_addresses = [binarylane_server.test.private_ipv4_addresses.0]
-			destination_ports = ["22"]
-			action = "accept"
-		}
-	]
+  firewall_rules = [
+    {
+      description           = "Allow SSH"
+      protocol              = "tcp"
+      source_addresses      = ["0.0.0.0/0"]
+      destination_addresses = [binarylane_server.test.private_ipv4_addresses.0]
+      destination_ports     = ["22"]
+      action                = "accept"
+    }
+  ]
 }
 
 data "binarylane_server_firewall_rules" "test" {
@@ -95,27 +97,29 @@ data "binarylane_server_firewall_rules" "test" {
 			// Update and Read testing
 			{
 				Config: providerConfig + `
+
 resource "binarylane_server" "test" {
-	name   = "tf-test-server-fw-rules"
-  region = "per"
-  image  = "debian-12"
-  size   = "std-min"
-	password = "` + password + `"
-	wait_for_create = 60  # Must wait for the server to be ready before creating firewall rules
+  name              = "tf-test-server-fw-rules"
+  region            = "per"
+  image             = "debian-12"
+  size              = "std-min"
+  password          = "` + password + `"
+  wait_for_create   = 60 # Must wait for the server to be ready before creating firewall rules
+  public_ipv4_count = 0
 }
 
 resource "binarylane_server_firewall_rules" "test" {
   server_id = binarylane_server.test.id
-	firewall_rules = [
-		{
-			description = "Allow HTTP" # Updated description
-			protocol = "tcp"
-			source_addresses = ["0.0.0.0/0"]
-			destination_addresses = [binarylane_server.test.private_ipv4_addresses.0]
-			destination_ports = ["80"] # Updated port
-			action = "accept"
-		},
-	]
+  firewall_rules = [
+    {
+      description           = "Allow HTTP" # Updated description
+      protocol              = "tcp"
+      source_addresses      = ["0.0.0.0/0"]
+      destination_addresses = [binarylane_server.test.private_ipv4_addresses.0]
+      destination_ports     = ["80"] # Updated port
+      action                = "accept"
+    },
+  ]
 }
 	`,
 				Check: resource.ComposeAggregateTestCheckFunc(

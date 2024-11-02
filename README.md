@@ -1,12 +1,13 @@
 # terraform-provider-binarylane
 
-See the examples in the [examples directory](./examples/README.md).
+See the [documentation on the Terraform Registry](https://registry.terraform.io/providers/oscarhermoso/binarylane/latest), or see [examples in the `examples` directory](./examples/README.md).
 
 ```terraform
 resource "binarylane_server" "example" {
-  region = "per"
-  image  = "ubuntu-24.04"
-  size   = "std-min"
+  region            = "per"
+  image             = "ubuntu-24.04"
+  size              = "std-min"
+  public_ipv4_count = 1
 }
 ```
 

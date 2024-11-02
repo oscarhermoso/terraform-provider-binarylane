@@ -32,25 +32,26 @@ func TestLoadBalancerResource(t *testing.T) {
 			{
 				Config: providerConfig + `
 resource "binarylane_server" "test" {
-	count  = 2
-	name   = "tf-test-lb-server-${count.index}"
-  region = "per"
-  image  = "debian-12"
-  size   = "std-min"
-	password = "` + password + `"
-	wait_for_create = 60
+  count             = 2
+  name              = "tf-test-lb-server-${count.index}"
+  region            = "per"
+  image             = "debian-12"
+  size              = "std-min"
+  password          = "` + password + `"
+  wait_for_create   = 60
+  public_ipv4_count = 1
 }
 
 resource "binarylane_load_balancer" "test" {
-	name   = "tf-test-lb"
-	server_ids = [binarylane_server.test.0.id, binarylane_server.test.1.id]
-	forwarding_rules = [{ entry_protocol = "http" }]
+  name             = "tf-test-lb"
+  server_ids       = [binarylane_server.test.0.id, binarylane_server.test.1.id]
+  forwarding_rules = [{ entry_protocol = "http" }]
 }
 
 data "binarylane_load_balancer" "test" {
   depends_on = [binarylane_load_balancer.test]
 
-	id = binarylane_load_balancer.test.id
+  id = binarylane_load_balancer.test.id
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
