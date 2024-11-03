@@ -36,6 +36,7 @@ Provides a Binary Lane Server resource. This can be used to create and delete se
 ### Read-Only
 
 - `id` (Number) The ID of the server to fetch.
+- `password_change_supported` (Boolean) If this is true then the `password` attribute can be changed with Terraform. If this is false then the `password` attribute can only be replaced with a null/empty value, which will clear the root/administrator password allowing the password to be changed via the web console.
 - `permalink` (String) A randomly generated two-word identifier assigned to servers in regions that support this feature
 - `private_ipv4_addresses` (List of String) The private IPv4 addresses assigned to the server.
 - `public_ipv4_addresses` (List of String) The public IPv4 addresses assigned to the server.

@@ -114,6 +114,45 @@ echo "Hello World" > /var/tmp/output.txt
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "user_data", "wait_for_create", "public_ipv4_count"},
 			},
+			// Update and Read testing
+			{
+				Config: providerConfig + `
+resource "binarylane_vpc" "test" {
+  name     = "tf-test-server-resource"
+  ip_range = "10.240.0.0/16"
+}
+
+resource "binarylane_ssh_key" "test" {
+  name       = "tf-test-server-resource"
+  public_key = "` + GeneratePublicKey(t) + `"
+  default    = true
+}
+
+resource "binarylane_ssh_key" "unused" {
+  name       = "tf-test-server-resource-unused"
+  public_key = "` + GeneratePublicKey(t) + `"
+  default    = true
+}
+
+resource "binarylane_server" "test" {
+  name              = "tf-test-server-resource-2"
+  region            = "per"
+  image             = "debian-12"
+  size              = "std-min"
+  password          = "` + password + `"
+  vpc_id            = binarylane_vpc.test.id
+  public_ipv4_count = 0
+  ssh_keys          = [binarylane_ssh_key.test.id]
+  user_data         = <<EOT
+#cloud-config
+echo "Hello World" > /var/tmp/output.txt
+EOT
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("binarylane_server.test", "name", "tf-test-server-resource-2"),
+				),
+			},
 		},
 	})
 }

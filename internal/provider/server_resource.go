@@ -13,10 +13,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -44,12 +47,13 @@ type serverResource struct {
 
 type serverModel struct {
 	resources.ServerModel
-	WaitForCreateSeconds types.Int32  `tfsdk:"wait_for_create"`
-	PublicIpv4Count      types.Int32  `tfsdk:"public_ipv4_count"`
-	PublicIpv4Addresses  types.List   `tfsdk:"public_ipv4_addresses"`
-	PrivateIPv4Addresses types.List   `tfsdk:"private_ipv4_addresses"`
-	Permalink            types.String `tfsdk:"permalink"`
-	Password             types.String `tfsdk:"password"`
+	WaitForCreateSeconds    types.Int32  `tfsdk:"wait_for_create"`
+	PublicIpv4Count         types.Int32  `tfsdk:"public_ipv4_count"`
+	PublicIpv4Addresses     types.List   `tfsdk:"public_ipv4_addresses"`
+	PrivateIPv4Addresses    types.List   `tfsdk:"private_ipv4_addresses"`
+	Permalink               types.String `tfsdk:"permalink"`
+	Password                types.String `tfsdk:"password"`
+	PasswordChangeSupported types.Bool   `tfsdk:"password_change_supported"`
 }
 
 func (d *serverResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -92,13 +96,27 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		},
 	}
 
+	image := resp.Schema.Attributes["image"]
+	resp.Schema.Attributes["image"] = &schema.StringAttribute{
+		Description:         image.GetDescription(),
+		MarkdownDescription: image.GetMarkdownDescription(),
+		Required:            image.IsRequired(),
+		Optional:            image.IsOptional(),
+		Computed:            image.IsComputed(),
+		Validators: []validator.String{
+			stringvalidator.LengthAtLeast(1),
+		},
+		PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()}, // Requires replacement if the image changes, TODO (#37)
+	}
+
 	backups := resp.Schema.Attributes["backups"]
 	resp.Schema.Attributes["backups"] = &schema.BoolAttribute{
 		Description:         backups.GetDescription(),
 		MarkdownDescription: backups.GetMarkdownDescription(),
 		Optional:            backups.IsOptional(),
 		Computed:            backups.IsComputed(),
-		Default:             booldefault.StaticBool(false), // Add default to backups
+		Default:             booldefault.StaticBool(false),                           // Add default to backups
+		PlanModifiers:       []planmodifier.Bool{boolplanmodifier.RequiresReplace()}, // TODO (#37)
 	}
 
 	user_data := resp.Schema.Attributes["user_data"]
@@ -118,6 +136,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		MarkdownDescription: vpcId.GetMarkdownDescription(),
 		Optional:            vpcId.IsOptional(),
 		Computed:            false, // VPC ID is not computed, defined at creation
+		PlanModifiers:       []planmodifier.Int64{int64planmodifier.RequiresReplace()},
 	}
 
 	portBlocking := resp.Schema.Attributes["port_blocking"]
@@ -127,6 +146,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Optional:            portBlocking.IsOptional(),
 		Computed:            portBlocking.IsComputed(),
 		Default:             booldefault.StaticBool(true), // Add default to port_blocking
+		PlanModifiers:       []planmodifier.Bool{boolplanmodifier.RequiresReplace()},
 	}
 
 	sshKeys := resp.Schema.Attributes["ssh_keys"]
@@ -153,6 +173,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Optional:            true,  // Password optional, if not set will be emailed to user
 		Computed:            false, // Computed must be false to allow server to be created without password
 		Sensitive:           true,  // Mark password as sensitive
+		PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 	}
 
 	waitDescription := "The number of seconds to wait for the server to be created, after which, a timeout error will " +
@@ -174,6 +195,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Optional:            false,
 		Computed:            false,
 		// Default:             int32default.StaticInt32(0), // TODO: Uncomment with 1.0 release (see issue #30)
+		PlanModifiers: []planmodifier.Int32{int32planmodifier.RequiresReplace()},
 		Validators: []validator.Int32{
 			int32validator.AtLeast(0),
 		},
@@ -214,6 +236,24 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Optional: false,
 		Required: false,
 		Computed: true,
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		},
+	}
+
+	pwChangeDescription := "If this is true then the `password` attribute can be changed with Terraform. " +
+		"If this is false then the `password` attribute can only be replaced with a null/empty value, which will clear " +
+		"the root/administrator password allowing the password to be changed via the web console."
+	resp.Schema.Attributes["password_change_supported"] = &schema.BoolAttribute{
+		Description:         pwChangeDescription,
+		MarkdownDescription: pwChangeDescription,
+		// read only
+		Optional: false,
+		Required: false,
+		Computed: true,
+		PlanModifiers: []planmodifier.Bool{
+			boolplanmodifier.UseStateForUnknown(),
+		},
 	}
 }
 
@@ -283,6 +323,7 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
 	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
+	data.PasswordChangeSupported = types.BoolValue(*serverResp.JSON200.Server.PasswordChangeSupported)
 
 	var publicIpv4Addresses []string
 	var privateIpv4Addresses []string
@@ -389,6 +430,7 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
 	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
+	data.PasswordChangeSupported = types.BoolValue(*serverResp.JSON200.Server.PasswordChangeSupported)
 
 	var publicIpv4Addresses []string
 	var privateIpv4Addresses []string
@@ -414,20 +456,54 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data serverModel
+	var plan, state serverModel
 
 	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Update API call logic
-	// TODO
+	state.WaitForCreateSeconds = plan.WaitForCreateSeconds
+
+	if !plan.Name.Equal(state.Name) {
+		renameResp, err := r.bc.client.PostServersServerIdActionsRenameWithResponse(
+			ctx,
+			state.Id.ValueInt64(),
+			binarylane.PostServersServerIdActionsRenameJSONRequestBody{
+				Type: "rename",
+				Name: plan.Name.ValueString(),
+			},
+		)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error updating server name: server_id=%s", state.Id.String()),
+				err.Error(),
+			)
+			return
+		}
+		if renameResp.StatusCode() != http.StatusOK {
+			resp.Diagnostics.AddError(
+				"Unexpected HTTP status code creating server firewall rules",
+				fmt.Sprintf("Received %s creating server firewall rules: server_id=%s. Details: %s", renameResp.Status(), state.Id.String(), renameResp.Body))
+			return
+		}
+		if *renameResp.JSON200.Action.Status == "errored" {
+			resp.Diagnostics.AddError(
+				"Unexpected HTTP status code creating server firewall rules",
+				fmt.Sprintf("Received %s creating server firewall rules: server_id=%s. Details: %s", renameResp.Status(), state.Id.String(), renameResp.Body))
+			return
+		}
+
+		state.Name = types.StringValue(plan.Name.ValueString())
+	}
+
+	// TODO - wait for rename to complete
+	// Unfortunately, the API does not support polling for the rename to complete, because the action ID returns a 404 response (see #13)
 
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
