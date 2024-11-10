@@ -9,6 +9,7 @@ import (
 	"terraform-provider-binarylane/internal/resources"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -37,6 +38,7 @@ type loadBalancerResource struct {
 
 type loadBalancerResourceModel struct {
 	resources.LoadBalancerModel
+	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
 
 func (r *loadBalancerResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -86,6 +88,11 @@ func (r *loadBalancerResource) Schema(ctx context.Context, req resource.SchemaRe
 			stringplanmodifier.RequiresReplace(),
 		},
 	}
+
+	resp.Schema.Attributes["timeouts"] =
+		timeouts.Attributes(ctx, timeouts.Opts{
+			Create: true,
+		})
 }
 
 func (r *loadBalancerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -147,7 +154,7 @@ func (r *loadBalancerResource) Create(ctx context.Context, req resource.CreateRe
 
 	diags = SetLoadBalancerModelState(ctx, &data.LoadBalancerModel, lbResp.JSON200.LoadBalancer)
 	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -169,31 +176,43 @@ func (r *loadBalancerResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	timeLimit := time.Now().Add(time.Duration(60 * time.Second))
-	for {
-		tflog.Info(ctx, "Waiting for load balancer to be ready...")
+	createTimeout, diags := data.Timeouts.Create(ctx, 20*time.Minute)
+	resp.Diagnostics.Append(diags...)
+	ctx, cancel := context.WithTimeout(ctx, createTimeout)
+	defer cancel()
+	var lastReadyResp *binarylane.GetActionsActionIdResponse
 
-		readyResp, err := r.bc.client.GetActionsActionIdWithResponse(ctx, createActionId)
-		if err != nil {
-			resp.Diagnostics.AddError("Error waiting for load balancer to be ready", err.Error())
-			return
-		}
-		if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {
-			tflog.Info(ctx, "Load balancer is ready")
-			break
-		}
-		if time.Now().After(timeLimit) {
+retryLoop:
+	for {
+		select {
+		case <-ctx.Done():
+			if lastReadyResp == nil {
+				return
+			}
 			resp.Diagnostics.AddError(
-				"Timed out waiting for load balancer to be ready",
+				"Timed out waiting for load balancer to be created",
 				fmt.Sprintf(
-					"Timed out waiting for load balancer to be created, as `wait_for_create` was surpassed without "+
-						"recieving a `completed_at` in response: name=%s, status=%s, details: %s",
-					data.Name.ValueString(), readyResp.Status(), readyResp.Body,
+					"Timed out waiting for load balancer %s to be created, last response was status=%s, body: %s",
+					data.Name.ValueString(),
+					lastReadyResp.Status(),
+					lastReadyResp.Body,
 				),
 			)
 			return
+		default:
+			readyResp, err := r.bc.client.GetActionsActionIdWithResponse(ctx, createActionId)
+			if err != nil {
+				resp.Diagnostics.AddError("Error waiting for load balancer to be created", err.Error())
+				return
+			}
+
+			if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {
+				break retryLoop
+			}
+
+			lastReadyResp = readyResp
+			tflog.Debug(ctx, fmt.Sprintf("Waiting for load balancer to be created: name=%s, status=%s, details: %s", data.Name.ValueString(), readyResp.Status(), readyResp.Body))
 		}
-		tflog.Debug(ctx, fmt.Sprintf("Waiting for load balancer to be ready: name=%s, status=%s, details: %s", data.Name.ValueString(), readyResp.Status(), readyResp.Body))
 		time.Sleep(time.Second * 5)
 	}
 }
@@ -228,7 +247,7 @@ func (r *loadBalancerResource) Read(ctx context.Context, req resource.ReadReques
 
 	diags := SetLoadBalancerModelState(ctx, &data.LoadBalancerModel, lbResp.JSON200.LoadBalancer)
 	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -292,7 +311,7 @@ func (r *loadBalancerResource) Update(ctx context.Context, req resource.UpdateRe
 
 	diags = SetLoadBalancerModelState(ctx, &data.LoadBalancerModel, lbResp.JSON200.LoadBalancer)
 	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

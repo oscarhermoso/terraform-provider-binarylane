@@ -38,7 +38,6 @@ resource "binarylane_server" "test" {
   image             = "debian-12"
   size              = "std-min"
   password          = "` + password + `"
-  wait_for_create   = 60
   public_ipv4_count = 1
 }
 

@@ -28,11 +28,12 @@ resource "binarylane_ssh_key" "example" {
 }
 
 resource "binarylane_server" "example" {
-  name     = "tf-example-ssh"
-  region   = "per"
-  image    = "ubuntu-24.04"
-  size     = "std-min"
-  ssh_keys = [binarylane_ssh_key.example.id]
+  name              = "tf-example-ssh"
+  region            = "per"
+  image             = "ubuntu-24.04"
+  size              = "std-min"
+  ssh_keys          = [binarylane_ssh_key.example.id]
+  public_ipv4_count = 1
 
   # If you are using a global default SSH key, you need to explicitly wait for
   # it to be created before creating the server.

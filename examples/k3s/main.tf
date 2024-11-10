@@ -53,7 +53,6 @@ resource "binarylane_server" "server" {
   vpc_id            = binarylane_vpc.example.id
   public_ipv4_count = 1
   user_data         = sensitive(data.cloudinit_config.server.rendered)
-  wait_for_create   = 60 # Must wait for the server to be ready before creating firewall rules
 }
 
 data "external" "kubeconfig" {
@@ -107,7 +106,6 @@ resource "binarylane_server" "agent" {
   vpc_id            = binarylane_vpc.example.id
   public_ipv4_count = 1
   user_data         = sensitive(data.cloudinit_config.agent.rendered)
-  wait_for_create   = 60 # Must wait for the server to be ready before creating firewall rules
 }
 
 # Virtual Private Cloud Routing

@@ -10,6 +10,7 @@ import (
 	"terraform-provider-binarylane/internal/resources"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -19,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -34,6 +34,7 @@ var (
 	_ resource.Resource                = &serverResource{}
 	_ resource.ResourceWithConfigure   = &serverResource{}
 	_ resource.ResourceWithImportState = &serverResource{}
+	_ resource.ResourceWithModifyPlan  = &serverResource{}
 )
 
 // Helper function to simplify the provider implementation.
@@ -47,13 +48,13 @@ type serverResource struct {
 
 type serverModel struct {
 	resources.ServerModel
-	WaitForCreateSeconds    types.Int32  `tfsdk:"wait_for_create"`
-	PublicIpv4Count         types.Int32  `tfsdk:"public_ipv4_count"`
-	PublicIpv4Addresses     types.List   `tfsdk:"public_ipv4_addresses"`
-	PrivateIPv4Addresses    types.List   `tfsdk:"private_ipv4_addresses"`
-	Permalink               types.String `tfsdk:"permalink"`
-	Password                types.String `tfsdk:"password"`
-	PasswordChangeSupported types.Bool   `tfsdk:"password_change_supported"`
+	PublicIpv4Count         types.Int32    `tfsdk:"public_ipv4_count"`
+	PublicIpv4Addresses     types.List     `tfsdk:"public_ipv4_addresses"`
+	PrivateIPv4Addresses    types.List     `tfsdk:"private_ipv4_addresses"`
+	Permalink               types.String   `tfsdk:"permalink"`
+	Password                types.String   `tfsdk:"password"`
+	PasswordChangeSupported types.Bool     `tfsdk:"password_change_supported"`
+	Timeouts                timeouts.Value `tfsdk:"timeouts"`
 }
 
 func (d *serverResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -176,16 +177,6 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 	}
 
-	waitDescription := "The number of seconds to wait for the server to be created, after which, a timeout error will " +
-		"be reported. If `wait_seconds` is left empty or set to 0, Terraform will succeed without waiting for the " +
-		"server creation to complete."
-	resp.Schema.Attributes["wait_for_create"] = &schema.Int32Attribute{
-		Description:         waitDescription,
-		MarkdownDescription: waitDescription,
-		Optional:            true,
-		Computed:            false,
-	}
-
 	publicIpv4CountDescription := "The number of public IPv4 addresses to assign to the server. If this is not provided, the " +
 		"server will be created with the default number of public IPv4 addresses."
 	resp.Schema.Attributes["public_ipv4_count"] = &schema.Int32Attribute{
@@ -195,7 +186,6 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Optional:            false,
 		Computed:            false,
 		// Default:             int32default.StaticInt32(0), // TODO: Uncomment with 1.0 release (see issue #30)
-		PlanModifiers: []planmodifier.Int32{int32planmodifier.RequiresReplace()},
 		Validators: []validator.Int32{
 			int32validator.AtLeast(0),
 		},
@@ -210,9 +200,6 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Optional: false,
 		Required: false,
 		Computed: true,
-		PlanModifiers: []planmodifier.List{
-			listplanmodifier.UseStateForUnknown(),
-		},
 	}
 
 	privateIpv4AddressesDescription := "The private IPv4 addresses assigned to the server."
@@ -255,6 +242,48 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 			boolplanmodifier.UseStateForUnknown(),
 		},
 	}
+
+	resp.Schema.Attributes["timeouts"] =
+		timeouts.Attributes(ctx, timeouts.Opts{
+			Create: true,
+			Update: true,
+		})
+}
+
+func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Creation or destruction plan
+	if req.Plan.Raw.IsNull() || req.State.Raw.IsNull() {
+		return
+	}
+
+	var plan, state serverModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// When IP count is changed, plan should show addition/removal of public IPs
+	ipv4CountPlan := plan.PublicIpv4Count.ValueInt32()
+	ipv4CountState := state.PublicIpv4Count.ValueInt32()
+	if ipv4CountPlan != ipv4CountState {
+		currentIps := []*string{}
+		diags := state.PublicIpv4Addresses.ElementsAs(ctx, &currentIps, false)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if ipv4CountPlan < ipv4CountState {
+			plan.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, currentIps[:ipv4CountPlan+1])
+			resp.Diagnostics.Append(diags...)
+		} else {
+			plan.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, append(currentIps, make([]*string, ipv4CountPlan-ipv4CountState)...))
+			resp.Diagnostics.Append(diags...)
+		}
+	}
+	resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
 }
 
 func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -343,10 +372,6 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
-	if data.WaitForCreateSeconds.ValueInt32() <= 0 {
-		return
-	}
-
 	// Wait for server to be ready
 	var createActionId int64
 	for _, action := range *serverResp.JSON200.Links.Actions {
@@ -362,31 +387,43 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	timeLimit := time.Now().Add(time.Duration(data.WaitForCreateSeconds.ValueInt32()) * time.Second)
-	for {
-		tflog.Info(ctx, "Waiting for server to be ready...")
+	createTimeout, diags := data.Timeouts.Create(ctx, 20*time.Minute)
+	resp.Diagnostics.Append(diags...)
+	ctx, cancel := context.WithTimeout(ctx, createTimeout)
+	defer cancel()
+	var lastReadyResp *binarylane.GetServersServerIdActionsActionIdResponse
 
-		readyResp, err := r.bc.client.GetServersServerIdActionsActionIdWithResponse(ctx, data.Id.ValueInt64(), createActionId)
-		if err != nil {
-			resp.Diagnostics.AddError("Error waiting for server to be ready", err.Error())
-			return
-		}
-		if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {
-			tflog.Info(ctx, "Server is ready")
-			break
-		}
-		if time.Now().After(timeLimit) {
+retryLoop:
+	for {
+		select {
+		case <-ctx.Done():
+			if lastReadyResp == nil {
+				return
+			}
 			resp.Diagnostics.AddError(
-				"Timed out waiting for server to be ready",
+				"Timed out waiting for server to be created",
 				fmt.Sprintf(
-					"Timed out waiting for server to be created, as `wait_for_create` was surpassed without "+
-						"recieving a `completed_at` in response: name=%s, status=%s, details: %s",
-					data.Name.ValueString(), readyResp.Status(), readyResp.Body,
+					"Timed out waiting for server %s to be created, last response was status=%s, body: %s",
+					data.Name.ValueString(),
+					lastReadyResp.Status(),
+					lastReadyResp.Body,
 				),
 			)
 			return
+		default:
+			readyResp, err := r.bc.client.GetServersServerIdActionsActionIdWithResponse(ctx, data.Id.ValueInt64(), createActionId)
+			if err != nil {
+				resp.Diagnostics.AddError("Error waiting for server to be created", err.Error())
+				return
+			}
+
+			if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {
+				break retryLoop
+			}
+
+			lastReadyResp = readyResp
+			tflog.Debug(ctx, fmt.Sprintf("Waiting for server to to be created: name=%s, status=%s, details: %s", data.Name.ValueString(), readyResp.Status(), readyResp.Body))
 		}
-		tflog.Debug(ctx, fmt.Sprintf("Waiting for server to be ready: name=%s, status=%s, details: %s", data.Name.ValueString(), readyResp.Status(), readyResp.Body))
 		time.Sleep(time.Second * 5)
 	}
 }
@@ -465,8 +502,12 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	state.WaitForCreateSeconds = plan.WaitForCreateSeconds
+	createTimeout, diags := plan.Timeouts.Update(ctx, 20*time.Minute)
+	resp.Diagnostics.Append(diags...)
+	ctx, cancel := context.WithTimeout(ctx, createTimeout)
+	defer cancel()
 
+	// Rename operation
 	if !plan.Name.Equal(state.Name) {
 		renameResp, err := r.bc.client.PostServersServerIdActionsRenameWithResponse(
 			ctx,
@@ -478,29 +519,151 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				fmt.Sprintf("Error updating server name: server_id=%s", state.Id.String()),
+				fmt.Sprintf("Error renaming server: server_id=%s", state.Id.String()),
 				err.Error(),
 			)
 			return
 		}
 		if renameResp.StatusCode() != http.StatusOK {
 			resp.Diagnostics.AddError(
-				"Unexpected HTTP status code creating server firewall rules",
-				fmt.Sprintf("Received %s creating server firewall rules: server_id=%s. Details: %s", renameResp.Status(), state.Id.String(), renameResp.Body))
+				"Unexpected HTTP status code renaming server",
+				fmt.Sprintf("Received %s renaming server: server_id=%s. Details: %s", renameResp.Status(), state.Id.String(), renameResp.Body))
 			return
 		}
 		if *renameResp.JSON200.Action.Status == "errored" {
 			resp.Diagnostics.AddError(
-				"Unexpected HTTP status code creating server firewall rules",
-				fmt.Sprintf("Received %s creating server firewall rules: server_id=%s. Details: %s", renameResp.Status(), state.Id.String(), renameResp.Body))
+				"Unexpected response with \"errored\" status when renaming server",
+				fmt.Sprintf("Received %s renaming server: server_id=%s. Details: %s", renameResp.Status(), state.Id.String(), renameResp.Body))
 			return
 		}
+
+		// TODO - Currently, the API does not support polling for the rename to complete, because the action ID returns a 404 response (see #13)
 
 		state.Name = types.StringValue(plan.Name.ValueString())
 	}
 
-	// TODO - wait for rename to complete
-	// Unfortunately, the API does not support polling for the rename to complete, because the action ID returns a 404 response (see #13)
+	// Resize operation
+	var resizeReq *binarylane.PostServersServerIdActionsResizeJSONRequestBody
+
+	if !plan.Size.Equal(state.Size) {
+		resizeReq = &binarylane.PostServersServerIdActionsResizeJSONRequestBody{
+			Type: "resize",
+		}
+		resizeReq.Size = plan.Size.ValueStringPointer()
+	}
+
+	if !plan.PublicIpv4Count.Equal(state.PublicIpv4Count) {
+		if resizeReq == nil {
+			resizeReq = &binarylane.PostServersServerIdActionsResizeJSONRequestBody{
+				Type: "resize",
+			}
+		}
+
+		resizeReq.Options = &binarylane.ChangeSizeOptionsRequest{
+			Ipv4Addresses: plan.PublicIpv4Count.ValueInt32Pointer(),
+		}
+
+		if plan.PublicIpv4Count.ValueInt32() < state.PublicIpv4Count.ValueInt32() {
+			currentIps := []string{}
+			diags := state.PublicIpv4Addresses.ElementsAs(ctx, &currentIps, false)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			removedIps := currentIps[plan.PublicIpv4Count.ValueInt32():state.PublicIpv4Count.ValueInt32()]
+			resizeReq.Options.Ipv4AddressesToRemove = &removedIps
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+		}
+	}
+
+	if resizeReq != nil {
+		tflog.Info(ctx, fmt.Sprintf("Resizing server: server_id=%s", state.Id.String()))
+		resizeResp, err := r.bc.client.PostServersServerIdActionsResizeWithResponse(
+			ctx,
+			state.Id.ValueInt64(),
+			*resizeReq,
+		)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error resizing server: server_id=%s", state.Id.String()),
+				err.Error(),
+			)
+			return
+		}
+		if resizeResp.StatusCode() != http.StatusOK {
+			resp.Diagnostics.AddError(
+				"Unexpected HTTP status code resizing server",
+				fmt.Sprintf("Received %s resizing server: server_id=%s. Details: %s", resizeResp.Status(), state.Id.String(), resizeResp.Body))
+			return
+		}
+
+		var lastReadyResp *binarylane.GetServersServerIdActionsActionIdResponse
+	retryLoop:
+		for {
+			select {
+			case <-ctx.Done():
+				if lastReadyResp == nil {
+					return
+				}
+				resp.Diagnostics.AddError(
+					"Timed out waiting for server to be resized",
+					fmt.Sprintf(
+						"Timed out waiting for server %s to be resized, last response was status=%s, body: %s",
+						plan.Name.ValueString(),
+						lastReadyResp.Status(),
+						lastReadyResp.Body,
+					),
+				)
+				return
+			default:
+				readyResp, err := r.bc.client.GetServersServerIdActionsActionIdWithResponse(ctx, state.Id.ValueInt64(), *resizeResp.JSON200.Action.Id)
+				if err != nil {
+					resp.Diagnostics.AddError("Error waiting for server to be resized", err.Error())
+					return
+				}
+
+				if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {
+					// success
+					state.Size = types.StringValue(plan.Size.ValueString())
+					state.PublicIpv4Count = types.Int32Value(plan.PublicIpv4Count.ValueInt32())
+					state.PublicIpv4Addresses, diags = plan.PublicIpv4Addresses.ToListValue(ctx)
+					resp.Diagnostics.Append(diags...)
+					if resp.Diagnostics.HasError() {
+						return
+					}
+					if state.PublicIpv4Addresses.IsUnknown() {
+						// New IPs may have been allocated, so we need to check the server again
+						serverResp, err := r.bc.client.GetServersServerIdWithResponse(ctx, state.Id.ValueInt64())
+						if err != nil {
+							resp.Diagnostics.AddError("Error checking IPs for server after resize", err.Error())
+							return
+						}
+						if serverResp.StatusCode() != http.StatusOK {
+							resp.Diagnostics.AddError("Unexpected HTTP status code checking IPs for server after resize",
+								fmt.Sprintf("Received %s checking IPs for server after resize: name=%s. Details: %s", serverResp.Status(), state.Name.ValueString(), serverResp.Body))
+							return
+						}
+						var publicIpv4Addresses []string
+						for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
+							if v4address.Type == "public" {
+								publicIpv4Addresses = append(publicIpv4Addresses, v4address.IpAddress)
+							}
+						}
+						state.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, publicIpv4Addresses)
+						resp.Diagnostics.Append(diags...)
+					}
+					break retryLoop
+				}
+
+				lastReadyResp = readyResp
+				tflog.Debug(ctx, fmt.Sprintf("Waiting for server to be resized: name=%s, status=%s, details: %s", state.Name.ValueString(), readyResp.Status(), readyResp.Body))
+			}
+			time.Sleep(time.Second * 5)
+		}
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)

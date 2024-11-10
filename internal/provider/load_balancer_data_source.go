@@ -95,7 +95,7 @@ func (d *loadBalancerDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	diags := SetLoadBalancerModelState(ctx, &data.LoadBalancerModel, lbResp.JSON200.LoadBalancer)
 	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
