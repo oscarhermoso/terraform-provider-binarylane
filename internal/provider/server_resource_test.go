@@ -56,7 +56,7 @@ resource "binarylane_server" "test" {
   size              = "std-min"
   password          = "` + password + `"
   vpc_id            = binarylane_vpc.test.id
-  public_ipv4_count = 0
+  public_ipv4_count = 1
   ssh_keys          = [binarylane_ssh_key.test.id]
   user_data         = <<EOT
 #cloud-config
@@ -78,12 +78,12 @@ data "binarylane_server" "test" {
 					resource.TestCheckResourceAttr("binarylane_server.test", "image", "debian-12"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "size", "std-min"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "vpc_id"),
-					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_count", "0"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_count", "1"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "password", password),
 					resource.TestCheckResourceAttr("binarylane_server.test", "user_data", `#cloud-config
 echo "Hello World" > /var/tmp/output.txt
 `),
-					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_addresses.#", "0"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_addresses.#", "1"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "private_ipv4_addresses.0"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "port_blocking", "true"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "ssh_keys.#", "1"), // Only the test SSH key should be registered
@@ -104,7 +104,7 @@ echo "Hello World" > /var/tmp/output.txt
 				ResourceName:            "binarylane_server.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "user_data", "wait_for_create", "public_ipv4_count"},
+				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "user_data", "public_ipv4_count", "timeouts"},
 			},
 			// Test import by name
 			{
@@ -112,7 +112,7 @@ echo "Hello World" > /var/tmp/output.txt
 				ImportState:             true,
 				ImportStateId:           "tf-test-server-resource",
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "user_data", "wait_for_create", "public_ipv4_count"},
+				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "user_data", "public_ipv4_count", "timeouts"},
 			},
 			// Update and Read testing
 			{
@@ -138,7 +138,7 @@ resource "binarylane_server" "test" {
   name              = "tf-test-server-resource-2"
   region            = "per"
   image             = "debian-12"
-  size              = "std-min"
+  size              = "std-1vcpu"
   password          = "` + password + `"
   vpc_id            = binarylane_vpc.test.id
   public_ipv4_count = 0
@@ -151,6 +151,8 @@ EOT
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("binarylane_server.test", "name", "tf-test-server-resource-2"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "size", "std-1vcpu"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_count", "0"),
 				),
 			},
 		},

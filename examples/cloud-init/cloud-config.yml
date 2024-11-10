@@ -1,10 +1,5 @@
 #cloud-config
 bootcmd:
-  # By default, the provider won't wait for the server installation to complete.
-  #
-  # If you want Terraform to wait until the server has fully provisioned, set
-  # the `wait_for_create` attribute on the `binarylane_server` resource.
-  #
   # If you have additional installation steps that need to be awaited, define
   # these in the `bootcmd` section and they will also be awaited.
   #

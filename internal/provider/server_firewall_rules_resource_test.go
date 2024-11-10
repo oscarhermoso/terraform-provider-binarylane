@@ -28,7 +28,6 @@ resource "binarylane_server" "test" {
   image             = "debian-12"
   size              = "std-min"
   password          = "` + password + `"
-  wait_for_create   = 60 # Must wait for the server to be ready before creating firewall rules
   public_ipv4_count = 0
 }
 
@@ -104,7 +103,6 @@ resource "binarylane_server" "test" {
   image             = "debian-12"
   size              = "std-min"
   password          = "` + password + `"
-  wait_for_create   = 60 # Must wait for the server to be ready before creating firewall rules
   public_ipv4_count = 0
 }
 

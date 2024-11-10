@@ -29,9 +29,9 @@ Provides a Binary Lane Server resource. This can be used to create and delete se
 - `password` (String, Sensitive) If this is provided the specified or default remote user's account password will be set to this value. Only valid if the server supports password change actions. If omitted and the server supports password change actions a random password will be generated and emailed to the account email address.
 - `port_blocking` (Boolean) Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.
 - `ssh_keys` (List of Number) This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys.
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 - `user_data` (String) If provided this will be used to initialise the new server. This must be left null if the Image does not support UserData, see DistributionInfo.Features for more information.
 - `vpc_id` (Number) Leave null to use default (public) network for the selected region.
-- `wait_for_create` (Number) The number of seconds to wait for the server to be created, after which, a timeout error will be reported. If `wait_seconds` is left empty or set to 0, Terraform will succeed without waiting for the server creation to complete.
 
 ### Read-Only
 
@@ -40,3 +40,11 @@ Provides a Binary Lane Server resource. This can be used to create and delete se
 - `permalink` (String) A randomly generated two-word identifier assigned to servers in regions that support this feature
 - `private_ipv4_addresses` (List of String) The private IPv4 addresses assigned to the server.
 - `public_ipv4_addresses` (List of String) The public IPv4 addresses assigned to the server.
+
+<a id="nestedatt--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
+- `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
