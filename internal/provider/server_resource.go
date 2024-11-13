@@ -479,6 +479,7 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 			privateIpv4Addresses = append(privateIpv4Addresses, v4address.IpAddress)
 		}
 	}
+	data.PublicIpv4Count = types.Int32Value(int32(len(publicIpv4Addresses)))
 	data.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, publicIpv4Addresses)
 	resp.Diagnostics.Append(diags...)
 	data.PrivateIPv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, privateIpv4Addresses)

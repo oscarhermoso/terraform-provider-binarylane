@@ -104,7 +104,7 @@ echo "Hello World" > /var/tmp/output.txt
 				ResourceName:            "binarylane_server.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "user_data", "public_ipv4_count", "timeouts"},
+				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "user_data", "timeouts"},
 			},
 			// Test import by name
 			{
@@ -112,7 +112,7 @@ echo "Hello World" > /var/tmp/output.txt
 				ImportState:             true,
 				ImportStateId:           "tf-test-server-resource",
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "user_data", "public_ipv4_count", "timeouts"},
+				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "user_data", "timeouts"},
 			},
 			// Update and Read testing
 			{
