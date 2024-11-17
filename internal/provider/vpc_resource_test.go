@@ -1,6 +1,12 @@
 package provider
 
 import (
+	"context"
+	"fmt"
+	"log"
+	"net/http"
+	"strings"
+	"terraform-provider-binarylane/internal/binarylane"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -114,6 +120,64 @@ resource "binarylane_vpc_route_entries" "test" {
 				),
 			},
 			// Delete testing automatically occurs in TestCase
+		},
+	})
+}
+
+func init() {
+	resource.AddTestSweepers("vpc", &resource.Sweeper{
+		Name: "vpc",
+		F: func(_ string) error {
+			client, err := binarylane.NewClientWithDefaultConfig()
+
+			if err != nil {
+				return fmt.Errorf("Error creating Binary Lane API client: %w", err)
+			}
+
+			ctx := context.Background()
+
+			var page int32 = 1
+			perPage := int32(200)
+			nextPage := true
+
+			for nextPage {
+				params := binarylane.GetVpcsParams{
+					Page:    &page,
+					PerPage: &perPage,
+				}
+
+				listResp, err := client.GetVpcsWithResponse(ctx, &params)
+				if err != nil {
+					return fmt.Errorf("Error getting VPCs for test sweep: %w", err)
+				}
+
+				if listResp.StatusCode() != http.StatusOK {
+					return fmt.Errorf("Unexpected status code getting VPCs for test sweep: %s", listResp.Body)
+				}
+
+				vpcs := listResp.JSON200.Vpcs
+				for _, vpc := range *vpcs {
+					if strings.HasPrefix(*vpc.Name, "tf-test-") {
+
+						deleteResp, err := client.DeleteVpcsVpcIdWithResponse(ctx, *vpc.Id)
+						if err != nil {
+							return fmt.Errorf("Error deleting VPC %d in test sweep: %w", *vpc.Id, err)
+						}
+						if deleteResp.StatusCode() != http.StatusNoContent {
+							return fmt.Errorf("Unexpected status %d deleting VPC %d for test sweep: %s", deleteResp.StatusCode(), *vpc.Id, deleteResp.Body)
+						}
+						log.Println("Deleted VPC for test sweep:", *vpc.Id)
+					}
+				}
+				if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages == nil || listResp.JSON200.Links.Pages.Next == nil {
+					nextPage = false
+					break
+				}
+
+				page++
+			}
+
+			return nil
 		},
 	})
 }

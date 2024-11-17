@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"terraform-provider-binarylane/internal/binarylane"
 	"testing"
@@ -97,16 +96,7 @@ func init() {
 		Name:         "load_balancer",
 		Dependencies: []string{"server"},
 		F: func(_ string) error {
-			endpoint := os.Getenv("BINARYLANE_API_ENDPOINT")
-			if endpoint == "" {
-				endpoint = "https://api.binarylane.com.au/v2"
-			}
-			token := os.Getenv("BINARYLANE_API_TOKEN")
-
-			client, err := binarylane.NewClientWithAuth(
-				endpoint,
-				token,
-			)
+			client, err := binarylane.NewClientWithDefaultConfig()
 
 			if err != nil {
 				return fmt.Errorf("Error creating Binary Lane API client: %w", err)
@@ -124,29 +114,29 @@ func init() {
 					PerPage: &perPage,
 				}
 
-				lbResp, err := client.GetLoadBalancersWithResponse(ctx, &params)
+				listResp, err := client.GetLoadBalancersWithResponse(ctx, &params)
 				if err != nil {
 					return fmt.Errorf("Error getting load balancers for test sweep: %w", err)
 				}
 
-				if lbResp.StatusCode() != http.StatusOK {
-					return fmt.Errorf("Unexpected status code getting load balancers for test sweep: %s", lbResp.Body)
+				if listResp.StatusCode() != http.StatusOK {
+					return fmt.Errorf("Unexpected status code getting load balancers for test sweep: %s", listResp.Body)
 				}
 
-				loadBalancers := *lbResp.JSON200.LoadBalancers
+				loadBalancers := *listResp.JSON200.LoadBalancers
 				for _, lb := range loadBalancers {
 					if strings.HasPrefix(*lb.Name, "tf-test-") {
-						lbResp, err := client.DeleteLoadBalancersLoadBalancerIdWithResponse(ctx, *lb.Id)
+						deleteResp, err := client.DeleteLoadBalancersLoadBalancerIdWithResponse(ctx, *lb.Id)
 						if err != nil {
 							return fmt.Errorf("Error deleting load balancer %d for test sweep: %w", *lb.Id, err)
 						}
-						if lbResp.StatusCode() != http.StatusNoContent {
-							return fmt.Errorf("Unexpected status %d deleting load balancer %d in test sweep: %s", lbResp.StatusCode(), *lb.Id, lbResp.Body)
+						if deleteResp.StatusCode() != http.StatusNoContent {
+							return fmt.Errorf("Unexpected status %d deleting load balancer %d in test sweep: %s", deleteResp.StatusCode(), *lb.Id, deleteResp.Body)
 						}
 						log.Println("Deleted load balancer during test sweep:", *lb.Id)
 					}
 				}
-				if lbResp.JSON200.Links == nil || lbResp.JSON200.Links.Pages == nil || lbResp.JSON200.Links.Pages.Next == nil {
+				if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages == nil || listResp.JSON200.Links.Pages.Next == nil {
 					nextPage = false
 					break
 				}

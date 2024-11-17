@@ -854,21 +854,10 @@ type ChangeBackupScheduleType string
 // ChangeImage defines model for ChangeImage.
 type ChangeImage struct {
 	// Image The slug or ID of the selected image. What type of image is permitted here varies based on the server action.
-	Image *ChangeImage_Image `json:"image"`
+	Image *string `json:"image"`
 
 	// Options Additional options for the server configuration after the image has been changed.
 	Options *ImageOptions `json:"options"`
-}
-
-// ChangeImageImage0 defines model for .
-type ChangeImageImage0 = int
-
-// ChangeImageImage1 defines model for .
-type ChangeImageImage1 = string
-
-// ChangeImage_Image The slug or ID of the selected image. What type of image is permitted here varies based on the server action.
-type ChangeImage_Image struct {
-	union json.RawMessage
 }
 
 // ChangeIpv6 Enable or Disable IPv6 for a Server
@@ -1662,21 +1651,10 @@ type ImageOptions struct {
 	// SshKeys This may be either the existing SSH Keys IDs or fingerprints.
 	// If this is null or not provided any SSH keys that have been marked as default will be deployed (if the operating system supports SSH Keys).
 	// Submit an empty array to disable deployment of default keys.
-	SshKeys *[]ImageOptions_SshKeys_Item `json:"ssh_keys"`
+	SshKeys *[]int `json:"ssh_keys"`
 
 	// UserData If provided this will be used to initialise the new server. This must be left null if the Image does not support UserData, see DistributionInfo.Features for more information.
 	UserData *string `json:"user_data"`
-}
-
-// ImageOptionsSshKeys0 defines model for .
-type ImageOptionsSshKeys0 = int
-
-// ImageOptionsSshKeys1 defines model for .
-type ImageOptionsSshKeys1 = string
-
-// ImageOptions_SshKeys_Item defines model for ImageOptions.ssh_keys.Item.
-type ImageOptions_SshKeys_Item struct {
-	union json.RawMessage
 }
 
 // ImageQueryType
@@ -2176,22 +2154,11 @@ type RebootType string
 // Rebuild Rebuild an Existing Server
 type Rebuild struct {
 	// Image The Operating System ID or slug or Backup image ID to use as a base for the rebuild.
-	Image *Rebuild_Image `json:"image"`
+	Image *string `json:"image"`
 
 	// Options Additional options. Leaving this entirely null or any of the properties included null will use the defaults from the existing server.
 	Options *ImageOptions `json:"options"`
 	Type    RebuildType   `json:"type"`
-}
-
-// RebuildImage0 defines model for .
-type RebuildImage0 = int
-
-// RebuildImage1 defines model for .
-type RebuildImage1 = string
-
-// Rebuild_Image The Operating System ID or slug or Backup image ID to use as a base for the rebuild.
-type Rebuild_Image struct {
-	union json.RawMessage
 }
 
 // RebuildType defines model for Rebuild.Type.
@@ -3985,130 +3952,6 @@ func (a ValidationProblemDetails) MarshalJSON() ([]byte, error) {
 	return json.Marshal(object)
 }
 
-// AsChangeImageImage0 returns the union data inside the ChangeImage_Image as a ChangeImageImage0
-func (t ChangeImage_Image) AsChangeImageImage0() (ChangeImageImage0, error) {
-	var body ChangeImageImage0
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromChangeImageImage0 overwrites any union data inside the ChangeImage_Image as the provided ChangeImageImage0
-func (t *ChangeImage_Image) FromChangeImageImage0(v ChangeImageImage0) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeChangeImageImage0 performs a merge with any union data inside the ChangeImage_Image, using the provided ChangeImageImage0
-func (t *ChangeImage_Image) MergeChangeImageImage0(v ChangeImageImage0) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsChangeImageImage1 returns the union data inside the ChangeImage_Image as a ChangeImageImage1
-func (t ChangeImage_Image) AsChangeImageImage1() (ChangeImageImage1, error) {
-	var body ChangeImageImage1
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromChangeImageImage1 overwrites any union data inside the ChangeImage_Image as the provided ChangeImageImage1
-func (t *ChangeImage_Image) FromChangeImageImage1(v ChangeImageImage1) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeChangeImageImage1 performs a merge with any union data inside the ChangeImage_Image, using the provided ChangeImageImage1
-func (t *ChangeImage_Image) MergeChangeImageImage1(v ChangeImageImage1) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t ChangeImage_Image) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *ChangeImage_Image) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
-
-// AsImageOptionsSshKeys0 returns the union data inside the ImageOptions_SshKeys_Item as a ImageOptionsSshKeys0
-func (t ImageOptions_SshKeys_Item) AsImageOptionsSshKeys0() (ImageOptionsSshKeys0, error) {
-	var body ImageOptionsSshKeys0
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromImageOptionsSshKeys0 overwrites any union data inside the ImageOptions_SshKeys_Item as the provided ImageOptionsSshKeys0
-func (t *ImageOptions_SshKeys_Item) FromImageOptionsSshKeys0(v ImageOptionsSshKeys0) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeImageOptionsSshKeys0 performs a merge with any union data inside the ImageOptions_SshKeys_Item, using the provided ImageOptionsSshKeys0
-func (t *ImageOptions_SshKeys_Item) MergeImageOptionsSshKeys0(v ImageOptionsSshKeys0) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsImageOptionsSshKeys1 returns the union data inside the ImageOptions_SshKeys_Item as a ImageOptionsSshKeys1
-func (t ImageOptions_SshKeys_Item) AsImageOptionsSshKeys1() (ImageOptionsSshKeys1, error) {
-	var body ImageOptionsSshKeys1
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromImageOptionsSshKeys1 overwrites any union data inside the ImageOptions_SshKeys_Item as the provided ImageOptionsSshKeys1
-func (t *ImageOptions_SshKeys_Item) FromImageOptionsSshKeys1(v ImageOptionsSshKeys1) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeImageOptionsSshKeys1 performs a merge with any union data inside the ImageOptions_SshKeys_Item, using the provided ImageOptionsSshKeys1
-func (t *ImageOptions_SshKeys_Item) MergeImageOptionsSshKeys1(v ImageOptionsSshKeys1) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t ImageOptions_SshKeys_Item) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *ImageOptions_SshKeys_Item) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
-
 // AsNetworkNetmask0 returns the union data inside the Network_Netmask as a NetworkNetmask0
 func (t Network_Netmask) AsNetworkNetmask0() (NetworkNetmask0, error) {
 	var body NetworkNetmask0
@@ -4167,68 +4010,6 @@ func (t Network_Netmask) MarshalJSON() ([]byte, error) {
 }
 
 func (t *Network_Netmask) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
-
-// AsRebuildImage0 returns the union data inside the Rebuild_Image as a RebuildImage0
-func (t Rebuild_Image) AsRebuildImage0() (RebuildImage0, error) {
-	var body RebuildImage0
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromRebuildImage0 overwrites any union data inside the Rebuild_Image as the provided RebuildImage0
-func (t *Rebuild_Image) FromRebuildImage0(v RebuildImage0) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeRebuildImage0 performs a merge with any union data inside the Rebuild_Image, using the provided RebuildImage0
-func (t *Rebuild_Image) MergeRebuildImage0(v RebuildImage0) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsRebuildImage1 returns the union data inside the Rebuild_Image as a RebuildImage1
-func (t Rebuild_Image) AsRebuildImage1() (RebuildImage1, error) {
-	var body RebuildImage1
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromRebuildImage1 overwrites any union data inside the Rebuild_Image as the provided RebuildImage1
-func (t *Rebuild_Image) FromRebuildImage1(v RebuildImage1) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeRebuildImage1 performs a merge with any union data inside the Rebuild_Image, using the provided RebuildImage1
-func (t *Rebuild_Image) MergeRebuildImage1(v RebuildImage1) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t Rebuild_Image) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *Rebuild_Image) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }

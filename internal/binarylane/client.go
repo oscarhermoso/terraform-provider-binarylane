@@ -6,17 +6,32 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httputil"
+	"os"
 
 	"github.com/deepmap/oapi-codegen/pkg/securityprovider"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-func NewClientWithAuth(endpoint string, token string) (*ClientWithResponses, error) {
+func NewClientWithDefaultConfig() (*ClientWithResponses, error) {
+	return NewClientWithConfig("", "")
+}
+
+func NewClientWithConfig(endpoint string, token string) (*ClientWithResponses, error) {
+	if endpoint == "" {
+		endpoint = os.Getenv("BINARYLANE_API_ENDPOINT")
+		if endpoint == "" {
+			endpoint = "https://api.binarylane.com.au/v2"
+		}
+	}
+
 	if token == "" {
-		return nil, errors.New("missing or empty value for the Binary Lane API " +
-			"token. Set the `api_token` value in the configuration or use the " +
-			"BINARYLANE_API_TOKEN environment variable. If either is already set, " +
-			"ensure the value is not empty")
+		token = os.Getenv("BINARYLANE_API_TOKEN")
+		if token == "" {
+			return nil, errors.New("missing or empty value for the Binary Lane API " +
+				"token. Set the `api_token` value in the configuration or use the " +
+				"BINARYLANE_API_TOKEN environment variable. If either is already set, " +
+				"ensure the value is not empty")
+		}
 	}
 
 	auth, err := securityprovider.NewSecurityProviderBearerToken(token)

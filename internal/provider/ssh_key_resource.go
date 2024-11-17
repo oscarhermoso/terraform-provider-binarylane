@@ -175,22 +175,28 @@ func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *sshKeyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data sshKeyModel
+	var plan, state sshKeyModel
+
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Update API call logic
-	sshResp, err := r.bc.client.PutAccountKeysKeyIdWithResponse(ctx, int(data.Id.ValueInt64()), binarylane.UpdateSshKeyRequest{
-		Name:    data.Name.ValueString(),
-		Default: data.Default.ValueBoolPointer(),
+	sshResp, err := r.bc.client.PutAccountKeysKeyIdWithResponse(ctx, int(state.Id.ValueInt64()), binarylane.UpdateSshKeyRequest{
+		Name:    plan.Name.ValueString(),
+		Default: plan.Default.ValueBoolPointer(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error updating SSH Key: name=%s", data.Name.ValueString()),
+			fmt.Sprintf("Error updating SSH Key: name=%s", plan.Name.ValueString()),
 			err.Error(),
 		)
 		return
@@ -198,30 +204,29 @@ func (r *sshKeyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	if sshResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code updating SSH Key",
-			fmt.Sprintf("Received %s updating new SSH Key: name=%s. Details: %s", sshResp.Status(), data.Name.ValueString(), sshResp.Body),
+			fmt.Sprintf("Received %s updating new SSH Key: name=%s. Details: %s", sshResp.Status(), plan.Name.ValueString(), sshResp.Body),
 		)
 		return
 	}
 
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *sshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data sshKeyModel
+	var state sshKeyModel
 
-	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-
+	// Read Terraform prior state into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Delete API call logic
-	sshResp, err := r.bc.client.DeleteAccountKeysKeyIdWithResponse(ctx, int(data.Id.ValueInt64()))
+	sshResp, err := r.bc.client.DeleteAccountKeysKeyIdWithResponse(ctx, int(state.Id.ValueInt64()))
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error deleting SSH Key: name=%s", data.Name.ValueString()),
+			fmt.Sprintf("Error deleting SSH Key: name=%s", state.Name.ValueString()),
 			err.Error(),
 		)
 		return
@@ -229,7 +234,7 @@ func (r *sshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	if sshResp.StatusCode() != http.StatusNoContent {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code deleting SSH Key",
-			fmt.Sprintf("Received %s deleting SSH Key: name=%s. Details: %s", sshResp.Status(), data.Name.ValueString(), sshResp.Body),
+			fmt.Sprintf("Received %s deleting SSH Key: name=%s. Details: %s", sshResp.Status(), state.Name.ValueString(), sshResp.Body),
 		)
 		return
 	}

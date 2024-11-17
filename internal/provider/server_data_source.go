@@ -151,8 +151,23 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.PrivateIPv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, privateIpv4Addresses)
 	resp.Diagnostics.Append(diags...)
 
-	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	// Get user data script
+	userDataResp, err := d.bc.client.GetServersServerIdUserDataWithResponse(ctx, data.Id.ValueInt64())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Error reading server user data: id=%s, name=%s", data.Id.String(), data.Name.ValueString()),
+			err.Error(),
+		)
+		return
+	}
+	if userDataResp.StatusCode() != http.StatusOK {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Unexpected HTTP status %d reading server user data: name=%s, id=%s", userDataResp.StatusCode(), data.Name.ValueString(), data.Id.String()),
+			string(userDataResp.Body),
+		)
+		return
+	}
+	data.UserData = types.StringPointerValue(userDataResp.JSON200.UserData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

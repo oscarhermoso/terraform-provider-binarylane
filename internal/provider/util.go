@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"slices"
 
@@ -152,4 +153,27 @@ func convertResourceSchemaToDataSourceSchema(rs r_schema.Schema, cfg AttributeCo
 	}
 
 	return &ds, nil
+}
+
+func listContainsUnknown(ctx context.Context, list types.List) bool {
+	// If the whole list is unknown, return true
+	if list.IsUnknown() {
+		return true
+	}
+
+	// Get elements as generic attr.Value to check individual unknown status
+	var elements []attr.Value
+	diags := list.ElementsAs(ctx, &elements, false)
+	if diags.HasError() {
+		return true // Assume unknown in case of errors
+	}
+
+	// Check if any element is unknown
+	for _, elem := range elements {
+		if elem.IsUnknown() {
+			return true
+		}
+	}
+
+	return false
 }
