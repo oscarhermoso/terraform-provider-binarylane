@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"terraform-provider-binarylane/internal/binarylane"
 	"testing"
@@ -25,6 +24,9 @@ func TestServerResource(t *testing.T) {
 	}
 	password := base64.URLEncoding.EncodeToString(pw_bytes)
 
+	sshPublicKeyInitial := GeneratePublicKey(t)
+	sshPublicKeyUpdated := GeneratePublicKey(t)
+
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -37,27 +39,27 @@ resource "binarylane_vpc" "test" {
   ip_range = "10.240.0.0/16"
 }
 
-resource "binarylane_ssh_key" "test" {
-  name       = "tf-test-server-resource"
-  public_key = "` + GeneratePublicKey(t) + `"
+resource "binarylane_ssh_key" "initial" {
+  name       = "tf-test-server-resource-initial"
+  public_key = "` + sshPublicKeyInitial + `"
   default    = true
 }
 
-resource "binarylane_ssh_key" "unused" {
-  name       = "tf-test-server-resource-unused"
-  public_key = "` + GeneratePublicKey(t) + `"
+resource "binarylane_ssh_key" "updated" {
+  name       = "tf-test-server-resource-updated"
+  public_key = "` + sshPublicKeyUpdated + `"
   default    = true
 }
 
 resource "binarylane_server" "test" {
   name              = "tf-test-server-resource"
   region            = "per"
-  image             = "debian-12"
+  image             = "debian-11"
   size              = "std-min"
   password          = "` + password + `"
   vpc_id            = binarylane_vpc.test.id
   public_ipv4_count = 1
-  ssh_keys          = [binarylane_ssh_key.test.id]
+  ssh_keys          = [binarylane_ssh_key.initial.id]
   user_data         = <<EOT
 #cloud-config
 echo "Hello World" > /var/tmp/output.txt
@@ -75,7 +77,7 @@ data "binarylane_server" "test" {
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "id"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "name", "tf-test-server-resource"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "region", "per"),
-					resource.TestCheckResourceAttr("binarylane_server.test", "image", "debian-12"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "image", "debian-11"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "size", "std-min"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "vpc_id"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_count", "1"),
@@ -86,17 +88,20 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_addresses.#", "1"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "private_ipv4_addresses.0"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "port_blocking", "true"),
-					resource.TestCheckResourceAttr("binarylane_server.test", "ssh_keys.#", "1"), // Only the test SSH key should be registered
-					resource.TestCheckResourceAttrPair("binarylane_server.test", "ssh_keys.0", "binarylane_ssh_key.test", "id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "ssh_keys.#", "1"),
+					resource.TestCheckResourceAttrPair("binarylane_server.test", "ssh_keys.0", "binarylane_ssh_key.initial", "id"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "permalink"),
 
 					// Verify data source values
 					resource.TestCheckResourceAttrPair("data.binarylane_server.test", "id", "binarylane_server.test", "id"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "name", "tf-test-server-resource"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "region", "per"),
-					resource.TestCheckResourceAttr("data.binarylane_server.test", "image", "debian-12"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "image", "debian-11"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "size", "std-min"),
 					resource.TestCheckResourceAttrPair("data.binarylane_server.test", "permalink", "binarylane_server.test", "permalink"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "user_data", `#cloud-config
+echo "Hello World" > /var/tmp/output.txt
+`),
 				),
 			},
 			// Test import by ID
@@ -104,7 +109,7 @@ echo "Hello World" > /var/tmp/output.txt
 				ResourceName:            "binarylane_server.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "user_data", "timeouts"},
+				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "timeouts"},
 			},
 			// Test import by name
 			{
@@ -112,7 +117,7 @@ echo "Hello World" > /var/tmp/output.txt
 				ImportState:             true,
 				ImportStateId:           "tf-test-server-resource",
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "user_data", "timeouts"},
+				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "timeouts"},
 			},
 			// Update and Read testing
 			{
@@ -122,15 +127,15 @@ resource "binarylane_vpc" "test" {
   ip_range = "10.240.0.0/16"
 }
 
-resource "binarylane_ssh_key" "test" {
-  name       = "tf-test-server-resource"
-  public_key = "` + GeneratePublicKey(t) + `"
+resource "binarylane_ssh_key" "initial" {
+  name       = "tf-test-server-resource-initial"
+  public_key = "` + sshPublicKeyInitial + `"
   default    = true
 }
 
-resource "binarylane_ssh_key" "unused" {
-  name       = "tf-test-server-resource-unused"
-  public_key = "` + GeneratePublicKey(t) + `"
+resource "binarylane_ssh_key" "updated" {
+  name       = "tf-test-server-resource-updated"
+  public_key = "` + sshPublicKeyUpdated + `"
   default    = true
 }
 
@@ -142,10 +147,12 @@ resource "binarylane_server" "test" {
   password          = "` + password + `"
   vpc_id            = binarylane_vpc.test.id
   public_ipv4_count = 0
-  ssh_keys          = [binarylane_ssh_key.test.id]
+  ssh_keys          = [binarylane_ssh_key.updated.id]
   user_data         = <<EOT
 #cloud-config
-echo "Hello World" > /var/tmp/output.txt
+echo "Hello Whitespace" > /var/tmp/output.txt
+
+
 EOT
 }
 `,
@@ -153,6 +160,16 @@ EOT
 					resource.TestCheckResourceAttr("binarylane_server.test", "name", "tf-test-server-resource-2"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "size", "std-1vcpu"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_count", "0"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_addresses.#", "0"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "image", "debian-12"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "ssh_keys.#", "1"),
+					resource.TestCheckResourceAttrPair("binarylane_server.test", "ssh_keys.0", "binarylane_ssh_key.updated", "id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "user_data", // test extra whitespace
+						`#cloud-config
+echo "Hello Whitespace" > /var/tmp/output.txt
+
+
+`),
 				),
 			},
 		},
@@ -163,16 +180,7 @@ func init() {
 	resource.AddTestSweepers("server", &resource.Sweeper{
 		Name: "server",
 		F: func(_ string) error {
-			endpoint := os.Getenv("BINARYLANE_API_ENDPOINT")
-			if endpoint == "" {
-				endpoint = "https://api.binarylane.com.au/v2"
-			}
-			token := os.Getenv("BINARYLANE_API_TOKEN")
-
-			client, err := binarylane.NewClientWithAuth(
-				endpoint,
-				token,
-			)
+			client, err := binarylane.NewClientWithDefaultConfig()
 
 			if err != nil {
 				return fmt.Errorf("Error creating Binary Lane API client: %w", err)
@@ -190,16 +198,16 @@ func init() {
 					PerPage: &perPage,
 				}
 
-				serverResp, err := client.GetServersWithResponse(ctx, &params)
+				listResp, err := client.GetServersWithResponse(ctx, &params)
 				if err != nil {
 					return fmt.Errorf("Error getting servers for test sweep: %w", err)
 				}
 
-				if serverResp.StatusCode() != http.StatusOK {
-					return fmt.Errorf("Unexpected status code getting servers in test sweep: %s", serverResp.Body)
+				if listResp.StatusCode() != http.StatusOK {
+					return fmt.Errorf("Unexpected status code getting servers in test sweep: %s", listResp.Body)
 				}
 
-				servers := *serverResp.JSON200.Servers
+				servers := *listResp.JSON200.Servers
 				for _, s := range servers {
 					if strings.HasPrefix(*s.Name, "tf-test-") {
 						reason := "Terraform deletion"
@@ -207,17 +215,17 @@ func init() {
 							Reason: &reason,
 						}
 
-						serverResp, err := client.DeleteServersServerIdWithResponse(ctx, *s.Id, &params)
+						deleteResp, err := client.DeleteServersServerIdWithResponse(ctx, *s.Id, &params)
 						if err != nil {
 							return fmt.Errorf("Error deleting server %d during test sweep: %w", *s.Id, err)
 						}
-						if serverResp.StatusCode() != http.StatusNoContent {
-							return fmt.Errorf("Unexpected status %d deleting server %d in test sweep: %s", serverResp.StatusCode(), *s.Id, serverResp.Body)
+						if deleteResp.StatusCode() != http.StatusNoContent {
+							return fmt.Errorf("Unexpected status %d deleting server %d in test sweep: %s", deleteResp.StatusCode(), *s.Id, deleteResp.Body)
 						}
 						log.Println("Deleted server during test sweep:", *s.Id)
 					}
 				}
-				if serverResp.JSON200.Links == nil || serverResp.JSON200.Links.Pages == nil || serverResp.JSON200.Links.Pages.Next == nil {
+				if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages == nil || listResp.JSON200.Links.Pages.Next == nil {
 					nextPage = false
 					break
 				}

@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"os"
 	"terraform-provider-binarylane/internal/binarylane"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -23,8 +22,7 @@ func New(version string) func() provider.Provider {
 }
 
 type BinarylaneClient struct {
-	endpoint string
-	client   *binarylane.ClientWithResponses
+	client *binarylane.ClientWithResponses
 }
 
 type binarylaneProvider struct {
@@ -65,32 +63,17 @@ func (p *binarylaneProvider) Configure(ctx context.Context, req provider.Configu
 		return
 	}
 
-	endpoint := config.Endpoint.ValueString()
-	if endpoint == "" {
-		endpoint = os.Getenv("BINARYLANE_API_ENDPOINT")
-		if endpoint == "" {
-			endpoint = "https://api.binarylane.com.au/v2"
-		}
-	}
-
-	token := config.Token.ValueString()
-	if token == "" {
-		token = os.Getenv("BINARYLANE_API_TOKEN")
-	}
-
-	client, err := binarylane.NewClientWithAuth(
-		endpoint,
-		token,
+	client, err := binarylane.NewClientWithConfig(
+		config.Endpoint.ValueString(),
+		config.Token.ValueString(),
 	)
-
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to create Binary Lane API client", err.Error())
 		return
 	}
 
 	binarylaneClient := BinarylaneClient{
-		endpoint: endpoint,
-		client:   client,
+		client: client,
 	}
 
 	resp.DataSourceData = binarylaneClient

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 	"terraform-provider-binarylane/internal/binarylane"
 	"terraform-provider-binarylane/internal/resources"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -107,7 +109,6 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Validators: []validator.String{
 			stringvalidator.LengthAtLeast(1),
 		},
-		PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()}, // Requires replacement if the image changes, TODO (#37)
 	}
 
 	backups := resp.Schema.Attributes["backups"]
@@ -126,9 +127,6 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		MarkdownDescription: user_data.GetMarkdownDescription(),
 		Optional:            true,  // Optional as not all servers have an initialization script
 		Computed:            false, // User defined
-		PlanModifiers: []planmodifier.String{
-			stringplanmodifier.RequiresReplace(), // If user changes init script, assume they want to replace server
-		},
 	}
 
 	vpcId := resp.Schema.Attributes["vpc_id"]
@@ -156,8 +154,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Description:         sshKeys.GetMarkdownDescription(),
 		MarkdownDescription: sshKeys.GetDescription(),
 		Optional:            sshKeys.IsOptional(),
-		Computed:            false,                                                   // SSH keys are not computed, defined at creation
-		PlanModifiers:       []planmodifier.List{listplanmodifier.RequiresReplace()}, // Cannot update SSH keys with API
+		Computed:            false, // SSH keys are not computed, defined at creation
 		Validators: []validator.List{
 			listvalidator.ValueInt64sAre(int64validator.AtLeast(1)),
 		},
@@ -266,23 +263,38 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 	}
 
 	// When IP count is changed, plan should show addition/removal of public IPs
-	ipv4CountPlan := plan.PublicIpv4Count.ValueInt32()
-	ipv4CountState := state.PublicIpv4Count.ValueInt32()
-	if ipv4CountPlan != ipv4CountState {
-		currentIps := []*string{}
-		diags := state.PublicIpv4Addresses.ElementsAs(ctx, &currentIps, false)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		if ipv4CountPlan < ipv4CountState {
-			plan.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, currentIps[:ipv4CountPlan+1])
-			resp.Diagnostics.Append(diags...)
+	plannedPublicIpV4Count := int(plan.PublicIpv4Count.ValueInt32())
+	plannedPublicIpAddresses := make([]attr.Value, plannedPublicIpV4Count)
+	stateIpV4Addresses := []*string{}
+	diags := state.PublicIpv4Addresses.ElementsAs(ctx, &stateIpV4Addresses, false)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	for i := range plannedPublicIpAddresses {
+		if i < len(stateIpV4Addresses) {
+			plannedPublicIpAddresses[i] = types.StringValue(*stateIpV4Addresses[i])
 		} else {
-			plan.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, append(currentIps, make([]*string, ipv4CountPlan-ipv4CountState)...))
-			resp.Diagnostics.Append(diags...)
+			plannedPublicIpAddresses[i] = types.StringUnknown()
 		}
 	}
+	plan.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, plannedPublicIpAddresses)
+	resp.Diagnostics.Append(diags...)
+
+	// Add warning if rebuild is required
+	attrsRequiringRebuild := attrsRequiringRebuild(&plan, &state)
+	if len(attrsRequiringRebuild) > 0 {
+		resp.Diagnostics.AddWarning(
+			"Server Rebuild Required",
+			fmt.Sprintf(
+				"Server %d will lose all data if this Terraform plan is applied, because of modified attribute(s): %s",
+				state.Id.ValueInt64(),
+				strings.Join(attrsRequiringRebuild, ", "),
+			),
+		)
+	}
+
+	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
 }
 
@@ -295,6 +307,11 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := data.Timeouts.Create(ctx, 20*time.Minute)
+	resp.Diagnostics.Append(diags...)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	// Create API call logic
 	tflog.Debug(ctx, fmt.Sprintf("Creating server: name=%s", data.Name.ValueString()))
@@ -343,35 +360,6 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	data.Id = types.Int64Value(*serverResp.JSON200.Server.Id)
-	data.Name = types.StringValue(*serverResp.JSON200.Server.Name)
-	data.Image = types.StringValue(*serverResp.JSON200.Server.Image.Slug)
-	data.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
-	data.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
-	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
-	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
-	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
-	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
-	data.PasswordChangeSupported = types.BoolValue(*serverResp.JSON200.Server.PasswordChangeSupported)
-
-	var publicIpv4Addresses []string
-	var privateIpv4Addresses []string
-
-	for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
-		if v4address.Type == "public" {
-			publicIpv4Addresses = append(publicIpv4Addresses, v4address.IpAddress)
-		} else {
-			privateIpv4Addresses = append(privateIpv4Addresses, v4address.IpAddress)
-		}
-	}
-	data.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, publicIpv4Addresses)
-	resp.Diagnostics.Append(diags...)
-	data.PrivateIPv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, privateIpv4Addresses)
-	resp.Diagnostics.Append(diags...)
-
-	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-
 	// Wait for server to be ready
 	var createActionId int64
 	for _, action := range *serverResp.JSON200.Links.Actions {
@@ -386,46 +374,38 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 			fmt.Sprintf("Received %s creating new server: name=%s. Details: %s", serverResp.Status(), data.Name.ValueString(), serverResp.Body))
 		return
 	}
-
-	createTimeout, diags := data.Timeouts.Create(ctx, 20*time.Minute)
-	resp.Diagnostics.Append(diags...)
-	ctx, cancel := context.WithTimeout(ctx, createTimeout)
-	defer cancel()
-	var lastReadyResp *binarylane.GetServersServerIdActionsActionIdResponse
-
-retryLoop:
-	for {
-		select {
-		case <-ctx.Done():
-			if lastReadyResp == nil {
-				return
-			}
-			resp.Diagnostics.AddError(
-				"Timed out waiting for server to be created",
-				fmt.Sprintf(
-					"Timed out waiting for server %s to be created, last response was status=%s, body: %s",
-					data.Name.ValueString(),
-					lastReadyResp.Status(),
-					lastReadyResp.Body,
-				),
-			)
-			return
-		default:
-			readyResp, err := r.bc.client.GetServersServerIdActionsActionIdWithResponse(ctx, data.Id.ValueInt64(), createActionId)
-			if err != nil {
-				resp.Diagnostics.AddError("Error waiting for server to be created", err.Error())
-				return
-			}
-
-			if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {
-				break retryLoop
-			}
-
-			lastReadyResp = readyResp
-			tflog.Debug(ctx, fmt.Sprintf("Waiting for server to to be created: name=%s, status=%s, details: %s", data.Name.ValueString(), readyResp.Status(), readyResp.Body))
-		}
-		time.Sleep(time.Second * 5)
+	err = r.waitForServerAction(ctx, *serverResp.JSON200.Server.Id, createActionId, "create")
+	if err != nil {
+		resp.Diagnostics.AddError("Error waiting for server to be created", err.Error())
 	}
+
+	data.Id = types.Int64Value(*serverResp.JSON200.Server.Id)
+	data.Name = types.StringValue(*serverResp.JSON200.Server.Name)
+	data.Image = types.StringValue(*serverResp.JSON200.Server.Image.Slug)
+	data.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
+	data.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
+	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
+	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
+	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
+	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
+	data.PasswordChangeSupported = types.BoolValue(*serverResp.JSON200.Server.PasswordChangeSupported)
+
+	publicIpv4Addresses := []string{}
+	privateIpv4Addresses := []string{}
+	for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
+		if v4address.Type == "public" {
+			publicIpv4Addresses = append(publicIpv4Addresses, v4address.IpAddress)
+		} else {
+			privateIpv4Addresses = append(privateIpv4Addresses, v4address.IpAddress)
+		}
+	}
+	data.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, publicIpv4Addresses)
+	resp.Diagnostics.Append(diags...)
+	data.PrivateIPv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, privateIpv4Addresses)
+	resp.Diagnostics.Append(diags...)
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -449,7 +429,6 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 		)
 		return
 	}
-
 	if serverResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Unexpected HTTP status code %s reading server: name=%s, id=%s", serverResp.Status(), data.Name.ValueString(), data.Id.String()),
@@ -469,9 +448,8 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
 	data.PasswordChangeSupported = types.BoolValue(*serverResp.JSON200.Server.PasswordChangeSupported)
 
-	var publicIpv4Addresses []string
-	var privateIpv4Addresses []string
-
+	publicIpv4Addresses := []string{}
+	privateIpv4Addresses := []string{}
 	for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
 		if v4address.Type == "public" {
 			publicIpv4Addresses = append(publicIpv4Addresses, v4address.IpAddress)
@@ -479,15 +457,33 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 			privateIpv4Addresses = append(privateIpv4Addresses, v4address.IpAddress)
 		}
 	}
-	data.PublicIpv4Count = types.Int32Value(int32(len(publicIpv4Addresses)))
 	data.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, publicIpv4Addresses)
 	resp.Diagnostics.Append(diags...)
 	data.PrivateIPv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, privateIpv4Addresses)
 	resp.Diagnostics.Append(diags...)
+	data.PublicIpv4Count = types.Int32Value(int32(len(publicIpv4Addresses)))
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Get user data script
+	userDataResp, err := r.bc.client.GetServersServerIdUserDataWithResponse(ctx, data.Id.ValueInt64())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Error reading server user data: id=%s, name=%s", data.Id.String(), data.Name.ValueString()),
+			err.Error(),
+		)
+		return
+	}
+	if userDataResp.StatusCode() != http.StatusOK {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Unexpected HTTP status %d reading server user data: name=%s, id=%s", userDataResp.StatusCode(), data.Name.ValueString(), data.Id.String()),
+			string(userDataResp.Body),
+		)
+		return
+	}
+	data.UserData = types.StringPointerValue(userDataResp.JSON200.UserData)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -503,13 +499,15 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	createTimeout, diags := plan.Timeouts.Update(ctx, 20*time.Minute)
+	timeout, diags := plan.Timeouts.Update(ctx, 20*time.Minute)
 	resp.Diagnostics.Append(diags...)
-	ctx, cancel := context.WithTimeout(ctx, createTimeout)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	// Rename operation
-	if !plan.Name.Equal(state.Name) {
+	rebuildNeeded := len(attrsRequiringRebuild(&plan, &state)) > 0
+
+	// Rename
+	if !plan.Name.Equal(state.Name) && !rebuildNeeded {
 		renameResp, err := r.bc.client.PostServersServerIdActionsRenameWithResponse(
 			ctx,
 			state.Id.ValueInt64(),
@@ -544,44 +542,44 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	// Resize operation
-	var resizeReq *binarylane.PostServersServerIdActionsResizeJSONRequestBody
-
-	if !plan.Size.Equal(state.Size) {
-		resizeReq = &binarylane.PostServersServerIdActionsResizeJSONRequestBody{
+	if !plan.Size.Equal(state.Size) || !plan.PublicIpv4Count.Equal(state.PublicIpv4Count) || !plan.Image.Equal(state.Image) {
+		resizeReq := &binarylane.PostServersServerIdActionsResizeJSONRequestBody{
 			Type: "resize",
 		}
-		resizeReq.Size = plan.Size.ValueStringPointer()
-	}
-
-	if !plan.PublicIpv4Count.Equal(state.PublicIpv4Count) {
-		if resizeReq == nil {
-			resizeReq = &binarylane.PostServersServerIdActionsResizeJSONRequestBody{
-				Type: "resize",
+		if !plan.Size.Equal(state.Size) {
+			resizeReq.Size = plan.Size.ValueStringPointer()
+			state.Size = plan.Size
+		}
+		if !plan.PublicIpv4Count.Equal(state.PublicIpv4Count) {
+			resizeReq.Options = &binarylane.ChangeSizeOptionsRequest{
+				Ipv4Addresses: plan.PublicIpv4Count.ValueInt32Pointer(),
 			}
+			if plan.PublicIpv4Count.ValueInt32() < state.PublicIpv4Count.ValueInt32() {
+				currentIps := []string{}
+				diags := state.PublicIpv4Addresses.ElementsAs(ctx, &currentIps, false)
+				resp.Diagnostics.Append(diags...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				removedIps := currentIps[plan.PublicIpv4Count.ValueInt32():state.PublicIpv4Count.ValueInt32()]
+				resizeReq.Options.Ipv4AddressesToRemove = &removedIps
+				resp.Diagnostics.Append(diags...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+			}
+			state.PublicIpv4Count = plan.PublicIpv4Count
+			state.PublicIpv4Addresses = plan.PublicIpv4Addresses
+		}
+		if !plan.Image.Equal(state.Image) {
+			resizeReq.ChangeImage = &binarylane.ChangeImage{
+				Image: plan.Image.ValueStringPointer(),
+			}
+			state.Image = plan.Image
 		}
 
-		resizeReq.Options = &binarylane.ChangeSizeOptionsRequest{
-			Ipv4Addresses: plan.PublicIpv4Count.ValueInt32Pointer(),
-		}
-
-		if plan.PublicIpv4Count.ValueInt32() < state.PublicIpv4Count.ValueInt32() {
-			currentIps := []string{}
-			diags := state.PublicIpv4Addresses.ElementsAs(ctx, &currentIps, false)
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			removedIps := currentIps[plan.PublicIpv4Count.ValueInt32():state.PublicIpv4Count.ValueInt32()]
-			resizeReq.Options.Ipv4AddressesToRemove = &removedIps
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-		}
-	}
-
-	if resizeReq != nil {
 		tflog.Info(ctx, fmt.Sprintf("Resizing server: server_id=%s", state.Id.String()))
+
 		resizeResp, err := r.bc.client.PostServersServerIdActionsResizeWithResponse(
 			ctx,
 			state.Id.ValueInt64(),
@@ -600,74 +598,90 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 				fmt.Sprintf("Received %s resizing server: server_id=%s. Details: %s", resizeResp.Status(), state.Id.String(), resizeResp.Body))
 			return
 		}
-
-		var lastReadyResp *binarylane.GetServersServerIdActionsActionIdResponse
-	retryLoop:
-		for {
-			select {
-			case <-ctx.Done():
-				if lastReadyResp == nil {
-					return
-				}
-				resp.Diagnostics.AddError(
-					"Timed out waiting for server to be resized",
-					fmt.Sprintf(
-						"Timed out waiting for server %s to be resized, last response was status=%s, body: %s",
-						plan.Name.ValueString(),
-						lastReadyResp.Status(),
-						lastReadyResp.Body,
-					),
-				)
-				return
-			default:
-				readyResp, err := r.bc.client.GetServersServerIdActionsActionIdWithResponse(ctx, state.Id.ValueInt64(), *resizeResp.JSON200.Action.Id)
-				if err != nil {
-					resp.Diagnostics.AddError("Error waiting for server to be resized", err.Error())
-					return
-				}
-
-				if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {
-					// success
-					state.Size = types.StringValue(plan.Size.ValueString())
-					state.PublicIpv4Count = types.Int32Value(plan.PublicIpv4Count.ValueInt32())
-					state.PublicIpv4Addresses, diags = plan.PublicIpv4Addresses.ToListValue(ctx)
-					resp.Diagnostics.Append(diags...)
-					if resp.Diagnostics.HasError() {
-						return
-					}
-					if state.PublicIpv4Addresses.IsUnknown() {
-						// New IPs may have been allocated, so we need to check the server again
-						serverResp, err := r.bc.client.GetServersServerIdWithResponse(ctx, state.Id.ValueInt64())
-						if err != nil {
-							resp.Diagnostics.AddError("Error checking IPs for server after resize", err.Error())
-							return
-						}
-						if serverResp.StatusCode() != http.StatusOK {
-							resp.Diagnostics.AddError("Unexpected HTTP status code checking IPs for server after resize",
-								fmt.Sprintf("Received %s checking IPs for server after resize: name=%s. Details: %s", serverResp.Status(), state.Name.ValueString(), serverResp.Body))
-							return
-						}
-						var publicIpv4Addresses []string
-						for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
-							if v4address.Type == "public" {
-								publicIpv4Addresses = append(publicIpv4Addresses, v4address.IpAddress)
-							}
-						}
-						state.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, publicIpv4Addresses)
-						resp.Diagnostics.Append(diags...)
-					}
-					break retryLoop
-				}
-
-				lastReadyResp = readyResp
-				tflog.Debug(ctx, fmt.Sprintf("Waiting for server to be resized: name=%s, status=%s, details: %s", state.Name.ValueString(), readyResp.Status(), readyResp.Body))
-			}
-			time.Sleep(time.Second * 5)
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *resizeResp.JSON200.Action.Id, "resize")
+		if err != nil {
+			resp.Diagnostics.AddError("Error waiting for server to be resized", err.Error())
+			return
 		}
+
+		// Success
+
+		if state.PublicIpv4Addresses.IsUnknown() || listContainsUnknown(ctx, state.PublicIpv4Addresses) {
+			// New IPs may have been allocated, so we need to check the server again
+			serverResp, err := r.bc.client.GetServersServerIdWithResponse(ctx, state.Id.ValueInt64())
+			if err != nil {
+				resp.Diagnostics.AddError("Error checking IPs for server after resize", err.Error())
+				return
+			}
+			if serverResp.StatusCode() != http.StatusOK {
+				resp.Diagnostics.AddError("Unexpected HTTP status code checking IPs for server after resize",
+					fmt.Sprintf("Received %s checking IPs for server after resize: name=%s. Details: %s", serverResp.Status(), state.Name.ValueString(), serverResp.Body))
+				return
+			}
+			publicIpv4Addresses := []string{}
+			for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
+				if v4address.Type == "public" {
+					publicIpv4Addresses = append(publicIpv4Addresses, v4address.IpAddress)
+				}
+			}
+			state.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, publicIpv4Addresses)
+			resp.Diagnostics.Append(diags...)
+		}
+
+		// Save updated data into Terraform state
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	}
 
-	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	// Rebuild operation
+	if !plan.SshKeys.Equal(state.SshKeys) || !plan.UserData.IsNull() && !plan.UserData.Equal(state.UserData) {
+		var rebuildReq *binarylane.PostServersServerIdActionsRebuildJSONRequestBody
+
+		sshKeys := []int{}
+		diags := plan.SshKeys.ElementsAs(ctx, &sshKeys, false)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		rebuildReq = &binarylane.PostServersServerIdActionsRebuildJSONRequestBody{
+			Type: "rebuild",
+			Options: &binarylane.ImageOptions{
+				Name:     plan.Name.ValueStringPointer(),
+				Password: plan.Password.ValueStringPointer(),
+				UserData: plan.UserData.ValueStringPointer(),
+				SshKeys:  &sshKeys,
+			},
+		}
+		rebuildResp, err := r.bc.client.PostServersServerIdActionsRebuildWithResponse(
+			ctx,
+			state.Id.ValueInt64(),
+			*rebuildReq,
+		)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error rebuilding server: server_id=%s", state.Id.String()),
+				err.Error(),
+			)
+			return
+		}
+		if rebuildResp.StatusCode() != http.StatusOK {
+			resp.Diagnostics.AddError(
+				"Unexpected HTTP status code rebuilding server",
+				fmt.Sprintf("Received %s rebuilding server: server_id=%s. Details: %s", rebuildResp.Status(), state.Id.String(), rebuildResp.Body))
+			return
+		}
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *rebuildResp.JSON200.Action.Id, "rebuild")
+		if err != nil {
+			resp.Diagnostics.AddError("Error waiting for server to be rebuilt", err.Error())
+			return
+		}
+		state.Name = plan.Name
+		state.Password = plan.Password
+		state.UserData = plan.UserData
+		state.SshKeys = plan.SshKeys
+
+		// Save updated data into Terraform state
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	}
 }
 
 func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -675,7 +689,6 @@ func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -708,42 +721,91 @@ func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest,
 func (r *serverResource) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
+	// Import by ID
 	id, err := strconv.ParseInt(req.ID, 10, 32)
 	if err == nil {
 		diags := resp.State.SetAttribute(ctx, path.Root("id"), int32(id))
 		resp.Diagnostics.Append(diags...)
-	} else {
-		name := req.ID
-		params := binarylane.GetServersParams{
-			Hostname: &name,
-		}
-
-		serverResp, err := r.bc.client.GetServersWithResponse(ctx, &params)
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Error getting server: hostname=%s", name), err.Error())
-			return
-		}
-
-		if serverResp.StatusCode() != http.StatusOK {
-			resp.Diagnostics.AddError(
-				"Unexpected HTTP status code getting server",
-				fmt.Sprintf("Received %s reading server: hostname=%s. Details: %s", serverResp.Status(), name,
-					serverResp.Body))
-			return
-		}
-
-		servers := *serverResp.JSON200.Servers
-		idx := slices.IndexFunc(servers, func(s binarylane.Server) bool { return *s.Name == name })
-		if idx == -1 {
-			resp.Diagnostics.AddError(
-				"Could not find server by hostname",
-				fmt.Sprintf("Error finding server: hostname=%s", name),
-			)
-			return
-		}
-		server := servers[idx]
-
-		diags := resp.State.SetAttribute(ctx, path.Root("id"), int32(*server.Id))
-		resp.Diagnostics.Append(diags...)
+		return
 	}
+
+	// Import by name
+
+	name := req.ID
+	params := binarylane.GetServersParams{
+		Hostname: &name,
+	}
+
+	serverResp, err := r.bc.client.GetServersWithResponse(ctx, &params)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error getting server: hostname=%s", name), err.Error())
+		return
+	}
+
+	if serverResp.StatusCode() != http.StatusOK {
+		resp.Diagnostics.AddError(
+			"Unexpected HTTP status code getting server",
+			fmt.Sprintf("Received %s reading server: hostname=%s. Details: %s", serverResp.Status(), name,
+				serverResp.Body))
+		return
+	}
+
+	servers := *serverResp.JSON200.Servers
+	idx := slices.IndexFunc(servers, func(s binarylane.Server) bool { return *s.Name == name })
+	if idx == -1 {
+		resp.Diagnostics.AddError(
+			"Could not find server by hostname",
+			fmt.Sprintf("Error finding server: hostname=%s", name),
+		)
+		return
+	}
+	server := servers[idx]
+
+	diags := resp.State.SetAttribute(ctx, path.Root("id"), int32(*server.Id))
+	resp.Diagnostics.Append(diags...)
+}
+
+func (r *serverResource) waitForServerAction(ctx context.Context, serverId int64, actionId int64, actionType string) error {
+	var lastReadyResp *binarylane.GetServersServerIdActionsActionIdResponse
+
+	for {
+		select {
+		case <-ctx.Done():
+			if lastReadyResp == nil {
+				return fmt.Errorf("timed out waiting for server %d to %s", serverId, actionType)
+			} else {
+				return fmt.Errorf("timed out waiting for server %d to %s, last response was status=%s, body: %s", serverId, actionType, lastReadyResp.Status(), lastReadyResp.Body)
+			}
+		default:
+			readyResp, err := r.bc.client.GetServersServerIdActionsActionIdWithResponse(ctx, serverId, actionId)
+			if err != nil {
+				return fmt.Errorf("unexpected error waiting for server %d to %s: %w", serverId, actionType, err)
+			}
+			if readyResp.StatusCode() == http.StatusOK && *readyResp.JSON200.Action.Status == binarylane.Errored {
+				return fmt.Errorf("server %d failed to %s with error: %s", serverId, actionType, *readyResp.JSON200.Action.ResultData)
+			}
+			if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {
+				return nil
+			}
+			lastReadyResp = readyResp
+			tflog.Debug(ctx, fmt.Sprintf("waiting for server %d to %s: last response was status=%s, details: %s", serverId, actionType, readyResp.Status(), readyResp.Body))
+		}
+		time.Sleep(time.Second * 5)
+	}
+}
+
+func attrsRequiringRebuild(plan *serverModel, state *serverModel) []string {
+	attrs := []string{}
+
+	if !plan.SshKeys.Equal(state.SshKeys) {
+		attrs = append(attrs, "ssh_keys")
+	}
+	if !plan.Image.Equal(state.Image) {
+		attrs = append(attrs, "image")
+	}
+	if !plan.UserData.IsNull() && !plan.UserData.Equal(state.UserData) {
+		attrs = append(attrs, "user_data")
+	}
+
+	return attrs
 }

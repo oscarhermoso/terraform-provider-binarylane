@@ -12,6 +12,9 @@ cat <<<$(jq '.paths |= with_entries(.key |= sub("/v2/"; "/"))' $OPENAPI_FILE) >$
 # Terraform can't handle oneOf types, so we need to replace them with basic types
 cat <<<$(jq '.components.schemas.CreateServerRequest.properties.image |= del(.oneOf) + {type:"string"}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.components.schemas.CreateServerRequest.properties.ssh_keys.items |= del(.oneOf) + {type:"integer"}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Rebuild.properties.image |= del(.oneOf) + {type:"string"}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.ImageOptions.properties.ssh_keys.items |= del(.oneOf) + {type:"integer"}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.ChangeImage.properties.image |= del(.oneOf) + {type:"string"}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.paths["/account/keys/{key_id}"].delete.parameters[0].schema |= del(.oneOf) + {type:"integer"}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.paths["/account/keys/{key_id}"].put.parameters[0].schema |= del(.oneOf) + {type:"integer"}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.paths["/account/keys/{key_id}"].get.parameters[0].schema |= del(.oneOf) + {type:"integer"}' $OPENAPI_FILE) >$OPENAPI_FILE

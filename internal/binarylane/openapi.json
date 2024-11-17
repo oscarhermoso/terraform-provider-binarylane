@@ -9514,17 +9514,10 @@
         "type": "object",
         "properties": {
           "image": {
-            "oneOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "string"
-              }
-            ],
             "description": "The slug or ID of the selected image. What type of image is permitted here varies based on the server action.",
             "nullable": true,
-            "example": 5
+            "example": 5,
+            "type": "string"
           },
           "options": {
             "allOf": [
@@ -11306,15 +11299,8 @@
           "ssh_keys": {
             "type": "array",
             "items": {
-              "oneOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "string"
-                }
-              ],
-              "example": 5
+              "example": 5,
+              "type": "integer"
             },
             "description": "This may be either the existing SSH Keys IDs or fingerprints.\nIf this is null or not provided any SSH keys that have been marked as default will be deployed (if the operating system supports SSH Keys).\nSubmit an empty array to disable deployment of default keys.",
             "nullable": true
@@ -12491,17 +12477,10 @@
             "type": "string"
           },
           "image": {
-            "oneOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "string"
-              }
-            ],
             "description": "The Operating System ID or slug or Backup image ID to use as a base for the rebuild.",
             "nullable": true,
-            "example": 5
+            "example": 5,
+            "type": "string"
           },
           "options": {
             "allOf": [

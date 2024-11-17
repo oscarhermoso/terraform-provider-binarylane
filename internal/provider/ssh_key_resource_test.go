@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"terraform-provider-binarylane/internal/binarylane"
 	"testing"
@@ -118,16 +117,7 @@ func init() {
 	resource.AddTestSweepers("ssh_key", &resource.Sweeper{
 		Name: "ssh_key",
 		F: func(_ string) error {
-			endpoint := os.Getenv("BINARYLANE_API_ENDPOINT")
-			if endpoint == "" {
-				endpoint = "https://api.binarylane.com.au/v2"
-			}
-			token := os.Getenv("BINARYLANE_API_TOKEN")
-
-			client, err := binarylane.NewClientWithAuth(
-				endpoint,
-				token,
-			)
+			client, err := binarylane.NewClientWithDefaultConfig()
 
 			if err != nil {
 				return fmt.Errorf("Error creating Binary Lane API client: %w", err)
@@ -145,30 +135,30 @@ func init() {
 					PerPage: &perPage,
 				}
 
-				keyResp, err := client.GetAccountKeysWithResponse(ctx, &params)
+				listResp, err := client.GetAccountKeysWithResponse(ctx, &params)
 				if err != nil {
 					return fmt.Errorf("Error getting SSH keys for test sweep: %w", err)
 				}
 
-				if keyResp.StatusCode() != http.StatusOK {
-					return fmt.Errorf("Unexpected status code getting SSH keys for test sweep: %s", keyResp.Body)
+				if listResp.StatusCode() != http.StatusOK {
+					return fmt.Errorf("Unexpected status code getting SSH keys for test sweep: %s", listResp.Body)
 				}
 
-				keys := keyResp.JSON200.SshKeys
+				keys := listResp.JSON200.SshKeys
 				for _, k := range keys {
 					if strings.HasPrefix(*k.Name, "tf-test-") {
 
-						keyResp, err := client.DeleteAccountKeysKeyIdWithResponse(ctx, int(*k.Id))
+						deleteResp, err := client.DeleteAccountKeysKeyIdWithResponse(ctx, int(*k.Id))
 						if err != nil {
 							return fmt.Errorf("Error deleting SSH key %d for test sweep: %w", *k.Id, err)
 						}
-						if keyResp.StatusCode() != http.StatusNoContent {
-							return fmt.Errorf("Unexpected status %d deleting SSH key %d for test sweep: %s", keyResp.StatusCode(), *k.Id, keyResp.Body)
+						if deleteResp.StatusCode() != http.StatusNoContent {
+							return fmt.Errorf("Unexpected status %d deleting SSH key %d for test sweep: %s", deleteResp.StatusCode(), *k.Id, deleteResp.Body)
 						}
 						log.Println("Deleted SSH key for test sweep:", *k.Id)
 					}
 				}
-				if keyResp.JSON200.Links == nil || keyResp.JSON200.Links.Pages == nil || keyResp.JSON200.Links.Pages.Next == nil {
+				if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages == nil || listResp.JSON200.Links.Pages.Next == nil {
 					nextPage = false
 					break
 				}
