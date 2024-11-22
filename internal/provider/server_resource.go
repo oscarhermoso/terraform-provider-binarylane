@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -50,13 +51,14 @@ type serverResource struct {
 
 type serverModel struct {
 	resources.ServerModel
-	PublicIpv4Count         types.Int32    `tfsdk:"public_ipv4_count"`
-	PublicIpv4Addresses     types.List     `tfsdk:"public_ipv4_addresses"`
-	PrivateIPv4Addresses    types.List     `tfsdk:"private_ipv4_addresses"`
-	Permalink               types.String   `tfsdk:"permalink"`
-	Password                types.String   `tfsdk:"password"`
-	PasswordChangeSupported types.Bool     `tfsdk:"password_change_supported"`
-	Timeouts                timeouts.Value `tfsdk:"timeouts"`
+	PublicIpv4Count           types.Int32    `tfsdk:"public_ipv4_count"`
+	PublicIpv4Addresses       types.List     `tfsdk:"public_ipv4_addresses"`
+	PrivateIPv4Addresses      types.List     `tfsdk:"private_ipv4_addresses"`
+	SourceAndDestinationCheck types.Bool     `tfsdk:"source_and_destination_check"`
+	Permalink                 types.String   `tfsdk:"permalink"`
+	Password                  types.String   `tfsdk:"password"`
+	PasswordChangeSupported   types.Bool     `tfsdk:"password_change_supported"`
+	Timeouts                  timeouts.Value `tfsdk:"timeouts"`
 }
 
 func (d *serverResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -199,6 +201,26 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Computed: true,
 	}
 
+	sourceDestCheckDescription := "This attribute can only be set if your server also has a `vpc_id` attribute set. " +
+		"When enabled (which is `true` by default), your server will only be able to send or receive " +
+		"packets that are directly addressed to one of the IP addresses associated with the Cloud Server. Generally, " +
+		"this is desirable behaviour because it prevents IP conflicts and other hard-to-diagnose networking faults due " +
+		"to incorrect network configuration. When `source_and_destination_check` is `false`, your Cloud Server will be able " +
+		"to send and receive packets addressed to any server. This is typically used when you want to use " +
+		"your Cloud Server as a VPN endpoint, a NAT server to provide internet access, or IP forwarding."
+	resp.Schema.Attributes["source_and_destination_check"] = &schema.BoolAttribute{
+		Description:         sourceDestCheckDescription,
+		MarkdownDescription: sourceDestCheckDescription,
+		Optional:            true,
+		Required:            false,
+		Computed:            false,
+		Validators: []validator.Bool{
+			boolvalidator.AlsoRequires(path.Expressions{
+				path.MatchRoot("vpc_id"),
+			}...),
+		},
+	}
+
 	privateIpv4AddressesDescription := "The private IPv4 addresses assigned to the server."
 	resp.Schema.Attributes["private_ipv4_addresses"] = &schema.ListAttribute{
 		Description:         privateIpv4AddressesDescription,
@@ -248,16 +270,33 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 }
 
 func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	// Creation or destruction plan
-	if req.Plan.Raw.IsNull() || req.State.Raw.IsNull() {
+	var plan, state serverModel
+
+	if req.Plan.Raw.IsNull() {
+		// Destruction plan, no modification needed
+		return
+	}
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var plan, state serverModel
+	if plan.SourceAndDestinationCheck.IsNull() {
+		if plan.VpcId.IsNull() {
+			plan.SourceAndDestinationCheck = types.BoolPointerValue(nil)
+		} else {
+			plan.SourceAndDestinationCheck = types.BoolPointerValue(Pointer(true))
+		}
+	}
+	resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
 
-	// Read Terraform plan data into the model
+	if req.State.Raw.IsNull() {
+		// Creation plan, no further modification needed
+		return
+	}
+	// Read Terraform state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -374,7 +413,7 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 			fmt.Sprintf("Received %s creating new server: name=%s. Details: %s", serverResp.Status(), data.Name.ValueString(), serverResp.Body))
 		return
 	}
-	err = r.waitForServerAction(ctx, *serverResp.JSON200.Server.Id, createActionId, "create")
+	err = r.waitForServerAction(ctx, *serverResp.JSON200.Server.Id, createActionId)
 	if err != nil {
 		resp.Diagnostics.AddError("Error waiting for server to be created", err.Error())
 	}
@@ -389,6 +428,9 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
 	data.PasswordChangeSupported = types.BoolValue(*serverResp.JSON200.Server.PasswordChangeSupported)
+	plannedSourceDestCheck := data.SourceAndDestinationCheck
+	serverRespSourceDestCheck := types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
+	data.SourceAndDestinationCheck = serverRespSourceDestCheck
 
 	publicIpv4Addresses := []string{}
 	privateIpv4Addresses := []string{}
@@ -403,6 +445,19 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	resp.Diagnostics.Append(diags...)
 	data.PrivateIPv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, privateIpv4Addresses)
 	resp.Diagnostics.Append(diags...)
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+	// Update source_and_destination_check if needed
+	if plannedSourceDestCheck.Equal(types.BoolPointerValue(Pointer(false))) {
+		err := r.updateSourceDestCheck(ctx, data.Id.ValueInt64(), false)
+		if err != nil {
+			resp.Diagnostics.AddError("Error updating source and destination check", err.Error())
+			return
+		}
+		data.SourceAndDestinationCheck = plannedSourceDestCheck
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -447,6 +502,7 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
 	data.PasswordChangeSupported = types.BoolValue(*serverResp.JSON200.Server.PasswordChangeSupported)
+	data.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
 
 	publicIpv4Addresses := []string{}
 	privateIpv4Addresses := []string{}
@@ -598,7 +654,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 				fmt.Sprintf("Received %s resizing server: server_id=%s. Details: %s", resizeResp.Status(), state.Id.String(), resizeResp.Body))
 			return
 		}
-		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *resizeResp.JSON200.Action.Id, "resize")
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *resizeResp.JSON200.Action.Id)
 		if err != nil {
 			resp.Diagnostics.AddError("Error waiting for server to be resized", err.Error())
 			return
@@ -669,7 +725,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 				fmt.Sprintf("Received %s rebuilding server: server_id=%s. Details: %s", rebuildResp.Status(), state.Id.String(), rebuildResp.Body))
 			return
 		}
-		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *rebuildResp.JSON200.Action.Id, "rebuild")
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *rebuildResp.JSON200.Action.Id)
 		if err != nil {
 			resp.Diagnostics.AddError("Error waiting for server to be rebuilt", err.Error())
 			return
@@ -678,6 +734,22 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		state.Password = plan.Password
 		state.UserData = plan.UserData
 		state.SshKeys = plan.SshKeys
+
+		// Save updated data into Terraform state
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	}
+
+	// Check source_and_destination_check
+	if !plan.SourceAndDestinationCheck.Equal(state.SourceAndDestinationCheck) {
+		if !plan.SourceAndDestinationCheck.IsNull() {
+			err := r.updateSourceDestCheck(ctx, state.Id.ValueInt64(), plan.SourceAndDestinationCheck.ValueBool())
+			if err != nil {
+				resp.Diagnostics.AddError("Error updating source and destination check", err.Error())
+				return
+			}
+		}
+
+		state.SourceAndDestinationCheck = plan.SourceAndDestinationCheck
 
 		// Save updated data into Terraform state
 		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -765,30 +837,35 @@ func (r *serverResource) ImportState(
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r *serverResource) waitForServerAction(ctx context.Context, serverId int64, actionId int64, actionType string) error {
+func (r *serverResource) waitForServerAction(ctx context.Context, serverId int64, actionId int64) error {
 	var lastReadyResp *binarylane.GetServersServerIdActionsActionIdResponse
 
 	for {
 		select {
 		case <-ctx.Done():
 			if lastReadyResp == nil {
-				return fmt.Errorf("timed out waiting for server %d to %s", serverId, actionType)
+				return fmt.Errorf("timed out waiting for server action: server_id=%d, action_id=%d", serverId, actionId)
 			} else {
-				return fmt.Errorf("timed out waiting for server %d to %s, last response was status=%s, body: %s", serverId, actionType, lastReadyResp.Status(), lastReadyResp.Body)
+				return fmt.Errorf("timed out waiting for server action: server_id=%d, action_id=%d, last response was status=%s, body: %s",
+					serverId, actionId, lastReadyResp.Status(), lastReadyResp.Body)
 			}
 		default:
 			readyResp, err := r.bc.client.GetServersServerIdActionsActionIdWithResponse(ctx, serverId, actionId)
 			if err != nil {
-				return fmt.Errorf("unexpected error waiting for server %d to %s: %w", serverId, actionType, err)
+				return fmt.Errorf("unexpected error waiting for server action: server_id=%d, action_id=%d, error: %w", serverId, actionId, err)
 			}
 			if readyResp.StatusCode() == http.StatusOK && *readyResp.JSON200.Action.Status == binarylane.Errored {
-				return fmt.Errorf("server %d failed to %s with error: %s", serverId, actionType, *readyResp.JSON200.Action.ResultData)
+				return fmt.Errorf("server action failed to with error: server_id=%d, action_id=%d, error: %s", serverId, actionId, *readyResp.JSON200.Action.ResultData)
 			}
 			if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {
 				return nil
 			}
 			lastReadyResp = readyResp
-			tflog.Debug(ctx, fmt.Sprintf("waiting for server %d to %s: last response was status=%s, details: %s", serverId, actionType, readyResp.Status(), readyResp.Body))
+			tflog.Debug(ctx,
+				fmt.Sprintf("waiting for server action for server_id=%d, action_id=%d: last response was status=%s, details: %s",
+					serverId, actionId, readyResp.Status(), readyResp.Body,
+				),
+			)
 		}
 		time.Sleep(time.Second * 5)
 	}
@@ -808,4 +885,35 @@ func attrsRequiringRebuild(plan *serverModel, state *serverModel) []string {
 	}
 
 	return attrs
+}
+
+func (r *serverResource) updateSourceDestCheck(
+	ctx context.Context,
+	serverId int64,
+	sourceDestCheckEnabled bool,
+) error {
+	tflog.Info(ctx, fmt.Sprintf("Changing source and destination check for server: server_id=%d, enabled=%t",
+		serverId, sourceDestCheckEnabled))
+
+	sourceDestCheckResp, err := r.bc.client.PostServersServerIdActionsChangeSourceAndDestinationCheckWithResponse(
+		ctx,
+		serverId,
+		binarylane.PostServersServerIdActionsChangeSourceAndDestinationCheckJSONRequestBody{
+			Type:    "change_source_and_destination_check",
+			Enabled: sourceDestCheckEnabled,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("error changing source and destination check for server: server_id=%d, error: %w", serverId, err)
+	}
+	if sourceDestCheckResp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("unexpected HTTP status code changing source and destination check for server: server_id=%d, details: %s", serverId, sourceDestCheckResp.Body)
+	}
+
+	err = r.waitForServerAction(ctx, serverId, *sourceDestCheckResp.JSON200.Action.Id)
+	if err != nil {
+		return fmt.Errorf("error changing source and destination check: %w", err)
+	}
+
+	return nil
 }
