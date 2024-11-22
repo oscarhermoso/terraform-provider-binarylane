@@ -213,7 +213,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		MarkdownDescription: sourceDestCheckDescription,
 		Optional:            true,
 		Required:            false,
-		Computed:            false,
+		Computed:            true,
 		Validators: []validator.Bool{
 			boolvalidator.AlsoRequires(path.Expressions{
 				path.MatchRoot("vpc_id"),
@@ -282,14 +282,14 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		return
 	}
 
-	if plan.SourceAndDestinationCheck.IsNull() {
+	if plan.SourceAndDestinationCheck.IsUnknown() {
 		if plan.VpcId.IsNull() {
-			plan.SourceAndDestinationCheck = types.BoolPointerValue(nil)
+			plan.SourceAndDestinationCheck = types.BoolNull()
 		} else {
 			plan.SourceAndDestinationCheck = types.BoolPointerValue(Pointer(true))
 		}
+		resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
 	}
-	resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
 
 	if req.State.Raw.IsNull() {
 		// Creation plan, no further modification needed

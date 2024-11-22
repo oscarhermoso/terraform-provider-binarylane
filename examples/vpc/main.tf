@@ -35,12 +35,13 @@ resource "binarylane_server" "db" {
 
 # VPN server
 resource "binarylane_server" "vpn" {
-  name              = "tf-example-vpc-vpn"
-  region            = "per"
-  image             = "ubuntu-24.04"
-  size              = "std-min"
-  vpc_id            = binarylane_vpc.example.id
-  public_ipv4_count = 1
+  name                         = "tf-example-vpc-vpn"
+  region                       = "per"
+  image                        = "ubuntu-24.04"
+  size                         = "std-min"
+  vpc_id                       = binarylane_vpc.example.id
+  public_ipv4_count            = 1
+  source_and_destination_check = false
 }
 
 resource "binarylane_vpc_route_entries" "example" {

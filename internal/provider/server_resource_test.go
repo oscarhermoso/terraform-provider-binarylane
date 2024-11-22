@@ -150,7 +150,7 @@ resource "binarylane_server" "test" {
   vpc_id            = binarylane_vpc.test.id
   public_ipv4_count = 0
   ssh_keys          = [binarylane_ssh_key.updated.id]
-	source_and_destination_check = true
+	# source_and_destination_check =  true  # defaults to true
   user_data         = <<EOT
 #cloud-config
 echo "Hello Whitespace" > /var/tmp/output.txt
