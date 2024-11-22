@@ -39,9 +39,35 @@ Planned features:
   - [ ] Virtual Private Cloud
   - [ ] Kubernetes
 
-## Parameters
+## Server parameters
 
-Images:
+### Regions
+
+<details>
+<summary>curl for regions</summary>
+
+```sh
+curl -X GET "https://api.binarylane.com.au/v2/regions" \
+  -H "Authorization: Bearer $BINARYLANE_API_TOKEN" > tmp/regions.json
+
+jq '[ .regions[] | .slug ] | sort' tmp/regions.json
+```
+</details>
+
+```json
+[
+  "bne",
+  "mel",
+  "per",
+  "sin",
+  "syd"
+]
+```
+
+### Images
+
+<details>
+<summary>curl for images</summary>
 
 ```sh
 curl -X GET "https://api.binarylane.com.au/v2/images?type=distribution&&page=1&per_page=200" \
@@ -49,6 +75,7 @@ curl -X GET "https://api.binarylane.com.au/v2/images?type=distribution&&page=1&p
 
 jq '[ .images[] | .slug ] | sort' tmp/images.json
 ```
+</details>
 
 ```json
 [
@@ -78,29 +105,10 @@ jq '[ .images[] | .slug ] | sort' tmp/images.json
 ]
 ```
 
-Regions:
-
-```sh
-curl -X GET "https://api.binarylane.com.au/v2/regions" \
-  -H "Authorization: Bearer $BINARYLANE_API_TOKEN" > tmp/regions.json
-
-jq '[ .regions[] | .slug ] | sort' tmp/regions.json
-```
-
-```json
-[
-  "bne",
-  "mel",
-  "per",
-  "sin",
-  "syd"
-]
-```
-
 ### Sizes
 
 <details>
-<summary>VM size</summary>
+<summary>curl for sizes</summary>
 
 ```sh
 curl -X GET "https://api.binarylane.com.au/v2/sizes" \
