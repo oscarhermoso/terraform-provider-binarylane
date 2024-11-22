@@ -60,6 +60,7 @@ resource "binarylane_server" "test" {
   vpc_id            = binarylane_vpc.test.id
   public_ipv4_count = 1
   ssh_keys          = [binarylane_ssh_key.initial.id]
+	source_and_destination_check = false
   user_data         = <<EOT
 #cloud-config
 echo "Hello World" > /var/tmp/output.txt
@@ -91,6 +92,7 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("binarylane_server.test", "ssh_keys.#", "1"),
 					resource.TestCheckResourceAttrPair("binarylane_server.test", "ssh_keys.0", "binarylane_ssh_key.initial", "id"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "permalink"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "source_and_destination_check", "false"),
 
 					// Verify data source values
 					resource.TestCheckResourceAttrPair("data.binarylane_server.test", "id", "binarylane_server.test", "id"),
@@ -148,6 +150,7 @@ resource "binarylane_server" "test" {
   vpc_id            = binarylane_vpc.test.id
   public_ipv4_count = 0
   ssh_keys          = [binarylane_ssh_key.updated.id]
+	# source_and_destination_check =  true  # defaults to true
   user_data         = <<EOT
 #cloud-config
 echo "Hello Whitespace" > /var/tmp/output.txt
@@ -164,6 +167,7 @@ EOT
 					resource.TestCheckResourceAttr("binarylane_server.test", "image", "debian-12"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "ssh_keys.#", "1"),
 					resource.TestCheckResourceAttrPair("binarylane_server.test", "ssh_keys.0", "binarylane_ssh_key.updated", "id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "source_and_destination_check", "true"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "user_data", // test extra whitespace
 						`#cloud-config
 echo "Hello Whitespace" > /var/tmp/output.txt
