@@ -714,7 +714,7 @@ type BackupInfo struct {
 	// BackupDisks A list of the individual disks that make up this backup.
 	BackupDisks *[]BackupDisk `json:"backup_disks,omitempty"`
 
-	// Iso If this is true the backup is an ISO image and cannot be restored. ISO images may only be attached for use as a boot disk or an additional disk.
+	// Iso If this is true the backup is an ISO image and cannot be restored or downloaded. ISO images may only be attached for use as a boot disk or an additional disk.
 	Iso *bool `json:"iso,omitempty"`
 
 	// Locked If this is true the backup is locked and cannot be replaced.
@@ -1501,21 +1501,6 @@ type EnableIpv6 struct {
 
 // EnableIpv6Type defines model for EnableIpv6.Type.
 type EnableIpv6Type string
-
-// FailoverIpsRequest defines model for FailoverIpsRequest.
-type FailoverIpsRequest struct {
-	// FailoverIps The list of IP Failover addresses to assign to this server. This overwrites the current list, so any current IP Failover addresses that are omitted will be removed from the server.
-	FailoverIps []string `json:"failover_ips"`
-}
-
-// FailoverIpsResponse defines model for FailoverIpsResponse.
-type FailoverIpsResponse struct {
-	FailoverIps *[]string `json:"failover_ips,omitempty"`
-	Links       *Links    `json:"links"`
-
-	// Meta Contains metadata about the response, currently this includes the total number of items.
-	Meta Meta `json:"meta"`
-}
 
 // ForwardingRule defines model for ForwardingRule.
 type ForwardingRule struct {
@@ -3214,27 +3199,6 @@ type PutDomainsDomainNameRecordsRecordIdParamsDomainName0 = int
 // PutDomainsDomainNameRecordsRecordIdParamsDomainName1 defines parameters for PutDomainsDomainNameRecordsRecordId.
 type PutDomainsDomainNameRecordsRecordIdParamsDomainName1 = string
 
-// GetFailoverIpsServerIdParams defines parameters for GetFailoverIpsServerId.
-type GetFailoverIpsServerIdParams struct {
-	// Page The selected page. Page numbering starts at 1
-	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
-
-	// PerPage The number of results to show per page.
-	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
-}
-
-// PostFailoverIpsServerIdJSONBody defines parameters for PostFailoverIpsServerId.
-type PostFailoverIpsServerIdJSONBody = FailoverIpsRequest
-
-// GetFailoverIpsServerIdAvailableParams defines parameters for GetFailoverIpsServerIdAvailable.
-type GetFailoverIpsServerIdAvailableParams struct {
-	// Page The selected page. Page numbering starts at 1
-	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
-
-	// PerPage The number of results to show per page.
-	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
-}
-
 // GetImagesParams defines parameters for GetImages.
 type GetImagesParams struct {
 	// Type Queries for distribution will include images that have pre-installed applications.
@@ -3521,9 +3485,6 @@ type PostDomainsDomainNameRecordsJSONRequestBody = PostDomainsDomainNameRecordsJ
 
 // PutDomainsDomainNameRecordsRecordIdJSONRequestBody defines body for PutDomainsDomainNameRecordsRecordId for application/json ContentType.
 type PutDomainsDomainNameRecordsRecordIdJSONRequestBody = PutDomainsDomainNameRecordsRecordIdJSONBody
-
-// PostFailoverIpsServerIdJSONRequestBody defines body for PostFailoverIpsServerId for application/json ContentType.
-type PostFailoverIpsServerIdJSONRequestBody = PostFailoverIpsServerIdJSONBody
 
 // PostLoadBalancersJSONRequestBody defines body for PostLoadBalancers for application/json ContentType.
 type PostLoadBalancersJSONRequestBody = PostLoadBalancersJSONBody

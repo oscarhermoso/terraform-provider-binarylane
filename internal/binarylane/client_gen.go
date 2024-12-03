@@ -197,17 +197,6 @@ type ClientInterface interface {
 		union json.RawMessage
 	}, recordId int64, body PutDomainsDomainNameRecordsRecordIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetFailoverIpsServerId request
-	GetFailoverIpsServerId(ctx context.Context, serverId int64, params *GetFailoverIpsServerIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostFailoverIpsServerIdWithBody request with any body
-	PostFailoverIpsServerIdWithBody(ctx context.Context, serverId int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostFailoverIpsServerId(ctx context.Context, serverId int64, body PostFailoverIpsServerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetFailoverIpsServerIdAvailable request
-	GetFailoverIpsServerIdAvailable(ctx context.Context, serverId int64, params *GetFailoverIpsServerIdAvailableParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// GetImages request
 	GetImages(ctx context.Context, params *GetImagesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -977,54 +966,6 @@ func (c *Client) PutDomainsDomainNameRecordsRecordId(ctx context.Context, domain
 	union json.RawMessage
 }, recordId int64, body PutDomainsDomainNameRecordsRecordIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutDomainsDomainNameRecordsRecordIdRequest(c.Server, domainName, recordId, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetFailoverIpsServerId(ctx context.Context, serverId int64, params *GetFailoverIpsServerIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetFailoverIpsServerIdRequest(c.Server, serverId, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostFailoverIpsServerIdWithBody(ctx context.Context, serverId int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostFailoverIpsServerIdRequestWithBody(c.Server, serverId, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostFailoverIpsServerId(ctx context.Context, serverId int64, body PostFailoverIpsServerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostFailoverIpsServerIdRequest(c.Server, serverId, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetFailoverIpsServerIdAvailable(ctx context.Context, serverId int64, params *GetFailoverIpsServerIdAvailableParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetFailoverIpsServerIdAvailableRequest(c.Server, serverId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3916,197 +3857,6 @@ func NewPutDomainsDomainNameRecordsRecordIdRequestWithBody(server string, domain
 	}
 
 	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewGetFailoverIpsServerIdRequest generates requests for GetFailoverIpsServerId
-func NewGetFailoverIpsServerIdRequest(server string, serverId int64, params *GetFailoverIpsServerIdParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "server_id", runtime.ParamLocationPath, serverId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/failover_ips/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if params.Page != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.PerPage != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "per_page", runtime.ParamLocationQuery, *params.PerPage); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewPostFailoverIpsServerIdRequest calls the generic PostFailoverIpsServerId builder with application/json body
-func NewPostFailoverIpsServerIdRequest(server string, serverId int64, body PostFailoverIpsServerIdJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostFailoverIpsServerIdRequestWithBody(server, serverId, "application/json", bodyReader)
-}
-
-// NewPostFailoverIpsServerIdRequestWithBody generates requests for PostFailoverIpsServerId with any type of body
-func NewPostFailoverIpsServerIdRequestWithBody(server string, serverId int64, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "server_id", runtime.ParamLocationPath, serverId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/failover_ips/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewGetFailoverIpsServerIdAvailableRequest generates requests for GetFailoverIpsServerIdAvailable
-func NewGetFailoverIpsServerIdAvailableRequest(server string, serverId int64, params *GetFailoverIpsServerIdAvailableParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "server_id", runtime.ParamLocationPath, serverId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/failover_ips/%s/available", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if params.Page != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.PerPage != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "per_page", runtime.ParamLocationQuery, *params.PerPage); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
 
 	return req, nil
 }
@@ -8665,17 +8415,6 @@ type ClientWithResponsesInterface interface {
 		union json.RawMessage
 	}, recordId int64, body PutDomainsDomainNameRecordsRecordIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutDomainsDomainNameRecordsRecordIdResponse, error)
 
-	// GetFailoverIpsServerIdWithResponse request
-	GetFailoverIpsServerIdWithResponse(ctx context.Context, serverId int64, params *GetFailoverIpsServerIdParams, reqEditors ...RequestEditorFn) (*GetFailoverIpsServerIdResponse, error)
-
-	// PostFailoverIpsServerIdWithBodyWithResponse request with any body
-	PostFailoverIpsServerIdWithBodyWithResponse(ctx context.Context, serverId int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostFailoverIpsServerIdResponse, error)
-
-	PostFailoverIpsServerIdWithResponse(ctx context.Context, serverId int64, body PostFailoverIpsServerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PostFailoverIpsServerIdResponse, error)
-
-	// GetFailoverIpsServerIdAvailableWithResponse request
-	GetFailoverIpsServerIdAvailableWithResponse(ctx context.Context, serverId int64, params *GetFailoverIpsServerIdAvailableParams, reqEditors ...RequestEditorFn) (*GetFailoverIpsServerIdAvailableResponse, error)
-
 	// GetImagesWithResponse request
 	GetImagesWithResponse(ctx context.Context, params *GetImagesParams, reqEditors ...RequestEditorFn) (*GetImagesResponse, error)
 
@@ -9641,76 +9380,6 @@ func (r PutDomainsDomainNameRecordsRecordIdResponse) StatusCode() int {
 	return 0
 }
 
-type GetFailoverIpsServerIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *FailoverIpsResponse
-	JSON404      *ProblemDetails
-}
-
-// Status returns HTTPResponse.Status
-func (r GetFailoverIpsServerIdResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetFailoverIpsServerIdResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostFailoverIpsServerIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *ActionResponse
-	JSON400      *ValidationProblemDetails
-	JSON404      *ProblemDetails
-}
-
-// Status returns HTTPResponse.Status
-func (r PostFailoverIpsServerIdResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostFailoverIpsServerIdResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetFailoverIpsServerIdAvailableResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *FailoverIpsResponse
-	JSON404      *ProblemDetails
-}
-
-// Status returns HTTPResponse.Status
-func (r GetFailoverIpsServerIdAvailableResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetFailoverIpsServerIdAvailableResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type GetImagesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -9761,6 +9430,7 @@ type GetImagesImageIdDownloadResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ImageDownloadResponse
+	JSON400      *ValidationProblemDetails
 	JSON404      *ProblemDetails
 }
 
@@ -12123,41 +11793,6 @@ func (c *ClientWithResponses) PutDomainsDomainNameRecordsRecordIdWithResponse(ct
 	return ParsePutDomainsDomainNameRecordsRecordIdResponse(rsp)
 }
 
-// GetFailoverIpsServerIdWithResponse request returning *GetFailoverIpsServerIdResponse
-func (c *ClientWithResponses) GetFailoverIpsServerIdWithResponse(ctx context.Context, serverId int64, params *GetFailoverIpsServerIdParams, reqEditors ...RequestEditorFn) (*GetFailoverIpsServerIdResponse, error) {
-	rsp, err := c.GetFailoverIpsServerId(ctx, serverId, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetFailoverIpsServerIdResponse(rsp)
-}
-
-// PostFailoverIpsServerIdWithBodyWithResponse request with arbitrary body returning *PostFailoverIpsServerIdResponse
-func (c *ClientWithResponses) PostFailoverIpsServerIdWithBodyWithResponse(ctx context.Context, serverId int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostFailoverIpsServerIdResponse, error) {
-	rsp, err := c.PostFailoverIpsServerIdWithBody(ctx, serverId, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostFailoverIpsServerIdResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostFailoverIpsServerIdWithResponse(ctx context.Context, serverId int64, body PostFailoverIpsServerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PostFailoverIpsServerIdResponse, error) {
-	rsp, err := c.PostFailoverIpsServerId(ctx, serverId, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostFailoverIpsServerIdResponse(rsp)
-}
-
-// GetFailoverIpsServerIdAvailableWithResponse request returning *GetFailoverIpsServerIdAvailableResponse
-func (c *ClientWithResponses) GetFailoverIpsServerIdAvailableWithResponse(ctx context.Context, serverId int64, params *GetFailoverIpsServerIdAvailableParams, reqEditors ...RequestEditorFn) (*GetFailoverIpsServerIdAvailableResponse, error) {
-	rsp, err := c.GetFailoverIpsServerIdAvailable(ctx, serverId, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetFailoverIpsServerIdAvailableResponse(rsp)
-}
-
 // GetImagesWithResponse request returning *GetImagesResponse
 func (c *ClientWithResponses) GetImagesWithResponse(ctx context.Context, params *GetImagesParams, reqEditors ...RequestEditorFn) (*GetImagesResponse, error) {
 	rsp, err := c.GetImages(ctx, params, reqEditors...)
@@ -14171,112 +13806,6 @@ func ParsePutDomainsDomainNameRecordsRecordIdResponse(rsp *http.Response) (*PutD
 	return response, nil
 }
 
-// ParseGetFailoverIpsServerIdResponse parses an HTTP response from a GetFailoverIpsServerIdWithResponse call
-func ParseGetFailoverIpsServerIdResponse(rsp *http.Response) (*GetFailoverIpsServerIdResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetFailoverIpsServerIdResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest FailoverIpsResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest ProblemDetails
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostFailoverIpsServerIdResponse parses an HTTP response from a PostFailoverIpsServerIdWithResponse call
-func ParsePostFailoverIpsServerIdResponse(rsp *http.Response) (*PostFailoverIpsServerIdResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostFailoverIpsServerIdResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ActionResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ValidationProblemDetails
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest ProblemDetails
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetFailoverIpsServerIdAvailableResponse parses an HTTP response from a GetFailoverIpsServerIdAvailableWithResponse call
-func ParseGetFailoverIpsServerIdAvailableResponse(rsp *http.Response) (*GetFailoverIpsServerIdAvailableResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetFailoverIpsServerIdAvailableResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest FailoverIpsResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest ProblemDetails
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseGetImagesResponse parses an HTTP response from a GetImagesWithResponse call
 func ParseGetImagesResponse(rsp *http.Response) (*GetImagesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -14363,6 +13892,13 @@ func ParseGetImagesImageIdDownloadResponse(rsp *http.Response) (*GetImagesImageI
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ValidationProblemDetails
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ProblemDetails
