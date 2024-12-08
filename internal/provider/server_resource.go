@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -49,13 +50,11 @@ type serverResource struct {
 	bc *BinarylaneClient
 }
 
-type serverModel struct {
-	resources.ServerModel
+type serverResourceModel struct {
+	serverDataModel
+
 	PublicIpv4Count           types.Int32    `tfsdk:"public_ipv4_count"`
-	PublicIpv4Addresses       types.List     `tfsdk:"public_ipv4_addresses"`
-	PrivateIPv4Addresses      types.List     `tfsdk:"private_ipv4_addresses"`
 	SourceAndDestinationCheck types.Bool     `tfsdk:"source_and_destination_check"`
-	Permalink                 types.String   `tfsdk:"permalink"`
 	Password                  types.String   `tfsdk:"password"`
 	PasswordChangeSupported   types.Bool     `tfsdk:"password_change_supported"`
 	Timeouts                  timeouts.Value `tfsdk:"timeouts"`
@@ -137,7 +136,6 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		MarkdownDescription: vpcId.GetMarkdownDescription(),
 		Optional:            vpcId.IsOptional(),
 		Computed:            false, // VPC ID is not computed, defined at creation
-		PlanModifiers:       []planmodifier.Int64{int64planmodifier.RequiresReplace()},
 	}
 
 	portBlocking := resp.Schema.Attributes["port_blocking"]
@@ -270,7 +268,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 }
 
 func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	var plan, state serverModel
+	var plan, state serverResourceModel
 
 	if req.Plan.Raw.IsNull() {
 		// Destruction plan, no modification needed
@@ -299,6 +297,10 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if !plan.VpcId.Equal(state.VpcId) {
+		plan.PrivateIPv4Addresses = types.ListUnknown(plan.PrivateIPv4Addresses.ElementType(ctx))
 	}
 
 	// When IP count is changed, plan should show addition/removal of public IPs
@@ -338,7 +340,7 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 }
 
 func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data serverModel
+	var data serverResourceModel
 
 	// Read Terraform plan data into the model
 	diags := req.Plan.Get(ctx, &data)
@@ -464,7 +466,7 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 }
 
 func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data serverModel
+	var data serverResourceModel
 
 	// Read Terraform prior state data into the model
 	diags := req.State.Get(ctx, &data)
@@ -492,36 +494,8 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	data.Id = types.Int64Value(*serverResp.JSON200.Server.Id)
-	data.Name = types.StringValue(*serverResp.JSON200.Server.Name)
-	data.Image = types.StringValue(*serverResp.JSON200.Server.Image.Slug)
-	data.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
-	data.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
-	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
-	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
-	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
-	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
-	data.PasswordChangeSupported = types.BoolValue(*serverResp.JSON200.Server.PasswordChangeSupported)
-	data.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
-
-	publicIpv4Addresses := []string{}
-	privateIpv4Addresses := []string{}
-	for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
-		if v4address.Type == "public" {
-			publicIpv4Addresses = append(publicIpv4Addresses, v4address.IpAddress)
-		} else {
-			privateIpv4Addresses = append(privateIpv4Addresses, v4address.IpAddress)
-		}
-	}
-	data.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, publicIpv4Addresses)
-	resp.Diagnostics.Append(diags...)
-	data.PrivateIPv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, privateIpv4Addresses)
-	resp.Diagnostics.Append(diags...)
-	data.PublicIpv4Count = types.Int32Value(int32(len(publicIpv4Addresses)))
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	diag := setServerResourceState(ctx, &data, serverResp.JSON200)
+	resp.Diagnostics.Append(diag...)
 
 	// Get user data script
 	userDataResp, err := r.bc.client.GetServersServerIdUserDataWithResponse(ctx, data.Id.ValueInt64())
@@ -546,7 +520,7 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state serverModel
+	var plan, state serverResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -561,6 +535,35 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 	defer cancel()
 
 	rebuildNeeded := len(attrsRequiringRebuild(&plan, &state)) > 0
+	refreshNeeded := false
+
+	defer (func() {
+		if !refreshNeeded {
+			return
+		}
+
+		serverResp, err := r.bc.client.GetServersServerIdWithResponse(ctx, state.Id.ValueInt64())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error reading server: id=%s, name=%s", state.Id.String(), state.Name.ValueString()),
+				err.Error(),
+			)
+			return
+		}
+		if serverResp.StatusCode() != http.StatusOK {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Unexpected HTTP status code %s reading server: name=%s, id=%s", serverResp.Status(), state.Name.ValueString(), state.Id.String()),
+				string(serverResp.Body),
+			)
+			return
+		}
+
+		diag := setServerResourceState(ctx, &state, serverResp.JSON200)
+		resp.Diagnostics.Append(diag...)
+
+		// Save updated data into Terraform state
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	})()
 
 	// Rename
 	if !plan.Name.Equal(state.Name) && !rebuildNeeded {
@@ -595,6 +598,41 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		// TODO - Currently, the API does not support polling for the rename to complete, because the action ID returns a 404 response (see #13)
 
 		state.Name = types.StringValue(plan.Name.ValueString())
+	}
+
+	// Change network
+	if !plan.VpcId.Equal(state.VpcId) {
+		networkResp, err := r.bc.client.PostServersServerIdActionsChangeNetworkWithResponse(
+			ctx,
+			state.Id.ValueInt64(),
+			binarylane.PostServersServerIdActionsChangeNetworkJSONRequestBody{
+				Type:  "change_network",
+				VpcId: plan.VpcId.ValueInt64Pointer(),
+			},
+		)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error changing network for server: server_id=%s", state.Id.String()),
+				err.Error())
+			return
+		}
+		if networkResp.StatusCode() != http.StatusOK {
+			resp.Diagnostics.AddError(
+				"Unexpected HTTP status code changing network for server",
+				fmt.Sprintf("Received %s changing network for server: server_id=%s. Details: %s", networkResp.Status(), state.Id.String(), networkResp.Body))
+			return
+		}
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *networkResp.JSON200.Action.Id)
+		if err != nil {
+			resp.Diagnostics.AddError("Error waiting for server to change network", err.Error())
+			return
+		}
+		state.VpcId = plan.VpcId
+		refreshNeeded = true // Refresh to get new private IP addresses
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	// Resize operation
@@ -654,38 +692,17 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 				fmt.Sprintf("Received %s resizing server: server_id=%s. Details: %s", resizeResp.Status(), state.Id.String(), resizeResp.Body))
 			return
 		}
+
 		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *resizeResp.JSON200.Action.Id)
 		if err != nil {
 			resp.Diagnostics.AddError("Error waiting for server to be resized", err.Error())
 			return
 		}
 
-		// Success
-
 		if state.PublicIpv4Addresses.IsUnknown() || listContainsUnknown(ctx, state.PublicIpv4Addresses) {
 			// New IPs may have been allocated, so we need to check the server again
-			serverResp, err := r.bc.client.GetServersServerIdWithResponse(ctx, state.Id.ValueInt64())
-			if err != nil {
-				resp.Diagnostics.AddError("Error checking IPs for server after resize", err.Error())
-				return
-			}
-			if serverResp.StatusCode() != http.StatusOK {
-				resp.Diagnostics.AddError("Unexpected HTTP status code checking IPs for server after resize",
-					fmt.Sprintf("Received %s checking IPs for server after resize: name=%s. Details: %s", serverResp.Status(), state.Name.ValueString(), serverResp.Body))
-				return
-			}
-			publicIpv4Addresses := []string{}
-			for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
-				if v4address.Type == "public" {
-					publicIpv4Addresses = append(publicIpv4Addresses, v4address.IpAddress)
-				}
-			}
-			state.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, publicIpv4Addresses)
-			resp.Diagnostics.Append(diags...)
+			refreshNeeded = true
 		}
-
-		// Save updated data into Terraform state
-		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	}
 
 	// Rebuild operation
@@ -757,7 +774,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 }
 
 func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data serverModel
+	var data serverResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -871,7 +888,7 @@ func (r *serverResource) waitForServerAction(ctx context.Context, serverId int64
 	}
 }
 
-func attrsRequiringRebuild(plan *serverModel, state *serverModel) []string {
+func attrsRequiringRebuild(plan *serverResourceModel, state *serverResourceModel) []string {
 	attrs := []string{}
 
 	if !plan.SshKeys.Equal(state.SshKeys) {
@@ -916,4 +933,51 @@ func (r *serverResource) updateSourceDestCheck(
 	}
 
 	return nil
+}
+
+func setServerResourceState(ctx context.Context, data *serverResourceModel, serverResp *binarylane.ServerResponse) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	data.Id = types.Int64Value(*serverResp.Server.Id)
+	data.Name = types.StringValue(*serverResp.Server.Name)
+	data.Image = types.StringValue(*serverResp.Server.Image.Slug)
+	data.Region = types.StringValue(*serverResp.Server.Region.Slug)
+	data.Size = types.StringValue(*serverResp.Server.Size.Slug)
+	data.Backups = types.BoolValue(serverResp.Server.NextBackupWindow != nil)
+	data.PortBlocking = types.BoolValue(serverResp.Server.Networks.PortBlocking)
+	data.VpcId = types.Int64PointerValue(serverResp.Server.VpcId)
+	data.Permalink = types.StringValue(*serverResp.Server.Permalink)
+	data.PasswordChangeSupported = types.BoolValue(*serverResp.Server.PasswordChangeSupported)
+	data.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.Server.Networks.SourceAndDestinationCheck)
+
+	publicIpv4Addresses := []string{}
+	privateIpv4Addresses := []string{}
+
+	for _, v4address := range serverResp.Server.Networks.V4 {
+		if v4address.Type == "public" {
+			publicIpv4Addresses = append(publicIpv4Addresses, v4address.IpAddress)
+		} else {
+			privateIpv4Addresses = append(privateIpv4Addresses, v4address.IpAddress)
+		}
+	}
+
+	tfPublicIpv4Addresses, diag := types.ListValueFrom(ctx, types.StringType, publicIpv4Addresses)
+	diags.Append(diag...)
+	if diag.HasError() {
+		data.PublicIpv4Addresses = types.ListUnknown(data.PublicIpv4Addresses.ElementType(ctx))
+		data.PublicIpv4Count = types.Int32Unknown()
+	} else {
+		data.PublicIpv4Addresses = tfPublicIpv4Addresses
+		data.PublicIpv4Count = types.Int32Value(int32(len(publicIpv4Addresses)))
+	}
+
+	tfPrivateIpv4Addresses, diag := types.ListValueFrom(ctx, types.StringType, privateIpv4Addresses)
+	diags.Append(diag...)
+	if diag.HasError() {
+		data.PrivateIPv4Addresses = types.ListUnknown(data.PrivateIPv4Addresses.ElementType(ctx))
+	} else {
+		data.PrivateIPv4Addresses = tfPrivateIpv4Addresses
+	}
+
+	return diags
 }

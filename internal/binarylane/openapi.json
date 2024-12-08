@@ -8,7 +8,7 @@
       "url": "https://support.binarylane.com.au",
       "email": "support@binarylane.com.au"
     },
-    "version": "0.25.0",
+    "version": "0.26.0",
     "x-logo": {
       "url": "https://www.binarylane.com.au/res/images/binarylane/logo.png",
       "backgroundColor": "#000000",
@@ -1200,242 +1200,6 @@
         "x-cli-command": "domain record delete"
       }
     },
-    "/failover_ips/{server_id}": {
-      "get": {
-        "tags": [
-          "FailoverIps"
-        ],
-        "summary": "Fetch the Failover IPs for a Server",
-        "parameters": [
-          {
-            "name": "server_id",
-            "in": "path",
-            "description": "The target server id.",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "description": "The target server id.",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "description": "The selected page. Page numbering starts at 1",
-            "schema": {
-              "maximum": 2147483647,
-              "minimum": 1,
-              "type": "integer",
-              "description": "The selected page. Page numbering starts at 1",
-              "format": "int32",
-              "default": 1
-            }
-          },
-          {
-            "name": "per_page",
-            "in": "query",
-            "description": "The number of results to show per page.",
-            "schema": {
-              "maximum": 200,
-              "minimum": 1,
-              "type": "integer",
-              "description": "The number of results to show per page.",
-              "format": "int32",
-              "default": 20
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FailoverIpsResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        },
-        "x-codeSamples": [
-          {
-            "lang": "Curl",
-            "source": "curl -X GET \"https://api.binarylane.com.au/v2/failover_ips/${server_id}?page=${page}&per_page=${per_page}\"  \\\n-H \"Authorization: Bearer ${APITOKEN}\""
-          }
-        ],
-        "x-cli-command": "server failover-ip get"
-      },
-      "post": {
-        "tags": [
-          "FailoverIps"
-        ],
-        "summary": "Sets the List of Failover IPs that are Assigned to a Server",
-        "description": "This overwrites the current list, i.e. submit the entire list, not just updates.\nIf NoContent is returned no changes were made.\nIf an action is returned the changes have been saved but the effect may not be complete until the action is complete. If the action does not complete the network changes can be forced by rebooting the server.",
-        "parameters": [
-          {
-            "name": "server_id",
-            "in": "path",
-            "description": "The target server id.",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "description": "The target server id.",
-              "format": "int64"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/FailoverIpsRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ActionResponse"
-                }
-              }
-            }
-          },
-          "204": {
-            "description": "No Content"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        },
-        "x-codeSamples": [
-          {
-            "lang": "Curl",
-            "source": "curl -X POST \"https://api.binarylane.com.au/v2/failover_ips/${server_id}\"  \\\n-H \"Authorization: Bearer ${APITOKEN}\"  \\\n-H \"Content-Type: application/json\" -d \"${PAYLOAD}\""
-          }
-        ],
-        "x-cli-command": "server failover-ip update"
-      }
-    },
-    "/failover_ips/{server_id}/available": {
-      "get": {
-        "tags": [
-          "FailoverIps"
-        ],
-        "summary": "Fetch a List of all Failover IPs that are Available to be Assigned to a Server",
-        "parameters": [
-          {
-            "name": "server_id",
-            "in": "path",
-            "description": "The target server id.",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "description": "The target server id.",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "description": "The selected page. Page numbering starts at 1",
-            "schema": {
-              "maximum": 2147483647,
-              "minimum": 1,
-              "type": "integer",
-              "description": "The selected page. Page numbering starts at 1",
-              "format": "int32",
-              "default": 1
-            }
-          },
-          {
-            "name": "per_page",
-            "in": "query",
-            "description": "The number of results to show per page.",
-            "schema": {
-              "maximum": 200,
-              "minimum": 1,
-              "type": "integer",
-              "description": "The number of results to show per page.",
-              "format": "int32",
-              "default": 20
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FailoverIpsResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        },
-        "x-codeSamples": [
-          {
-            "lang": "Curl",
-            "source": "curl -X GET \"https://api.binarylane.com.au/v2/failover_ips/${server_id}/available?page=${page}&per_page=${per_page}\"  \\\n-H \"Authorization: Bearer ${APITOKEN}\""
-          }
-        ],
-        "x-cli-command": "server failover-ip available"
-      }
-    },
     "/images": {
       "get": {
         "tags": [
@@ -1609,6 +1373,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ImageDownloadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
                 }
               }
             }
@@ -9199,7 +8973,7 @@
           },
           "iso": {
             "type": "boolean",
-            "description": "If this is true the backup is an ISO image and cannot be restored. ISO images may only be attached for use as a boot disk or an additional disk.",
+            "description": "If this is true the backup is an ISO image and cannot be restored or downloaded. ISO images may only be attached for use as a boot disk or an additional disk.",
             "readOnly": true
           },
           "backup_disks": {
@@ -10934,53 +10708,6 @@
           }
         },
         "description": "Enable IPv6 for a Server"
-      },
-      "FailoverIpsRequest": {
-        "required": [
-          "failover_ips"
-        ],
-        "type": "object",
-        "properties": {
-          "failover_ips": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "The list of IP Failover addresses to assign to this server. This overwrites the current list, so any current IP Failover addresses that are omitted will be removed from the server."
-          }
-        }
-      },
-      "FailoverIpsResponse": {
-        "required": [
-          "failover_ips",
-          "meta"
-        ],
-        "type": "object",
-        "properties": {
-          "meta": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Meta"
-              }
-            ],
-            "description": "Contains metadata about the response, currently this includes the total number of items."
-          },
-          "links": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Links"
-              }
-            ],
-            "nullable": true
-          },
-          "failover_ips": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "readOnly": true
-          }
-        }
       },
       "ForwardingRule": {
         "required": [
@@ -15008,7 +14735,6 @@
         "ServerActions",
         "Actions",
         "DataUsages",
-        "FailoverIps",
         "Images",
         "Keys",
         "ReverseNames",

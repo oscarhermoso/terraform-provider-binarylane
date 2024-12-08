@@ -152,7 +152,7 @@ func (r *loadBalancerResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	diags = SetLoadBalancerModelState(ctx, &data.LoadBalancerModel, lbResp.JSON200.LoadBalancer)
+	diags = setLoadBalancerModelState(ctx, &data.LoadBalancerModel, lbResp.JSON200.LoadBalancer)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -245,7 +245,7 @@ func (r *loadBalancerResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	diags := SetLoadBalancerModelState(ctx, &data.LoadBalancerModel, lbResp.JSON200.LoadBalancer)
+	diags := setLoadBalancerModelState(ctx, &data.LoadBalancerModel, lbResp.JSON200.LoadBalancer)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -309,7 +309,7 @@ func (r *loadBalancerResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	diags = SetLoadBalancerModelState(ctx, &data.LoadBalancerModel, lbResp.JSON200.LoadBalancer)
+	diags = setLoadBalancerModelState(ctx, &data.LoadBalancerModel, lbResp.JSON200.LoadBalancer)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -414,7 +414,7 @@ func (r *loadBalancerResource) ImportState(
 	resp.Diagnostics.Append(diags...)
 }
 
-func SetLoadBalancerModelState(ctx context.Context, data *resources.LoadBalancerModel, lb *binarylane.LoadBalancer) diag.Diagnostics {
+func setLoadBalancerModelState(ctx context.Context, data *resources.LoadBalancerModel, lb *binarylane.LoadBalancer) diag.Diagnostics {
 	var diags, diag diag.Diagnostics
 
 	data.Id = types.Int64Value(*lb.Id)

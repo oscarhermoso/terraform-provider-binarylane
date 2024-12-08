@@ -128,16 +128,17 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	// Set data values
 	data.Id = types.Int64Value(*serverResp.JSON200.Server.Id)
 	data.Name = types.StringValue(*serverResp.JSON200.Server.Name)
 	data.Image = types.StringValue(*serverResp.JSON200.Server.Image.Slug)
 	data.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
 	data.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
+	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
+	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
+	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
-
-	var publicIpv4Addresses []string
-	var privateIpv4Addresses []string
+	publicIpv4Addresses := []string{}
+	privateIpv4Addresses := []string{}
 
 	for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
 		if v4address.Type == "public" {
@@ -146,10 +147,22 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 			privateIpv4Addresses = append(privateIpv4Addresses, v4address.IpAddress)
 		}
 	}
-	data.PublicIpv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, publicIpv4Addresses)
-	resp.Diagnostics.Append(diags...)
-	data.PrivateIPv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, privateIpv4Addresses)
-	resp.Diagnostics.Append(diags...)
+
+	tfPublicIpv4Addresses, diag := types.ListValueFrom(ctx, types.StringType, publicIpv4Addresses)
+	diags.Append(diag...)
+	if diag.HasError() {
+		data.PublicIpv4Addresses = types.ListUnknown(data.PublicIpv4Addresses.ElementType(ctx))
+	} else {
+		data.PublicIpv4Addresses = tfPublicIpv4Addresses
+	}
+
+	tfPrivateIpv4Addresses, diag := types.ListValueFrom(ctx, types.StringType, privateIpv4Addresses)
+	diags.Append(diag...)
+	if diag.HasError() {
+		data.PrivateIPv4Addresses = types.ListUnknown(data.PrivateIPv4Addresses.ElementType(ctx))
+	} else {
+		data.PrivateIPv4Addresses = tfPrivateIpv4Addresses
+	}
 
 	// Get user data script
 	userDataResp, err := d.bc.client.GetServersServerIdUserDataWithResponse(ctx, data.Id.ValueInt64())

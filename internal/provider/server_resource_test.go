@@ -100,6 +100,7 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "region", "per"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "image", "debian-11"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "size", "std-min"),
+					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "vpc_id"),
 					resource.TestCheckResourceAttrPair("data.binarylane_server.test", "permalink", "binarylane_server.test", "permalink"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "user_data", `#cloud-config
 echo "Hello World" > /var/tmp/output.txt
@@ -147,10 +148,10 @@ resource "binarylane_server" "test" {
   image             = "debian-12"
   size              = "std-1vcpu"
   password          = "` + password + `"
-  vpc_id            = binarylane_vpc.test.id
+  vpc_id            = null
   public_ipv4_count = 0
   ssh_keys          = [binarylane_ssh_key.updated.id]
-	# source_and_destination_check =  true  # defaults to true
+	# source_and_destination_check =  null  # defaults to null when vpc_id is null
   user_data         = <<EOT
 #cloud-config
 echo "Hello Whitespace" > /var/tmp/output.txt
@@ -165,9 +166,10 @@ EOT
 					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_count", "0"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_addresses.#", "0"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "image", "debian-12"),
+					resource.TestCheckNoResourceAttr("binarylane_server.test", "vpc_id"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "ssh_keys.#", "1"),
 					resource.TestCheckResourceAttrPair("binarylane_server.test", "ssh_keys.0", "binarylane_ssh_key.updated", "id"),
-					resource.TestCheckResourceAttr("binarylane_server.test", "source_and_destination_check", "true"),
+					resource.TestCheckNoResourceAttr("binarylane_server.test", "source_and_destination_check"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "user_data", // test extra whitespace
 						`#cloud-config
 echo "Hello Whitespace" > /var/tmp/output.txt
