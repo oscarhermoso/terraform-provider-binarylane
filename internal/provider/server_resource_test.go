@@ -56,6 +56,7 @@ resource "binarylane_server" "test" {
   region            = "per"
   image             = "debian-11"
   size              = "std-min"
+	memory            = 1152
   password          = "` + password + `"
   vpc_id            = binarylane_vpc.test.id
   public_ipv4_count = 1
@@ -80,6 +81,8 @@ data "binarylane_server" "test" {
 					resource.TestCheckResourceAttr("binarylane_server.test", "region", "per"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "image", "debian-11"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "size", "std-min"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "memory", "1152"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disk", "20"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "vpc_id"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_count", "1"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "password", password),
@@ -105,6 +108,8 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "user_data", `#cloud-config
 echo "Hello World" > /var/tmp/output.txt
 `),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "memory", "1152"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disk", "20"),
 				),
 			},
 			// Test import by ID
@@ -147,6 +152,7 @@ resource "binarylane_server" "test" {
   region            = "per"
   image             = "debian-12"
   size              = "std-1vcpu"
+  disk              = "45"
   password          = "` + password + `"
   vpc_id            = null
   public_ipv4_count = 0
@@ -163,6 +169,8 @@ EOT
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("binarylane_server.test", "name", "tf-test-server-resource-2"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "size", "std-1vcpu"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "memory", "2048"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disk", "45"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_count", "0"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_addresses.#", "0"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "image", "debian-12"),

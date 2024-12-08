@@ -30,6 +30,8 @@ type serverDataModel struct {
 	PublicIpv4Addresses  types.List   `tfsdk:"public_ipv4_addresses"`
 	PrivateIPv4Addresses types.List   `tfsdk:"private_ipv4_addresses"`
 	Permalink            types.String `tfsdk:"permalink"`
+	Memory               types.Int32  `tfsdk:"memory"`
+	Disk                 types.Int32  `tfsdk:"disk"`
 }
 
 func (d *serverDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -98,6 +100,20 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 		ElementType:         types.StringType,
 		Computed:            true,
 	}
+
+	memoryDescription := "The amount of memory in MB assigned to the server."
+	resp.Schema.Attributes["memory"] = &schema.Int32Attribute{
+		Description:         memoryDescription,
+		MarkdownDescription: memoryDescription,
+		Computed:            true,
+	}
+
+	diskDescription := "The amount of storage in GB assigned to the server."
+	resp.Schema.Attributes["disk"] = &schema.Int32Attribute{
+		Description:         diskDescription,
+		MarkdownDescription: diskDescription,
+		Computed:            true,
+	}
 }
 
 func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -137,6 +153,8 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
 	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
+	data.Memory = types.Int32Value(*serverResp.JSON200.Server.Memory)
+	data.Disk = types.Int32Value(*serverResp.JSON200.Server.Disk)
 	publicIpv4Addresses := []string{}
 	privateIpv4Addresses := []string{}
 

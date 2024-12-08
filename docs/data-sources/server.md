@@ -22,7 +22,9 @@ Provides a Binary Lane Server data source. This can be used to read existing ser
 ### Read-Only
 
 - `backups` (Boolean) If true this will enable two daily backups for the server. `options.daily_backups` will override this value if provided. Setting this to false has no effect.
+- `disk` (Number) The amount of storage in GB assigned to the server.
 - `image` (String) The slug of the selected operating system.
+- `memory` (Number) The amount of memory in MB assigned to the server.
 - `name` (String) The hostname of your server, such as vps01.yourcompany.com. If not provided, the server will be created with a random name.
 - `permalink` (String) A randomly generated two-word identifier assigned to servers in regions that support this feature
 - `port_blocking` (Boolean) Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.

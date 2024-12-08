@@ -185,6 +185,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		// Default:             int32default.StaticInt32(0), // TODO: Uncomment with 1.0 release (see issue #30)
 		Validators: []validator.Int32{
 			int32validator.AtLeast(0),
+			int32validator.AtMost(8),
 		},
 	}
 
@@ -260,6 +261,58 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		},
 	}
 
+	memoryDescription := `The total memory in MB for this server. If specified this is the absolute value, not just the
+additional memory above what is included in the size. Leave null to accept the default for the size if this is a new
+server or a resize to a different base size, or to keep the current value if this a resize with the same base size
+but different options.`
+	memoryValidValues := "Valid values must be a multiple of 128. If the value is greater than 2048MB, it must be a " +
+		"multiple of 1024. If the value is greater than 16384MB, it must be a multiple of 2048. If the value is greater " +
+		"than 24576MB, it must be a multiple of 4096."
+	memoryValidValuesMarkdown := ` Valid values:
+  - must be a multiple of 128
+  - \> 2048MB must be a multiple of 1024
+  - \> 16384MB must be a multiple of 2048
+  - \> 24576MB must be a multiple of 4096`
+
+	resp.Schema.Attributes["memory"] = &schema.Int32Attribute{
+		Description:         memoryDescription + memoryValidValues,
+		MarkdownDescription: memoryDescription + memoryValidValuesMarkdown,
+		Optional:            true,
+		Required:            false,
+		Computed:            true,
+		Validators: []validator.Int32{
+			int32validator.AtLeast(128),
+			MultipleOfValidator{Multiple: 128},
+			MultipleOfValidator{Multiple: 1024, RangeFrom: 2048, RangeTo: 16384},
+			MultipleOfValidator{Multiple: 2048, RangeFrom: 16384, RangeTo: 24576},
+			MultipleOfValidator{Multiple: 4096, RangeFrom: 24576},
+		},
+	}
+
+	diskDescription := `The total storage in GB for this server. If specified this is the absolute value, not just the additional storage above what is included in the size.
+Leave null to accept the default for the size if this is a new server or a resize to a different base size,
+or to keep the current value if this a resize with the same base size but different options.`
+	diskValidValues := "Valid values must be a multiple of 5. If the value is greater than 60GB, it must be a multiple of 10. " +
+		"if the value is greater than 200GB, it must be a multiple of 100. "
+	diskValidValuesMarkdown := ` Valid values:
+  - must be a multiple of 5
+  - \> 60GB must be a multiple of 10
+  - \> 200GB must be a multiple of 100`
+
+	resp.Schema.Attributes["disk"] = &schema.Int32Attribute{
+		Description:         diskDescription + diskValidValues,
+		MarkdownDescription: diskDescription + diskValidValuesMarkdown,
+		Optional:            true,
+		Required:            false,
+		Computed:            true,
+		Validators: []validator.Int32{
+			int32validator.AtLeast(20),
+			MultipleOfValidator{Multiple: 5},
+			MultipleOfValidator{Multiple: 10, RangeFrom: 60, RangeTo: 200},
+			MultipleOfValidator{Multiple: 100, RangeFrom: 200},
+		},
+	}
+
 	resp.Schema.Attributes["timeouts"] =
 		timeouts.Attributes(ctx, timeouts.Opts{
 			Create: true,
@@ -274,6 +327,7 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		// Destruction plan, no modification needed
 		return
 	}
+
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -293,6 +347,7 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		// Creation plan, no further modification needed
 		return
 	}
+
 	// Read Terraform state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -333,6 +388,14 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 				strings.Join(attrsRequiringRebuild, ", "),
 			),
 		)
+	}
+
+	// Use state for unknown disk/memory values, as long as server size is the same
+	if (plan.Memory.IsNull() || plan.Memory.IsUnknown()) && plan.Size.Equal(state.Size) {
+		plan.Memory = state.Memory
+	}
+	if (plan.Disk.IsNull() || plan.Disk.IsUnknown()) && plan.Size.Equal(state.Size) {
+		plan.Disk = state.Disk
 	}
 
 	// Save data into Terraform state
@@ -376,6 +439,13 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 		Options: &binarylane.SizeOptionsRequest{
 			Ipv4Addresses: data.PublicIpv4Count.ValueInt32Pointer(),
 		},
+	}
+
+	if !data.Memory.IsNull() && !data.Memory.IsUnknown() {
+		body.Options.Memory = data.Memory.ValueInt32Pointer()
+	}
+	if !data.Disk.IsNull() && !data.Disk.IsUnknown() {
+		body.Options.Disk = data.Disk.ValueInt32Pointer()
 	}
 
 	if data.Password.IsNull() {
@@ -430,6 +500,8 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
 	data.PasswordChangeSupported = types.BoolValue(*serverResp.JSON200.Server.PasswordChangeSupported)
+	data.Memory = types.Int32Value(*serverResp.JSON200.Server.Memory)
+	data.Disk = types.Int32Value(*serverResp.JSON200.Server.Disk)
 	plannedSourceDestCheck := data.SourceAndDestinationCheck
 	serverRespSourceDestCheck := types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
 	data.SourceAndDestinationCheck = serverRespSourceDestCheck
@@ -636,18 +708,42 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	// Resize operation
-	if !plan.Size.Equal(state.Size) || !plan.PublicIpv4Count.Equal(state.PublicIpv4Count) || !plan.Image.Equal(state.Image) {
+	if !plan.Size.Equal(state.Size) ||
+		!plan.Memory.IsNull() && !plan.Memory.IsUnknown() && !plan.Memory.Equal(state.Memory) ||
+		!plan.Disk.IsNull() && !plan.Disk.IsUnknown() && !plan.Disk.Equal(state.Disk) ||
+		!plan.Image.Equal(state.Image) ||
+		!plan.PublicIpv4Count.Equal(state.PublicIpv4Count) {
+
 		resizeReq := &binarylane.PostServersServerIdActionsResizeJSONRequestBody{
-			Type: "resize",
+			Type:    "resize",
+			Options: &binarylane.ChangeSizeOptionsRequest{},
 		}
-		if !plan.Size.Equal(state.Size) {
+
+		if !plan.Size.Equal(state.Size) ||
+			!plan.Memory.IsNull() && !plan.Memory.IsUnknown() && !plan.Memory.Equal(state.Memory) ||
+			!plan.Disk.IsNull() && !plan.Disk.IsUnknown() && !plan.Disk.Equal(state.Disk) {
+
 			resizeReq.Size = plan.Size.ValueStringPointer()
-			state.Size = plan.Size
-		}
-		if !plan.PublicIpv4Count.Equal(state.PublicIpv4Count) {
-			resizeReq.Options = &binarylane.ChangeSizeOptionsRequest{
-				Ipv4Addresses: plan.PublicIpv4Count.ValueInt32Pointer(),
+			if !plan.Memory.IsUnknown() && !plan.Memory.IsNull() {
+				resizeReq.Options.Memory = plan.Memory.ValueInt32Pointer()
 			}
+			if !plan.Disk.IsNull() && !plan.Disk.IsUnknown() {
+				resizeReq.Options.Disk = plan.Disk.ValueInt32Pointer()
+			}
+			state.Size = plan.Size
+			state.Memory = plan.Memory
+			state.Disk = plan.Disk
+		}
+
+		if !plan.Image.Equal(state.Image) {
+			resizeReq.ChangeImage = &binarylane.ChangeImage{
+				Image: plan.Image.ValueStringPointer(),
+			}
+			state.Image = plan.Image
+		}
+
+		if !plan.PublicIpv4Count.Equal(state.PublicIpv4Count) {
+			resizeReq.Options.Ipv4Addresses = plan.PublicIpv4Count.ValueInt32Pointer()
 			if plan.PublicIpv4Count.ValueInt32() < state.PublicIpv4Count.ValueInt32() {
 				currentIps := []string{}
 				diags := state.PublicIpv4Addresses.ElementsAs(ctx, &currentIps, false)
@@ -664,12 +760,6 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 			}
 			state.PublicIpv4Count = plan.PublicIpv4Count
 			state.PublicIpv4Addresses = plan.PublicIpv4Addresses
-		}
-		if !plan.Image.Equal(state.Image) {
-			resizeReq.ChangeImage = &binarylane.ChangeImage{
-				Image: plan.Image.ValueStringPointer(),
-			}
-			state.Image = plan.Image
 		}
 
 		tflog.Info(ctx, fmt.Sprintf("Resizing server: server_id=%s", state.Id.String()))
@@ -699,8 +789,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
-		if state.PublicIpv4Addresses.IsUnknown() || listContainsUnknown(ctx, state.PublicIpv4Addresses) {
-			// New IPs may have been allocated, so we need to check the server again
+		if state.PublicIpv4Addresses.IsUnknown() || listContainsUnknown(ctx, state.PublicIpv4Addresses) || state.Memory.IsNull() || state.Memory.IsUnknown() {
 			refreshNeeded = true
 		}
 	}
@@ -949,6 +1038,8 @@ func setServerResourceState(ctx context.Context, data *serverResourceModel, serv
 	data.Permalink = types.StringValue(*serverResp.Server.Permalink)
 	data.PasswordChangeSupported = types.BoolValue(*serverResp.Server.PasswordChangeSupported)
 	data.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.Server.Networks.SourceAndDestinationCheck)
+	data.Memory = types.Int32Value(*serverResp.Server.Memory)
+	data.Disk = types.Int32Value(*serverResp.Server.Disk)
 
 	publicIpv4Addresses := []string{}
 	privateIpv4Addresses := []string{}

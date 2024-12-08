@@ -25,6 +25,20 @@ Provides a Binary Lane Server resource. This can be used to create and delete se
 ### Optional
 
 - `backups` (Boolean) If true this will enable two daily backups for the server. `options.daily_backups` will override this value if provided. Setting this to false has no effect.
+- `disk` (Number) The total storage in GB for this server. If specified this is the absolute value, not just the additional storage above what is included in the size.
+Leave null to accept the default for the size if this is a new server or a resize to a different base size,
+or to keep the current value if this a resize with the same base size but different options. Valid values:
+  - must be a multiple of 5
+  - \> 60GB must be a multiple of 10
+  - \> 200GB must be a multiple of 100
+- `memory` (Number) The total memory in MB for this server. If specified this is the absolute value, not just the
+additional memory above what is included in the size. Leave null to accept the default for the size if this is a new
+server or a resize to a different base size, or to keep the current value if this a resize with the same base size
+but different options. Valid values:
+  - must be a multiple of 128
+  - \> 2048MB must be a multiple of 1024
+  - \> 16384MB must be a multiple of 2048
+  - \> 24576MB must be a multiple of 4096
 - `name` (String) The hostname of your server, such as vps01.yourcompany.com. If not provided, the server will be created with a random name.
 - `password` (String, Sensitive) If this is provided the specified or default remote user's account password will be set to this value. Only valid if the server supports password change actions. If omitted and the server supports password change actions a random password will be generated and emailed to the account email address.
 - `port_blocking` (Boolean) Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.
