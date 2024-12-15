@@ -62,6 +62,7 @@ resource "binarylane_server" "test" {
   public_ipv4_count = 1
   ssh_keys          = [binarylane_ssh_key.initial.id]
 	source_and_destination_check = false
+	backups						= true
   user_data         = <<EOT
 #cloud-config
 echo "Hello World" > /var/tmp/output.txt
@@ -96,6 +97,7 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttrPair("binarylane_server.test", "ssh_keys.0", "binarylane_ssh_key.initial", "id"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "permalink"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "source_and_destination_check", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "backups", "true"),
 
 					// Verify data source values
 					resource.TestCheckResourceAttrPair("data.binarylane_server.test", "id", "binarylane_server.test", "id"),
@@ -110,6 +112,7 @@ echo "Hello World" > /var/tmp/output.txt
 `),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "memory", "1152"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "disk", "20"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "backups", "true"),
 				),
 			},
 			// Test import by ID
@@ -157,7 +160,8 @@ resource "binarylane_server" "test" {
   vpc_id            = null
   public_ipv4_count = 0
   ssh_keys          = [binarylane_ssh_key.updated.id]
-	# source_and_destination_check =  null  # defaults to null when vpc_id is null
+	# source_and_destination_check =  null  # defaults to null when vpc_id is not set
+	# backups				  = false  # defaults to false when backups is not set
   user_data         = <<EOT
 #cloud-config
 echo "Hello Whitespace" > /var/tmp/output.txt
@@ -178,6 +182,7 @@ EOT
 					resource.TestCheckResourceAttr("binarylane_server.test", "ssh_keys.#", "1"),
 					resource.TestCheckResourceAttrPair("binarylane_server.test", "ssh_keys.0", "binarylane_ssh_key.updated", "id"),
 					resource.TestCheckNoResourceAttr("binarylane_server.test", "source_and_destination_check"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "backups", "false"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "user_data", // test extra whitespace
 						`#cloud-config
 echo "Hello Whitespace" > /var/tmp/output.txt

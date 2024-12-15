@@ -116,10 +116,9 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 	resp.Schema.Attributes["backups"] = &schema.BoolAttribute{
 		Description:         backups.GetDescription(),
 		MarkdownDescription: backups.GetMarkdownDescription(),
-		Optional:            backups.IsOptional(),
-		Computed:            backups.IsComputed(),
-		Default:             booldefault.StaticBool(false),                           // Add default to backups
-		PlanModifiers:       []planmodifier.Bool{boolplanmodifier.RequiresReplace()}, // TODO (#37)
+		Optional:            true,
+		Computed:            true,
+		Default:             booldefault.StaticBool(false), // Add default to backups
 	}
 
 	user_data := resp.Schema.Attributes["user_data"]
@@ -439,6 +438,7 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 		Options: &binarylane.SizeOptionsRequest{
 			Ipv4Addresses: data.PublicIpv4Count.ValueInt32Pointer(),
 		},
+		Backups: data.Backups.ValueBoolPointer(),
 	}
 
 	if !data.Memory.IsNull() && !data.Memory.IsUnknown() {
@@ -860,6 +860,38 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		// Save updated data into Terraform state
 		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	}
+
+	// Enable or disable backups
+	if !plan.Backups.Equal(state.Backups) {
+		if plan.Backups.ValueBool() {
+			backupResp, err := r.bc.client.PostServersServerIdActionsEnableBackupsWithResponse(ctx, state.Id.ValueInt64(), binarylane.EnableBackups{
+				Type: "enable_backups",
+			})
+			if err != nil {
+				resp.Diagnostics.AddError("Error enabling backups", err.Error())
+				return
+			}
+			err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *backupResp.JSON200.Action.Id)
+			if err != nil {
+				resp.Diagnostics.AddError("Error waiting for backups to be enabled", err.Error())
+				return
+			}
+		} else {
+			backupResp, err := r.bc.client.PostServersServerIdActionsDisableBackupsWithResponse(ctx, state.Id.ValueInt64(), binarylane.DisableBackups{
+				Type: "disable_backups",
+			})
+			if err != nil {
+				resp.Diagnostics.AddError("Error disabling backups", err.Error())
+				return
+			}
+			err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *backupResp.JSON200.Action.Id)
+			if err != nil {
+				resp.Diagnostics.AddError("Error waiting for backups to be disabled", err.Error())
+				return
+			}
+		}
+		state.Backups = plan.Backups
+	}
 }
 
 func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -1040,6 +1072,7 @@ func setServerResourceState(ctx context.Context, data *serverResourceModel, serv
 	data.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.Server.Networks.SourceAndDestinationCheck)
 	data.Memory = types.Int32Value(*serverResp.Server.Memory)
 	data.Disk = types.Int32Value(*serverResp.Server.Disk)
+	data.Backups = types.BoolValue(serverResp.Server.NextBackupWindow != nil)
 
 	publicIpv4Addresses := []string{}
 	privateIpv4Addresses := []string{}
