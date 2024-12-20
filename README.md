@@ -18,8 +18,8 @@ Planned features:
 - [x] Servers
   - [x] Firewall Rules
   - [x] Cloud Init
-  - [ ] Updating server properties
-  - [ ] Backups
+  - [x] Updating server properties
+  - [ ] Customised Backups
   - [ ] Software
   - [ ] IPV6
   - [ ] Alerts

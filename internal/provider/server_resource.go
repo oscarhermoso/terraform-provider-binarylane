@@ -144,7 +144,19 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Optional:            portBlocking.IsOptional(),
 		Computed:            portBlocking.IsComputed(),
 		Default:             booldefault.StaticBool(true), // Add default to port_blocking
-		PlanModifiers:       []planmodifier.Bool{boolplanmodifier.RequiresReplace()},
+	}
+
+	region := resp.Schema.Attributes["region"].(schema.StringAttribute)
+	resp.Schema.Attributes["region"] = &schema.StringAttribute{
+		Description:         region.GetDescription(),
+		MarkdownDescription: region.GetMarkdownDescription(),
+		Optional:            region.IsOptional(),
+		Computed:            region.IsComputed(),
+		Required:            region.IsRequired(),
+		Validators:          region.StringValidators(),
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.RequiresReplace(),
+		},
 	}
 
 	sshKeys := resp.Schema.Attributes["ssh_keys"]
@@ -170,7 +182,6 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Optional:            true,  // Password optional, if not set will be emailed to user
 		Computed:            false, // Computed must be false to allow server to be created without password
 		Sensitive:           true,  // Mark password as sensitive
-		PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 	}
 
 	publicIpv4CountDescription := "The number of public IPv4 addresses to assign to the server. If this is not provided, the " +
@@ -792,6 +803,12 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		if state.PublicIpv4Addresses.IsUnknown() || listContainsUnknown(ctx, state.PublicIpv4Addresses) || state.Memory.IsNull() || state.Memory.IsUnknown() {
 			refreshNeeded = true
 		}
+
+		// Save updated data into Terraform state
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	// Rebuild operation
@@ -843,6 +860,34 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 		// Save updated data into Terraform state
 		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	} else
+	// Reset Password (only needed if server didn't rebuild)
+	if !plan.Password.Equal(state.Password) {
+		passwordResp, err := r.bc.client.PostServersServerIdActionsPasswordResetWithResponse(ctx, state.Id.ValueInt64(),
+			binarylane.PasswordReset{
+				Type:     "password_reset",
+				Password: plan.Password.ValueStringPointer(),
+			},
+		)
+		if err != nil {
+			resp.Diagnostics.AddError("Error resetting password", err.Error())
+			return
+		}
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *passwordResp.JSON200.Action.Id)
+		if err != nil {
+			resp.Diagnostics.AddError("Error waiting for password reset", err.Error())
+			return
+		}
+		state.Password = plan.Password
+
+		// Save updated data into Terraform state
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	// Check source_and_destination_check
@@ -859,6 +904,9 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 		// Save updated data into Terraform state
 		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	// Enable or disable backups
@@ -891,6 +939,35 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 			}
 		}
 		state.Backups = plan.Backups
+
+		// Save updated data into Terraform state
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	// Change port blocking
+	if !plan.PortBlocking.Equal(state.PortBlocking) {
+		portBlockingResp, err := r.bc.client.PostServersServerIdActionsChangePortBlockingWithResponse(ctx, state.Id.ValueInt64(),
+			binarylane.ChangePortBlocking{
+				Type:    "change_port_blocking",
+				Enabled: plan.PortBlocking.ValueBool(),
+			},
+		)
+		if err != nil {
+			resp.Diagnostics.AddError("Error changing \"port_blocking\" attribute", err.Error())
+			return
+		}
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *portBlockingResp.JSON200.Action.Id)
+		if err != nil {
+			resp.Diagnostics.AddError("Error waiting for \"port_blocking\" attribute to change", err.Error())
+			return
+		}
+		state.PortBlocking = plan.PortBlocking
+
+		// Save updated data into Terraform state
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	}
 }
 

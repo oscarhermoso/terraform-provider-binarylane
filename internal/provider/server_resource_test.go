@@ -16,13 +16,13 @@ import (
 
 func TestServerResource(t *testing.T) {
 	// Must assign a password to the server or Binary Lane will send emails
-	pw_bytes := make([]byte, 12)
-	_, err := rand.Read(pw_bytes)
-	if err != nil {
-		t.Errorf("Failed to generate password: %s", err)
-		return
-	}
-	password := base64.URLEncoding.EncodeToString(pw_bytes)
+	pwBytes := make([]byte, 12)
+	rand.Read(pwBytes)
+	password := base64.URLEncoding.EncodeToString(pwBytes)
+
+	pwBytes2 := make([]byte, 12)
+	rand.Read(pwBytes2)
+	password2 := base64.URLEncoding.EncodeToString(pwBytes2)
 
 	sshPublicKeyInitial := GeneratePublicKey(t)
 	sshPublicKeyUpdated := GeneratePublicKey(t)
@@ -63,6 +63,7 @@ resource "binarylane_server" "test" {
   ssh_keys          = [binarylane_ssh_key.initial.id]
 	source_and_destination_check = false
 	backups						= true
+	port_blocking			= false
   user_data         = <<EOT
 #cloud-config
 echo "Hello World" > /var/tmp/output.txt
@@ -92,7 +93,7 @@ echo "Hello World" > /var/tmp/output.txt
 `),
 					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_addresses.#", "1"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "private_ipv4_addresses.0"),
-					resource.TestCheckResourceAttr("binarylane_server.test", "port_blocking", "true"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "port_blocking", "false"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "ssh_keys.#", "1"),
 					resource.TestCheckResourceAttrPair("binarylane_server.test", "ssh_keys.0", "binarylane_ssh_key.initial", "id"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "permalink"),
@@ -113,6 +114,7 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "memory", "1152"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "disk", "20"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "backups", "true"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "port_blocking", "false"),
 				),
 			},
 			// Test import by ID
@@ -160,8 +162,11 @@ resource "binarylane_server" "test" {
   vpc_id            = null
   public_ipv4_count = 0
   ssh_keys          = [binarylane_ssh_key.updated.id]
-	# source_and_destination_check =  null  # defaults to null when vpc_id is not set
-	# backups				  = false  # defaults to false when backups is not set
+
+	# source_and_destination_check =  null  # defaults to null
+	# backups				  = false  # defaults to false
+	# port_blocking		= true   # defaults to true
+
   user_data         = <<EOT
 #cloud-config
 echo "Hello Whitespace" > /var/tmp/output.txt
@@ -183,12 +188,61 @@ EOT
 					resource.TestCheckResourceAttrPair("binarylane_server.test", "ssh_keys.0", "binarylane_ssh_key.updated", "id"),
 					resource.TestCheckNoResourceAttr("binarylane_server.test", "source_and_destination_check"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "backups", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "port_blocking", "true"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "user_data", // test extra whitespace
 						`#cloud-config
 echo "Hello Whitespace" > /var/tmp/output.txt
 
 
 `),
+				),
+			},
+			// Change password testing (Cannot run at same time as Rebuild operation, so it has it's own test)
+			{
+				Config: providerConfig + `
+resource "binarylane_vpc" "test" {
+  name     = "tf-test-server-resource"
+  ip_range = "10.240.0.0/16"
+}
+
+resource "binarylane_ssh_key" "initial" {
+  name       = "tf-test-server-resource-initial"
+  public_key = "` + sshPublicKeyInitial + `"
+  default    = true
+}
+
+resource "binarylane_ssh_key" "updated" {
+  name       = "tf-test-server-resource-updated"
+  public_key = "` + sshPublicKeyUpdated + `"
+  default    = true
+}
+
+resource "binarylane_server" "test" {
+  name              = "tf-test-server-resource-2"
+  region            = "per"
+  image             = "debian-12"
+  size              = "std-1vcpu"
+  disk              = "45"
+  password          = "` + password2 + `"
+  vpc_id            = null
+  public_ipv4_count = 0
+  ssh_keys          = [binarylane_ssh_key.updated.id]
+
+	# source_and_destination_check =  null  # defaults to null
+	# backups				  = false  # defaults to false
+	# port_blocking		= true   # defaults to true
+
+  user_data         = <<EOT
+#cloud-config
+echo "Hello Whitespace" > /var/tmp/output.txt
+
+
+EOT
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("binarylane_server.test", "name", "tf-test-server-resource-2"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "password", password2),
 				),
 			},
 		},
