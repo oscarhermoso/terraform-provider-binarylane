@@ -7,7 +7,7 @@ import (
 	"terraform-provider-binarylane/internal/resources"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
 
 var (
@@ -50,7 +50,20 @@ func (d *vpcRouteEntriesDataSource) Schema(ctx context.Context, req datasource.S
 	resp.Schema.Attributes["vpc_id"] = &schema.Int64Attribute{
 		Description:         vpcId.GetDescription(),
 		MarkdownDescription: vpcId.GetMarkdownDescription(),
-		Required:            true, // VPC ID is required to define the route entries
+		Required:            true, // vpc_id is required to define the route entries
+	}
+
+	vpcRouteEntries := resp.Schema.Attributes["route_entries"].(schema.ListNestedAttribute)
+	vpcRouteEntriesDescription := "The route entries that control how network traffic is directed through the VPC environment."
+	resp.Schema.Attributes["route_entries"] = &schema.ListNestedAttribute{
+		Description: vpcRouteEntriesDescription,
+		NestedObject: schema.NestedAttributeObject{
+			CustomType: vpcRouteEntries.NestedObject.CustomType,
+			Attributes: vpcRouteEntries.NestedObject.Attributes,
+		},
+		CustomType: vpcRouteEntries.CustomType,
+		Required:   false,
+		Computed:   true,
 	}
 }
 

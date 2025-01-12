@@ -50,7 +50,7 @@ func (r *vpcRouteEntriesResource) Schema(ctx context.Context, req resource.Schem
 	resp.Schema.Attributes["vpc_id"] = &schema.Int64Attribute{
 		Description:         vpcId.GetDescription(),
 		MarkdownDescription: vpcId.GetMarkdownDescription(),
-		Required:            true, // VPC ID is required to define the route entries
+		Required:            true, // vpc_id is required to define the route entries
 		Validators: []validator.Int64{
 			int64validator.AtLeast(1),
 		},

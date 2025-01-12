@@ -59,7 +59,17 @@ func (d *sshKeyDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 		return
 	}
 	resp.Schema = *ds
-	// resp.Schema.Description = "TODO"
+
+	// Overrides
+	defaultDescription := "If `true`, this SSH key will be included on all new server installations (if the operating " +
+		"system supports SSH key injection)."
+	resp.Schema.Attributes["default"] = schema.BoolAttribute{
+		Description:         defaultDescription,
+		MarkdownDescription: defaultDescription,
+		Optional:            false,
+		Required:            false,
+		Computed:            true,
+	}
 
 	// Additional attributes
 	fingerprintDescription := "The fingerprint of the SSH key."

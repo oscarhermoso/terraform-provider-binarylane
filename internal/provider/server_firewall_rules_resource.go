@@ -59,7 +59,6 @@ func (r *serverFirewallRulesResource) Metadata(ctx context.Context, req resource
 
 func (r *serverFirewallRulesResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = resources.ServerFirewallRulesResourceSchema(ctx)
-	// resp.Schema.Description = "TODO"
 
 	// Overrides
 	serverId := resp.Schema.Attributes["server_id"]

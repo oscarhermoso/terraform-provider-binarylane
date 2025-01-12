@@ -1,0 +1,1 @@
+../binarylane_vpc/resource.tf

@@ -421,6 +421,7 @@ const (
 	PcI440fx4point2  VmMachineType = "pc_i440fx_4point2"
 	PcI440fx5point0  VmMachineType = "pc_i440fx_5point0"
 	PcI440fx5point1  VmMachineType = "pc_i440fx_5point1"
+	PcI440fx7point2  VmMachineType = "pc_i440fx_7point2"
 )
 
 // Account defines model for Account.
@@ -492,7 +493,7 @@ type Action struct {
 	// ResourceType The resource type (if any) associated with this action.
 	ResourceType *ResourceType `json:"resource_type"`
 
-	// ResultData Returned information from a completed action. For example: a successful completed 'ping' action will have the ping value in ms in this field.
+	// ResultData Returned information from a completed action. For example: a successful completed 'uptime' action will have the uptime value in this field.
 	ResultData *string `json:"result_data"`
 
 	// StartedAt The timestamp in ISO8601 format of when processing of this action started.
@@ -3014,6 +3015,7 @@ type VideoDevice string
 // | pc_i440fx_4point2 | PC I440 FX 4.2 |
 // | pc_i440fx_5point0 | PC I440 FX 5.0 |
 // | pc_i440fx_5point1 | PC I440 FX 5.1 |
+// | pc_i440fx_7point2 | PC I440 FX 7.2 |
 type VmMachineType string
 
 // Vpc defines model for Vpc.
