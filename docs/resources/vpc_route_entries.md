@@ -18,35 +18,9 @@ resource "binarylane_vpc" "example" {
   ip_range = "10.240.0.0/16"
 }
 
-# Web & NAT server
 resource "binarylane_server" "web" {
-  name              = "tf-example-vpc-web"
-  region            = "per"
-  image             = "ubuntu-24.04"
-  size              = "std-min"
-  vpc_id            = binarylane_vpc.example.id
-  public_ipv4_count = 1
-}
-
-# Database server
-resource "binarylane_server" "db" {
-  name              = "tf-example-vpc-db"
-  region            = "per"
-  image             = "ubuntu-24.04"
-  size              = "std-min"
-  vpc_id            = binarylane_vpc.example.id
-  public_ipv4_count = 0
-}
-
-# VPN server
-resource "binarylane_server" "vpn" {
-  name                         = "tf-example-vpc-vpn"
-  region                       = "per"
-  image                        = "ubuntu-24.04"
-  size                         = "std-min"
-  vpc_id                       = binarylane_vpc.example.id
-  public_ipv4_count            = 1
-  source_and_destination_check = false
+  # ...
+  vpc_id = binarylane_vpc.example.id
 }
 
 resource "binarylane_vpc_route_entries" "example" {

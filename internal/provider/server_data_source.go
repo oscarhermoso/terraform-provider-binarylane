@@ -79,7 +79,7 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 	}
 
 	nameDescription := "The hostname of your server, such as vps01.yourcompany.com."
-	resp.Schema.Attributes["name"] = &schema.BoolAttribute{
+	resp.Schema.Attributes["name"] = &schema.StringAttribute{
 		Description:         nameDescription,
 		MarkdownDescription: nameDescription,
 		Optional:            false,
@@ -97,7 +97,8 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 	}
 
 	sshKeysDescription := "This is a list of SSH key ids that were added to the server during creation."
-	resp.Schema.Attributes["ssh_keys"] = &schema.BoolAttribute{
+	resp.Schema.Attributes["ssh_keys"] = &schema.ListAttribute{
+		ElementType:         types.Int64Type,
 		Description:         sshKeysDescription,
 		MarkdownDescription: sshKeysDescription,
 		Optional:            false,
@@ -115,7 +116,7 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 	}
 
 	vpcIdDescription := "ID of the Virtual Private Cloud (VPC) the server is connected to."
-	resp.Schema.Attributes["vpc_id"] = &schema.StringAttribute{
+	resp.Schema.Attributes["vpc_id"] = &schema.Int64Attribute{
 		Description:         vpcIdDescription,
 		MarkdownDescription: vpcIdDescription,
 		Optional:            false,

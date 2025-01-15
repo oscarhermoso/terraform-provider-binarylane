@@ -31,13 +31,13 @@ data "binarylane_server" "example" {
 - `disk` (Number) The amount of storage in GB assigned to the server.
 - `image` (String) The slug of the selected operating system.
 - `memory` (Number) The amount of memory in MB assigned to the server.
-- `name` (Boolean) The hostname of your server, such as vps01.yourcompany.com.
+- `name` (String) The hostname of your server, such as vps01.yourcompany.com.
 - `permalink` (String) A randomly generated two-word identifier assigned to servers in regions that support this feature
 - `port_blocking` (Boolean) Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.
 - `private_ipv4_addresses` (List of String) The private IPv4 addresses assigned to the server.
 - `public_ipv4_addresses` (List of String) The public IPv4 addresses assigned to the server.
 - `region` (String) The slug of the selected region.
 - `size` (String) The slug of the selected size.
-- `ssh_keys` (Boolean) This is a list of SSH key ids that were added to the server during creation.
+- `ssh_keys` (List of Number) This is a list of SSH key ids that were added to the server during creation.
 - `user_data` (String) A script or cloud-config YAML file to configure the server.
-- `vpc_id` (String) ID of the Virtual Private Cloud (VPC) the server is connected to.
+- `vpc_id` (Number) ID of the Virtual Private Cloud (VPC) the server is connected to.
