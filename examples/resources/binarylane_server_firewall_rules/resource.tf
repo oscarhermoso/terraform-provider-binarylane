@@ -1,9 +1,5 @@
 resource "binarylane_server" "example" {
-  name              = "example"
-  region            = "per"
-  image             = "debian-12"
-  size              = "std-min"
-  public_ipv4_count = 0
+  # ...
 }
 
 resource "binarylane_server_firewall_rules" "example" {

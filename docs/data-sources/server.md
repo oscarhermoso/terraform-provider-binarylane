@@ -38,6 +38,6 @@ data "binarylane_server" "example" {
 - `public_ipv4_addresses` (List of String) The public IPv4 addresses assigned to the server.
 - `region` (String) The slug of the selected region.
 - `size` (String) The slug of the selected size.
-- `ssh_keys` (Boolean) This is a list of SSH key ids that were added to the server during creation.
+- `ssh_keys` (List of Number) This is a list of SSH key ids that were added to the server during creation.
 - `user_data` (String) A script or cloud-config YAML file to configure the server.
-- `vpc_id` (String) ID of the Virtual Private Cloud (VPC) the server is connected to.
+- `vpc_id` (Number) ID of the Virtual Private Cloud (VPC) the server is connected to.
