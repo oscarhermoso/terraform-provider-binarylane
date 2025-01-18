@@ -3,12 +3,12 @@
 page_title: "binarylane_server Resource - terraform-provider-binarylane"
 subcategory: ""
 description: |-
-  This can be used to create and delete servers.
+  
 ---
 
 # binarylane_server (Resource)
 
-This can be used to create and delete servers.
+
 
 ## Example Usage
 

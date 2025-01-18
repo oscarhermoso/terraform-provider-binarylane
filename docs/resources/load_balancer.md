@@ -52,7 +52,7 @@ resource "binarylane_load_balancer" "example" {
 
 Required:
 
-- `entry_protocol` (String) The protocol that traffic must match for this load balancer to forward traffic according to this rule.
+- `entry_protocol` (String) The protocol that traffic must match for the load balancer to forward it. Valid values are "http" and "https".
 
 
 <a id="nestedatt--health_check"></a>

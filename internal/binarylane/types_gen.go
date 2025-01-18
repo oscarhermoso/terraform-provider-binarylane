@@ -1505,7 +1505,7 @@ type EnableIpv6Type string
 
 // ForwardingRule defines model for ForwardingRule.
 type ForwardingRule struct {
-	// EntryProtocol The protocol that traffic must match for this load balancer to forward traffic according to this rule.
+	// EntryProtocol The protocol that traffic must match for the load balancer to forward it. Valid values are "http" and "https".
 	EntryProtocol LoadBalancerRuleProtocol `json:"entry_protocol" tfsdk:"entry_protocol"`
 }
 

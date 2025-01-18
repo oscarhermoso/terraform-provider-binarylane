@@ -84,7 +84,6 @@ func (r *serverResource) Metadata(ctx context.Context, req resource.MetadataRequ
 
 func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = resources.ServerResourceSchema(ctx)
-	resp.Schema.Description = "This can be used to create and delete servers."
 
 	// Overrides
 	id := resp.Schema.Attributes["id"]
