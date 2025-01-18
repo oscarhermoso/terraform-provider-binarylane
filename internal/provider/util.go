@@ -32,127 +32,160 @@ func convertResourceSchemaToDataSourceSchema(rs r_schema.Schema, cfg AttributeCo
 
 		required := cfg.RequiredAttributes != nil && slices.Contains(*cfg.RequiredAttributes, name)
 		optional := cfg.OptionalAttributes != nil && slices.Contains(*cfg.OptionalAttributes, name)
-		switch attribute.GetType() {
-		case types.BoolType:
-			ds.Attributes[name] = d_schema.BoolAttribute{
-				Description:         attribute.GetDescription(),
-				Required:            required,
-				Optional:            optional,
-				Computed:            !required,
-				Sensitive:           attribute.IsSensitive(),
-				MarkdownDescription: attribute.GetMarkdownDescription(),
-				DeprecationMessage:  attribute.GetDeprecationMessage(),
-			}
-		case types.DynamicType:
-			ds.Attributes[name] = d_schema.DynamicAttribute{
-				Description:         attribute.GetDescription(),
-				Required:            required,
-				Optional:            optional,
-				Computed:            !required,
-				Sensitive:           attribute.IsSensitive(),
-				MarkdownDescription: attribute.GetMarkdownDescription(),
-				DeprecationMessage:  attribute.GetDeprecationMessage(),
-			}
-		case types.Float32Type:
-			ds.Attributes[name] = d_schema.Float32Attribute{
-				Description:         attribute.GetDescription(),
-				Required:            required,
-				Optional:            optional,
-				Computed:            !required,
-				Sensitive:           attribute.IsSensitive(),
-				MarkdownDescription: attribute.GetMarkdownDescription(),
-				DeprecationMessage:  attribute.GetDeprecationMessage(),
-			}
-		case types.Float64Type:
-			ds.Attributes[name] = d_schema.Float64Attribute{
-				Description:         attribute.GetDescription(),
-				Required:            required,
-				Optional:            optional,
-				Computed:            !required,
-				Sensitive:           attribute.IsSensitive(),
-				MarkdownDescription: attribute.GetMarkdownDescription(),
-				DeprecationMessage:  attribute.GetDeprecationMessage(),
-			}
-		case types.Int32Type:
-			ds.Attributes[name] = d_schema.Int32Attribute{
-				Description:         attribute.GetDescription(),
-				Required:            required,
-				Optional:            optional,
-				Computed:            !required,
-				Sensitive:           attribute.IsSensitive(),
-				MarkdownDescription: attribute.GetMarkdownDescription(),
-				DeprecationMessage:  attribute.GetDeprecationMessage(),
-			}
-		case types.Int64Type:
-			ds.Attributes[name] = d_schema.Int64Attribute{
-				Description:         attribute.GetDescription(),
-				Required:            required,
-				Optional:            optional,
-				Computed:            !required,
-				Sensitive:           attribute.IsSensitive(),
-				MarkdownDescription: attribute.GetMarkdownDescription(),
-				DeprecationMessage:  attribute.GetDeprecationMessage(),
-			}
-		case types.NumberType:
-			ds.Attributes[name] = d_schema.NumberAttribute{
-				Description:         attribute.GetDescription(),
-				Required:            required,
-				Optional:            optional,
-				Computed:            !required,
-				Sensitive:           attribute.IsSensitive(),
-				MarkdownDescription: attribute.GetMarkdownDescription(),
-				DeprecationMessage:  attribute.GetDeprecationMessage(),
-			}
-		case types.StringType:
-			ds.Attributes[name] = d_schema.StringAttribute{
-				Description:         attribute.GetDescription(),
-				Required:            required,
-				Optional:            optional,
-				Computed:            !required,
-				Sensitive:           attribute.IsSensitive(),
-				MarkdownDescription: attribute.GetMarkdownDescription(),
-				DeprecationMessage:  attribute.GetDeprecationMessage(),
-			}
-		default:
-			if listType, isList := attribute.GetType().(types.ListType); isList {
-				ds.Attributes[name] = d_schema.ListAttribute{
-					ElementType:         listType.ElemType,
-					Description:         attribute.GetDescription(),
-					Required:            required,
-					Optional:            optional,
-					Computed:            !required,
-					Sensitive:           attribute.IsSensitive(),
-					MarkdownDescription: attribute.GetMarkdownDescription(),
-					DeprecationMessage:  attribute.GetDeprecationMessage(),
-				}
-				continue
-			}
 
-			if objType, isObject := attribute.(r_schema.SingleNestedAttribute); isObject {
-				attributeTypes := make(map[string]attr.Type, len(objType.GetAttributes()))
-				for name, attribute := range objType.GetAttributes() {
-					attributeTypes[name] = attribute.GetType()
-				}
-
-				ds.Attributes[name] = d_schema.ObjectAttribute{
-					CustomType:          objType.CustomType,
-					Description:         attribute.GetDescription(),
-					Required:            required,
-					Optional:            optional,
-					Computed:            !required,
-					Sensitive:           attribute.IsSensitive(),
-					MarkdownDescription: attribute.GetMarkdownDescription(),
-					DeprecationMessage:  attribute.GetDeprecationMessage(),
-					AttributeTypes:      attributeTypes,
-				}
-				continue
-			}
-
-			return nil, fmt.Errorf("failed to convert resource schema attribute to data source schema attribute: name=%s, type=%s", name, attribute.GetType())
+		attr, err := convertResourceAttrToDataSourceAttr(name, attribute, required, optional)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert resource schema attribute to data source schema attribute: %w", err)
 		}
+		ds.Attributes[name] = attr
 	}
 
 	return &ds, nil
+}
+
+func convertResourceAttrToDataSourceAttr(name string, attribute r_schema.Attribute, required, optional bool) (d_schema.Attribute, error) {
+	switch attribute.GetType() {
+	case types.BoolType:
+		return d_schema.BoolAttribute{
+			Description:         attribute.GetDescription(),
+			Required:            required,
+			Optional:            optional,
+			Computed:            !required,
+			Sensitive:           attribute.IsSensitive(),
+			MarkdownDescription: attribute.GetMarkdownDescription(),
+			DeprecationMessage:  attribute.GetDeprecationMessage(),
+		}, nil
+	case types.DynamicType:
+		return d_schema.DynamicAttribute{
+			Description:         attribute.GetDescription(),
+			Required:            required,
+			Optional:            optional,
+			Computed:            !required,
+			Sensitive:           attribute.IsSensitive(),
+			MarkdownDescription: attribute.GetMarkdownDescription(),
+			DeprecationMessage:  attribute.GetDeprecationMessage(),
+		}, nil
+	case types.Float32Type:
+		return d_schema.Float32Attribute{
+			Description:         attribute.GetDescription(),
+			Required:            required,
+			Optional:            optional,
+			Computed:            !required,
+			Sensitive:           attribute.IsSensitive(),
+			MarkdownDescription: attribute.GetMarkdownDescription(),
+			DeprecationMessage:  attribute.GetDeprecationMessage(),
+		}, nil
+	case types.Float64Type:
+		return d_schema.Float64Attribute{
+			Description:         attribute.GetDescription(),
+			Required:            required,
+			Optional:            optional,
+			Computed:            !required,
+			Sensitive:           attribute.IsSensitive(),
+			MarkdownDescription: attribute.GetMarkdownDescription(),
+			DeprecationMessage:  attribute.GetDeprecationMessage(),
+		}, nil
+	case types.Int32Type:
+		return d_schema.Int32Attribute{
+			Description:         attribute.GetDescription(),
+			Required:            required,
+			Optional:            optional,
+			Computed:            !required,
+			Sensitive:           attribute.IsSensitive(),
+			MarkdownDescription: attribute.GetMarkdownDescription(),
+			DeprecationMessage:  attribute.GetDeprecationMessage(),
+		}, nil
+	case types.Int64Type:
+		return d_schema.Int64Attribute{
+			Description:         attribute.GetDescription(),
+			Required:            required,
+			Optional:            optional,
+			Computed:            !required,
+			Sensitive:           attribute.IsSensitive(),
+			MarkdownDescription: attribute.GetMarkdownDescription(),
+			DeprecationMessage:  attribute.GetDeprecationMessage(),
+		}, nil
+	case types.NumberType:
+		return d_schema.NumberAttribute{
+			Description:         attribute.GetDescription(),
+			Required:            required,
+			Optional:            optional,
+			Computed:            !required,
+			Sensitive:           attribute.IsSensitive(),
+			MarkdownDescription: attribute.GetMarkdownDescription(),
+			DeprecationMessage:  attribute.GetDeprecationMessage(),
+		}, nil
+	case types.StringType:
+		return d_schema.StringAttribute{
+			Description:         attribute.GetDescription(),
+			Required:            required,
+			Optional:            optional,
+			Computed:            !required,
+			Sensitive:           attribute.IsSensitive(),
+			MarkdownDescription: attribute.GetMarkdownDescription(),
+			DeprecationMessage:  attribute.GetDeprecationMessage(),
+		}, nil
+	default:
+		if t, isList := attribute.(r_schema.ListNestedAttribute); isList {
+			nestedObjectAttrs := make(map[string]d_schema.Attribute)
+			for name, attribute := range t.NestedObject.Attributes {
+				nestedAttribute, err := convertResourceAttrToDataSourceAttr(name, attribute, required, optional)
+				if err != nil {
+					return nil, err
+				}
+				nestedObjectAttrs[name] = nestedAttribute
+			}
+
+			return d_schema.ListNestedAttribute{
+				NestedObject: d_schema.NestedAttributeObject{
+					Attributes: nestedObjectAttrs,
+					CustomType: t.NestedObject.CustomType,
+					Validators: t.NestedObject.Validators,
+				},
+				Description:         attribute.GetDescription(),
+				Required:            required,
+				Optional:            optional,
+				Computed:            !required,
+				Sensitive:           attribute.IsSensitive(),
+				MarkdownDescription: attribute.GetMarkdownDescription(),
+				DeprecationMessage:  attribute.GetDeprecationMessage(),
+			}, nil
+		}
+
+		if t, isList := attribute.GetType().(types.ListType); isList {
+			return d_schema.ListAttribute{
+				ElementType:         t.ElemType,
+				Description:         attribute.GetDescription(),
+				Required:            required,
+				Optional:            optional,
+				Computed:            !required,
+				Sensitive:           attribute.IsSensitive(),
+				MarkdownDescription: attribute.GetMarkdownDescription(),
+				DeprecationMessage:  attribute.GetDeprecationMessage(),
+			}, nil
+		}
+
+		if t, isObject := attribute.(r_schema.SingleNestedAttribute); isObject {
+			attributeTypes := make(map[string]attr.Type, len(t.GetAttributes()))
+			for name, attribute := range t.GetAttributes() {
+				attributeTypes[name] = attribute.GetType()
+			}
+
+			return d_schema.ObjectAttribute{
+				CustomType:          t.CustomType,
+				Description:         attribute.GetDescription(),
+				Required:            required,
+				Optional:            optional,
+				Computed:            !required,
+				Sensitive:           attribute.IsSensitive(),
+				MarkdownDescription: attribute.GetMarkdownDescription(),
+				DeprecationMessage:  attribute.GetDeprecationMessage(),
+				AttributeTypes:      attributeTypes,
+			}, nil
+		}
+
+		return nil, fmt.Errorf("conversion of attribute type is not implemented: name=%s, type=%s", name, attribute.GetType())
+	}
 }
 
 func listContainsUnknown(ctx context.Context, list types.List) bool {

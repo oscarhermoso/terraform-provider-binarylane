@@ -61,15 +61,24 @@ func (r *sshKeyResource) Metadata(ctx context.Context, req resource.MetadataRequ
 
 func (r *sshKeyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = resources.SshKeyResourceSchema(ctx)
-	// resp.Schema.Description = "TODO"
 
 	// Overrides
-	default_ := resp.Schema.Attributes["default"]
+	idDescription := "The numeric ID of the SSH key."
+	resp.Schema.Attributes["id"] = schema.Int64Attribute{
+		Required:            false,
+		Optional:            false,
+		Computed:            true,
+		Description:         idDescription,
+		MarkdownDescription: idDescription,
+	}
+
+	defaultDescription := "If `true`, this SSH key will be included on all new server installations (if the operating " +
+		"system supports SSH key injection). Default is `false`."
 	resp.Schema.Attributes["default"] = schema.BoolAttribute{
 		Optional:            true,
 		Computed:            true,
-		Description:         default_.GetDescription(),
-		MarkdownDescription: default_.GetMarkdownDescription(),
+		Description:         defaultDescription,
+		MarkdownDescription: defaultDescription,
 		Default:             booldefault.StaticBool(false), // Add default to backups
 	}
 
@@ -265,7 +274,7 @@ func (r *sshKeyResource) ImportState(
 
 		sshResp, err := r.bc.client.GetAccountKeysWithResponse(ctx, &params)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Error getting SSH key for import: fingerprint=%s", req.ID), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Error getting SSH keys for import: fingerprint=%s", req.ID), err.Error())
 			return
 		}
 

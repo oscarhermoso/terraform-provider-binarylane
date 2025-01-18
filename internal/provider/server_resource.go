@@ -84,7 +84,6 @@ func (r *serverResource) Metadata(ctx context.Context, req resource.MetadataRequ
 
 func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = resources.ServerResourceSchema(ctx)
-	resp.Schema.Description = "Provides a Binary Lane Server resource. This can be used to create and delete servers."
 
 	// Overrides
 	id := resp.Schema.Attributes["id"]
@@ -100,10 +99,11 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		},
 	}
 
+	imageDescription := "The slug of the selected operating system, such as `debian-12`. You can fetch a full list of images from the BinaryLane API."
 	image := resp.Schema.Attributes["image"]
 	resp.Schema.Attributes["image"] = &schema.StringAttribute{
-		Description:         image.GetDescription(),
-		MarkdownDescription: image.GetMarkdownDescription(),
+		Description:         imageDescription,
+		MarkdownDescription: imageDescription,
 		Required:            image.IsRequired(),
 		Optional:            image.IsOptional(),
 		Computed:            image.IsComputed(),
@@ -112,10 +112,10 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		},
 	}
 
-	backups := resp.Schema.Attributes["backups"]
+	backupsDescription := "If `true` this will enable two daily backups for the server. By default, backups are disabled."
 	resp.Schema.Attributes["backups"] = &schema.BoolAttribute{
-		Description:         backups.GetDescription(),
-		MarkdownDescription: backups.GetMarkdownDescription(),
+		Description:         backupsDescription,
+		MarkdownDescription: backupsDescription,
 		Optional:            true,
 		Computed:            true,
 		Default:             booldefault.StaticBool(false), // Add default to backups
@@ -134,7 +134,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Description:         vpcId.GetDescription(),
 		MarkdownDescription: vpcId.GetMarkdownDescription(),
 		Optional:            vpcId.IsOptional(),
-		Computed:            false, // VPC ID is not computed, defined at creation
+		Computed:            false, // vpc_id is not computed, defined at creation
 	}
 
 	portBlocking := resp.Schema.Attributes["port_blocking"]
@@ -171,6 +171,20 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		},
 	}
 
+	userDataDescription := "A script or cloud-config YAML file to configure the server. Can only be specified if the OS image supports UserData (i.e. not Windows)." +
+		" See more: https://cloudinit.readthedocs.io/en/latest/explanation/format.html#user-data-script"
+	userData := resp.Schema.Attributes["user_data"]
+	resp.Schema.Attributes["user_data"] = &schema.StringAttribute{
+		Description:         userDataDescription,
+		MarkdownDescription: userDataDescription,
+		Required:            userData.IsRequired(),
+		Optional:            userData.IsOptional(),
+		Computed:            userData.IsComputed(),
+		Validators: []validator.String{
+			stringvalidator.LengthAtMost(65536),
+		},
+	}
+
 	// Additional attributes
 	pwDescription :=
 		"If this is provided the specified or default remote user's account password will be set to this value. " +
@@ -184,15 +198,13 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Sensitive:           true,  // Mark password as sensitive
 	}
 
-	publicIpv4CountDescription := "The number of public IPv4 addresses to assign to the server. If this is not provided, the " +
-		"server will be created with the default number of public IPv4 addresses."
+	publicIpv4CountDescription := "The number of public IPv4 addresses to assign to the server."
 	resp.Schema.Attributes["public_ipv4_count"] = &schema.Int32Attribute{
 		Description:         publicIpv4CountDescription,
 		MarkdownDescription: publicIpv4CountDescription,
 		Required:            true,
 		Optional:            false,
 		Computed:            false,
-		// Default:             int32default.StaticInt32(0), // TODO: Uncomment with 1.0 release (see issue #30)
 		Validators: []validator.Int32{
 			int32validator.AtLeast(0),
 			int32validator.AtMost(8),
@@ -271,18 +283,15 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		},
 	}
 
-	memoryDescription := `The total memory in MB for this server. If specified this is the absolute value, not just the
-additional memory above what is included in the size. Leave null to accept the default for the size if this is a new
-server or a resize to a different base size, or to keep the current value if this a resize with the same base size
-but different options.`
-	memoryValidValues := "Valid values must be a multiple of 128. If the value is greater than 2048MB, it must be a " +
-		"multiple of 1024. If the value is greater than 16384MB, it must be a multiple of 2048. If the value is greater " +
-		"than 24576MB, it must be a multiple of 4096."
+	memoryDescription := `The total memory in MB for this server. Leave null to accept the default size.`
+	memoryValidValues := "Valid values must be a multiple of 128. If the value is greater than 2048 MB, it must be a " +
+		"multiple of 1024. If the value is greater than 16384 MB, it must be a multiple of 2048. If the value is greater " +
+		"than 24576 MB, it must be a multiple of 4096."
 	memoryValidValuesMarkdown := ` Valid values:
   - must be a multiple of 128
-  - \> 2048MB must be a multiple of 1024
-  - \> 16384MB must be a multiple of 2048
-  - \> 24576MB must be a multiple of 4096`
+  - \> 2048 MB must be a multiple of 1024
+  - \> 16384 MB must be a multiple of 2048
+  - \> 24576 MB must be a multiple of 4096`
 
 	resp.Schema.Attributes["memory"] = &schema.Int32Attribute{
 		Description:         memoryDescription + memoryValidValues,
@@ -299,15 +308,13 @@ but different options.`
 		},
 	}
 
-	diskDescription := `The total storage in GB for this server. If specified this is the absolute value, not just the additional storage above what is included in the size.
-Leave null to accept the default for the size if this is a new server or a resize to a different base size,
-or to keep the current value if this a resize with the same base size but different options.`
-	diskValidValues := "Valid values must be a multiple of 5. If the value is greater than 60GB, it must be a multiple of 10. " +
-		"if the value is greater than 200GB, it must be a multiple of 100. "
+	diskDescription := `The total storage in GB for this server. Leave null to accept the default for the size`
+	diskValidValues := "Valid values must be a multiple of 5. If the value is greater than 60 GB, it must be a multiple of 10. " +
+		"if the value is greater than 200 GB, it must be a multiple of 100. "
 	diskValidValuesMarkdown := ` Valid values:
   - must be a multiple of 5
-  - \> 60GB must be a multiple of 10
-  - \> 200GB must be a multiple of 100`
+  - \> 60 GB must be a multiple of 10
+  - \> 200 GB must be a multiple of 100`
 
 	resp.Schema.Attributes["disk"] = &schema.Int32Attribute{
 		Description:         diskDescription + diskValidValues,

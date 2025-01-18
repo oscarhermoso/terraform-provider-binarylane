@@ -78,10 +78,58 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 		Required:            true, // ID is required to find the server
 	}
 
+	nameDescription := "The hostname of your server, such as vps01.yourcompany.com."
+	resp.Schema.Attributes["name"] = &schema.StringAttribute{
+		Description:         nameDescription,
+		MarkdownDescription: nameDescription,
+		Optional:            false,
+		Required:            false,
+		Computed:            true,
+	}
+
+	backupsDescription := "If `true`, the server will be backed up twice per day. By default, backups are disabled."
+	resp.Schema.Attributes["backups"] = &schema.BoolAttribute{
+		Description:         backupsDescription,
+		MarkdownDescription: backupsDescription,
+		Optional:            false,
+		Required:            false,
+		Computed:            true,
+	}
+
+	sshKeysDescription := "This is a list of SSH key ids that were added to the server during creation."
+	resp.Schema.Attributes["ssh_keys"] = &schema.ListAttribute{
+		ElementType:         types.Int64Type,
+		Description:         sshKeysDescription,
+		MarkdownDescription: sshKeysDescription,
+		Optional:            false,
+		Required:            false,
+		Computed:            true,
+	}
+
+	userDataDescription := "A script or cloud-config YAML file to configure the server."
+	resp.Schema.Attributes["user_data"] = &schema.StringAttribute{
+		Description:         userDataDescription,
+		MarkdownDescription: userDataDescription,
+		Optional:            false,
+		Required:            false,
+		Computed:            true,
+	}
+
+	vpcIdDescription := "ID of the Virtual Private Cloud (VPC) the server is connected to."
+	resp.Schema.Attributes["vpc_id"] = &schema.Int64Attribute{
+		Description:         vpcIdDescription,
+		MarkdownDescription: vpcIdDescription,
+		Optional:            false,
+		Required:            false,
+		Computed:            true,
+	}
+
 	// Additional attributes
 	resp.Schema.Attributes["permalink"] = &schema.StringAttribute{
 		Description:         "A randomly generated two-word identifier assigned to servers in regions that support this feature",
 		MarkdownDescription: "A randomly generated two-word identifier assigned to servers in regions that support this feature",
+		Optional:            false,
+		Required:            false,
 		Computed:            true,
 	}
 
@@ -90,6 +138,8 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 		Description:         publicIpv4AddressesDescription,
 		MarkdownDescription: publicIpv4AddressesDescription,
 		ElementType:         types.StringType,
+		Optional:            false,
+		Required:            false,
 		Computed:            true,
 	}
 
@@ -98,6 +148,8 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 		Description:         privateIpv4AddressesDescription,
 		MarkdownDescription: privateIpv4AddressesDescription,
 		ElementType:         types.StringType,
+		Optional:            false,
+		Required:            false,
 		Computed:            true,
 	}
 
@@ -105,6 +157,8 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 	resp.Schema.Attributes["memory"] = &schema.Int32Attribute{
 		Description:         memoryDescription,
 		MarkdownDescription: memoryDescription,
+		Optional:            false,
+		Required:            false,
 		Computed:            true,
 	}
 
@@ -112,6 +166,8 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 	resp.Schema.Attributes["disk"] = &schema.Int32Attribute{
 		Description:         diskDescription,
 		MarkdownDescription: diskDescription,
+		Optional:            false,
+		Required:            false,
 		Computed:            true,
 	}
 }

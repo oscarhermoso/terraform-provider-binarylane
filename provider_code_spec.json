@@ -17,7 +17,7 @@
 										"name": "entry_protocol",
 										"string": {
 											"computed_optional_required": "required",
-											"description": "The protocol that traffic must match for this load balancer to forward traffic according to this rule.",
+											"description": "The protocol that traffic must match for the load balancer to forward it. Valid values are \"http\" and \"https\".",
 											"validators": [
 												{
 													"custom": {
