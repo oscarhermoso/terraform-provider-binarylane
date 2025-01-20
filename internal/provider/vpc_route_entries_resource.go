@@ -244,6 +244,7 @@ func GetRouteEntriesState(ctx context.Context, routeEntries *[]binarylane.RouteE
 		routeEntriesValues = []resources.RouteEntriesValue{}
 	} else {
 		for _, route := range *routeEntries {
+			// TODO: This panics if invalid, should be handled better
 			r := resources.NewRouteEntriesValueMust(routeEntriesValue.AttributeTypes(ctx), map[string]attr.Value{
 				"description": types.StringValue(*route.Description),
 				"destination": types.StringValue(*route.Destination),

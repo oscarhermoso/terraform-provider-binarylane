@@ -93,6 +93,7 @@ func (p *binarylaneProvider) DataSources(_ context.Context) []func() datasource.
 		NewVpcDataSource,
 		NewVpcRouteEntriesDataSource,
 		NewLoadBalancerDataSource,
+		NewImagesDataSource,
 	}
 }
 

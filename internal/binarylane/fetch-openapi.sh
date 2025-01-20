@@ -9,7 +9,7 @@ curl https://api.binarylane.com.au/reference/openapi.json --output $OPENAPI_FILE
 cat <<<$(jq '.servers[0].url = "https://api.binarylane.com.au/v2"' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.paths |= with_entries(.key |= sub("/v2/"; "/"))' $OPENAPI_FILE) >$OPENAPI_FILE
 
-# Terraform can't handle oneOf types, so we need to replace them with basic types
+# Terraform can't handle oneOf/allOf types, so we need to replace them with basic types
 cat <<<$(jq '.components.schemas.CreateServerRequest.properties.image |= del(.oneOf) + {type:"string"}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.components.schemas.CreateServerRequest.properties.ssh_keys.items |= del(.oneOf) + {type:"integer"}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.components.schemas.Rebuild.properties.image |= del(.oneOf) + {type:"string"}' $OPENAPI_FILE) >$OPENAPI_FILE
@@ -20,6 +20,7 @@ cat <<<$(jq '.paths["/account/keys/{key_id}"].put.parameters[0].schema |= del(.o
 cat <<<$(jq '.paths["/account/keys/{key_id}"].get.parameters[0].schema |= del(.oneOf) + {type:"integer"}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.paths["/account/keys/{key_id}"].delete.parameters[0].schema |= del(.oneOf) + {type:"integer"}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.paths["/account/keys/{key_id}"].delete.parameters[0].schema |= del(.oneOf) + {type:"integer"}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.paths["/images"].get.parameters[0].schema |= del(.allOf) + {type:"string"}' $OPENAPI_FILE) >$OPENAPI_FILE
 
 # Remove the "/paths/{image_id}" path because its duplicated by "/images/{image_id_or_slug}"
 cat <<<$(jq 'del(.paths."/images/{image_id}")' $OPENAPI_FILE) >$OPENAPI_FILE
@@ -44,6 +45,35 @@ cat <<<$(jq '.components.schemas.CreateLoadBalancerRequest.properties.forwarding
 cat <<<$(jq '.components.schemas.ForwardingRule.properties.entry_protocol += {"x-oapi-codegen-extra-tags": {"tfsdk": "entry_protocol"}}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.components.schemas.LoadBalancer.properties.health_check += {"x-oapi-codegen-extra-tags": {"tfsdk": "health_check"}}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.components.schemas.HealthCheckProtocol |= del(.enum)' $OPENAPI_FILE) >$OPENAPI_FILE
+
+## Images
+cat <<<$(jq '.components.schemas.Image.properties.backup_info += {"x-oapi-codegen-extra-tags": {"tfsdk": "backup_info"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.created_at += {"x-oapi-codegen-extra-tags": {"tfsdk": "created_at"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.description += {"x-oapi-codegen-extra-tags": {"tfsdk": "description"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.distribution += {"x-oapi-codegen-extra-tags": {"tfsdk": "distribution"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.distribution_info += {"x-oapi-codegen-extra-tags": {"tfsdk": "distribution_info"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.distribution_surcharges += {"x-oapi-codegen-extra-tags": {"tfsdk": "distribution_surcharges"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.error_message += {"x-oapi-codegen-extra-tags": {"tfsdk": "error_message"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.full_name += {"x-oapi-codegen-extra-tags": {"tfsdk": "full_name"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.id += {"x-oapi-codegen-extra-tags": {"tfsdk": "id"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.min_disk_size += {"x-oapi-codegen-extra-tags": {"tfsdk": "min_disk_size"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.min_memory_megabytes += {"x-oapi-codegen-extra-tags": {"tfsdk": "min_memory_megabytes"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.name += {"x-oapi-codegen-extra-tags": {"tfsdk": "name"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.public += {"x-oapi-codegen-extra-tags": {"tfsdk": "public"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.regions += {"x-oapi-codegen-extra-tags": {"tfsdk": "regions"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.size_gigabytes += {"x-oapi-codegen-extra-tags": {"tfsdk": "size_gigabytes"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.slug += {"x-oapi-codegen-extra-tags": {"tfsdk": "slug"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.status += {"x-oapi-codegen-extra-tags": {"tfsdk": "status"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Image.properties.type += {"x-oapi-codegen-extra-tags": {"tfsdk": "type"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.DistributionInfo.properties.features += {"x-oapi-codegen-extra-tags": {"tfsdk": "features"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.DistributionInfo.properties.remote_access_user += {"x-oapi-codegen-extra-tags": {"tfsdk": "remote_access_user"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.DistributionInfo.properties.password_recovery += {"x-oapi-codegen-extra-tags": {"tfsdk": "password_recovery"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.DistributionInfo.properties.image_id += {"x-oapi-codegen-extra-tags": {"tfsdk": "image_id"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.DistributionSurcharges.properties.surcharge_base_cost += {"x-oapi-codegen-extra-tags": {"tfsdk": "surcharge_base_cost"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.DistributionSurcharges.properties.surcharge_per_memory_megabyte += {"x-oapi-codegen-extra-tags": {"tfsdk": "surcharge_per_memory_megabyte"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.DistributionSurcharges.properties.surcharge_per_memory_max_megabytes += {"x-oapi-codegen-extra-tags": {"tfsdk": "surcharge_per_memory_max_megabytes"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.DistributionSurcharges.properties.surcharge_per_vcpu += {"x-oapi-codegen-extra-tags": {"tfsdk": "surcharge_per_vcpu"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.DistributionSurcharges.properties.surcharge_min_vcpu += {"x-oapi-codegen-extra-tags": {"tfsdk": "surcharge_min_vcpu"}}' $OPENAPI_FILE) >$OPENAPI_FILE
 
 # Edit description here because it's hard to override nested schema properties
 cat <<<$(jq '.components.schemas.ForwardingRule.properties.entry_protocol.description = "The protocol that traffic must match for the load balancer to forward it. Valid values are \"http\" and \"https\"."' $OPENAPI_FILE) >$OPENAPI_FILE

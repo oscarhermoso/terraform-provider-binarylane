@@ -1212,11 +1212,7 @@
             "in": "query",
             "description": "Queries for distribution will include images that have pre-installed applications.",
             "schema": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/ImageQueryType"
-                }
-              ]
+              "type": "string"
             }
           },
           {
@@ -9813,7 +9809,10 @@
             "type": "integer",
             "description": "If this is a backup image, the operating system ID of the server at the time the backup was created.",
             "format": "int64",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "image_id"
+            }
           },
           "password_recovery": {
             "allOf": [
@@ -9822,13 +9821,19 @@
               }
             ],
             "description": "Supported methods of password recovery.\n\n| Value | Description |\n| ----- | ----------- |\n| manual | Password must be reset manually using the recovery console and rescue disk. |\n| offline-clear | Password can be cleared for the admin/root user only. New password needs to be provided on login via the console (Requires restart). |\n| offline-change | Password can be reset and new credentials sent (Requires restart). |\n| online-change | Password may be reset without requiring a reboot via installed QEMU Guest Agent. |\n\n",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "password_recovery"
+            }
           },
           "remote_access_user": {
             "type": "string",
             "description": "User name to use when connecting via remote access (RDP or SSH).",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "remote_access_user"
+            }
           },
           "features": {
             "type": "array",
@@ -9836,7 +9841,10 @@
               "$ref": "#/components/schemas/DistributionFeature"
             },
             "description": "Features supported by this distribution.",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "features"
+            }
           }
         }
       },
@@ -9848,35 +9856,50 @@
             "description": "The additional cost for using this operating system as the base image for a size.",
             "format": "double",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "surcharge_base_cost"
+            }
           },
           "surcharge_per_memory_megabyte": {
             "type": "number",
             "description": "The additional cost per MB for using this operating system as the base image for a size.",
             "format": "double",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "surcharge_per_memory_megabyte"
+            }
           },
           "surcharge_per_memory_max_megabytes": {
             "type": "integer",
             "description": "The maximum memory in MB that counts towards the surcharge_per_memory_mb. Any memory above this cap does not attract the surcharge.",
             "format": "int32",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "surcharge_per_memory_max_megabytes"
+            }
           },
           "surcharge_per_vcpu": {
             "type": "number",
             "description": "The additional cost per vcpu for using this operating system as the base image for a size.",
             "format": "double",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "surcharge_per_vcpu"
+            }
           },
           "surcharge_min_vcpu": {
             "type": "integer",
             "description": "The minimum vcpu count for surcharge calculations.",
             "format": "int32",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "surcharge_min_vcpu"
+            }
           }
         }
       },
@@ -10358,14 +10381,20 @@
             "description": "The ID of this image.",
             "format": "int64",
             "readOnly": true,
-            "x-cli-format": 1
+            "x-cli-format": 1,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "id"
+            }
           },
           "name": {
             "minLength": 1,
             "type": "string",
             "description": "If this is an operating system image, this is the name of the operating system version. If this is a backup image, this is the label of the backup if it exists, otherwise it is the UTC timestamp of the creation of the image.",
             "readOnly": true,
-            "x-cli-format": 4
+            "x-cli-format": 4,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "name"
+            }
           },
           "type": {
             "allOf": [
@@ -10373,32 +10402,47 @@
                 "$ref": "#/components/schemas/ImageType"
               }
             ],
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "type"
+            }
           },
           "distribution": {
             "type": "string",
             "description": "If this is an operating system image, this is the name of the distribution. If this is a backup image, this is the name of the distribution the server is using.",
             "nullable": true,
             "readOnly": true,
-            "x-cli-format": 3
+            "x-cli-format": 3,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "distribution"
+            }
           },
           "full_name": {
             "type": "string",
             "description": "If this is an operating system image, this is the name and version of the distribution. If this is a backup image, this is the server hostname and label of the backup if it exists, otherwise it is the server hostname and UTC timestamp of the creation of the image.",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "full_name"
+            }
           },
           "slug": {
             "type": "string",
             "description": "If this is an operating system image this is a slug which may be used as an alternative to the ID as a reference.",
             "nullable": true,
             "readOnly": true,
-            "x-cli-format": 2
+            "x-cli-format": 2,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "slug"
+            }
           },
           "public": {
             "type": "boolean",
             "description": "A public image is available to all users. A private image is available only to the account that created the image.",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "public"
+            }
           },
           "regions": {
             "type": "array",
@@ -10406,32 +10450,47 @@
               "type": "string"
             },
             "description": "The slugs of the regions where the image is available for use.",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "regions"
+            }
           },
           "created_at": {
             "type": "string",
             "description": "If this is a backup image this is the date and time in ISO8601 format when the image was created.",
             "format": "date-time",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "created_at"
+            }
           },
           "min_disk_size": {
             "type": "integer",
             "description": "For a distribution image this is the minimum disk size in GB required to install the operating system. For a backup image this is the minimum total disk size in GB required to restore the backup.",
             "format": "int32",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "min_disk_size"
+            }
           },
           "size_gigabytes": {
             "type": "number",
             "description": "For a distribution image this is the disk size used in GB by the operating system on initial install. For a backup image this is the size of the compressed backup image in GB.",
             "format": "double",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "size_gigabytes"
+            }
           },
           "description": {
             "type": "string",
             "description": "A description that may provide further details or warnings about the image.",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "description"
+            }
           },
           "status": {
             "allOf": [
@@ -10439,19 +10498,28 @@
                 "$ref": "#/components/schemas/ImageStatus"
               }
             ],
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "status"
+            }
           },
           "error_message": {
             "type": "string",
             "description": "If the image creation failed this may provide further information.",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "error_message"
+            }
           },
           "min_memory_megabytes": {
             "type": "integer",
             "description": "This is minimum memory in MB necessary to support this operating system (or the base operating system for a backup image).",
             "format": "int32",
-            "nullable": true
+            "nullable": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "min_memory_megabytes"
+            }
           },
           "distribution_surcharges": {
             "allOf": [
@@ -10461,7 +10529,10 @@
             ],
             "description": "If this is not null the use of this image may incur surcharges above the base cost of the server. All costs are in AU$.",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "distribution_surcharges"
+            }
           },
           "distribution_info": {
             "allOf": [
@@ -10470,7 +10541,10 @@
               }
             ],
             "description": "This object may provide further information about the distribution.",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "distribution_info"
+            }
           },
           "backup_info": {
             "allOf": [
@@ -10480,7 +10554,10 @@
             ],
             "description": "If this image is a backup, this object will provide further information.",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "backup_info"
+            }
           }
         }
       },

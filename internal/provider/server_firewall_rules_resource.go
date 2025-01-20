@@ -266,6 +266,7 @@ func GetFirewallRulesState(ctx context.Context, firewallRules *[]binarylane.Adva
 				return basetypes.NewListUnknown(firewallRulesValue.Type(ctx)), diags
 			}
 
+			// TODO: This panics if invalid, should be handled better
 			ruleValue := resources.NewFirewallRulesValueMust(firewallRulesValue.AttributeTypes(ctx), map[string]attr.Value{
 				"description":           types.StringPointerValue(rule.Description),
 				"action":                types.StringValue(string(rule.Action)),

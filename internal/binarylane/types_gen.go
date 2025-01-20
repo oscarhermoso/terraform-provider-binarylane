@@ -230,12 +230,6 @@ const (
 	EnableIpv6TypeEnableIpv6 EnableIpv6Type = "enable_ipv6"
 )
 
-// Defines values for ImageQueryType.
-const (
-	ImageQueryTypeBackup       ImageQueryType = "backup"
-	ImageQueryTypeDistribution ImageQueryType = "distribution"
-)
-
 // Defines values for ImageStatus.
 const (
 	Available ImageStatus = "available"
@@ -246,9 +240,9 @@ const (
 
 // Defines values for ImageType.
 const (
-	ImageTypeBackup   ImageType = "backup"
-	ImageTypeCustom   ImageType = "custom"
-	ImageTypeSnapshot ImageType = "snapshot"
+	Backup   ImageType = "backup"
+	Custom   ImageType = "custom"
+	Snapshot ImageType = "snapshot"
 )
 
 // Defines values for IsRunningType.
@@ -1304,10 +1298,10 @@ type DistributionFeature string
 // DistributionInfo defines model for DistributionInfo.
 type DistributionInfo struct {
 	// Features Features supported by this distribution.
-	Features *[]DistributionFeature `json:"features,omitempty"`
+	Features *[]DistributionFeature `json:"features,omitempty" tfsdk:"features"`
 
 	// ImageId If this is a backup image, the operating system ID of the server at the time the backup was created.
-	ImageId *int64 `json:"image_id,omitempty"`
+	ImageId *int64 `json:"image_id,omitempty" tfsdk:"image_id"`
 
 	// PasswordRecovery Supported methods of password recovery.
 	//
@@ -1318,28 +1312,28 @@ type DistributionInfo struct {
 	// | offline-change | Password can be reset and new credentials sent (Requires restart). |
 	// | online-change | Password may be reset without requiring a reboot via installed QEMU Guest Agent. |
 	//
-	PasswordRecovery *PasswordRecoveryType `json:"password_recovery,omitempty"`
+	PasswordRecovery *PasswordRecoveryType `json:"password_recovery,omitempty" tfsdk:"password_recovery"`
 
 	// RemoteAccessUser User name to use when connecting via remote access (RDP or SSH).
-	RemoteAccessUser *string `json:"remote_access_user"`
+	RemoteAccessUser *string `json:"remote_access_user" tfsdk:"remote_access_user"`
 }
 
 // DistributionSurcharges defines model for DistributionSurcharges.
 type DistributionSurcharges struct {
 	// SurchargeBaseCost The additional cost for using this operating system as the base image for a size.
-	SurchargeBaseCost *float64 `json:"surcharge_base_cost"`
+	SurchargeBaseCost *float64 `json:"surcharge_base_cost" tfsdk:"surcharge_base_cost"`
 
 	// SurchargeMinVcpu The minimum vcpu count for surcharge calculations.
-	SurchargeMinVcpu *int32 `json:"surcharge_min_vcpu"`
+	SurchargeMinVcpu *int32 `json:"surcharge_min_vcpu" tfsdk:"surcharge_min_vcpu"`
 
 	// SurchargePerMemoryMaxMegabytes The maximum memory in MB that counts towards the surcharge_per_memory_mb. Any memory above this cap does not attract the surcharge.
-	SurchargePerMemoryMaxMegabytes *int32 `json:"surcharge_per_memory_max_megabytes"`
+	SurchargePerMemoryMaxMegabytes *int32 `json:"surcharge_per_memory_max_megabytes" tfsdk:"surcharge_per_memory_max_megabytes"`
 
 	// SurchargePerMemoryMegabyte The additional cost per MB for using this operating system as the base image for a size.
-	SurchargePerMemoryMegabyte *float64 `json:"surcharge_per_memory_megabyte"`
+	SurchargePerMemoryMegabyte *float64 `json:"surcharge_per_memory_megabyte" tfsdk:"surcharge_per_memory_megabyte"`
 
 	// SurchargePerVcpu The additional cost per vcpu for using this operating system as the base image for a size.
-	SurchargePerVcpu *float64 `json:"surcharge_per_vcpu"`
+	SurchargePerVcpu *float64 `json:"surcharge_per_vcpu" tfsdk:"surcharge_per_vcpu"`
 }
 
 // Domain defines model for Domain.
@@ -1547,54 +1541,54 @@ type Host struct {
 // Image defines model for Image.
 type Image struct {
 	// BackupInfo If this image is a backup, this object will provide further information.
-	BackupInfo *BackupInfo `json:"backup_info"`
+	BackupInfo *BackupInfo `json:"backup_info" tfsdk:"backup_info"`
 
 	// CreatedAt If this is a backup image this is the date and time in ISO8601 format when the image was created.
-	CreatedAt *time.Time `json:"created_at"`
+	CreatedAt *time.Time `json:"created_at" tfsdk:"created_at"`
 
 	// Description A description that may provide further details or warnings about the image.
-	Description *string `json:"description"`
+	Description *string `json:"description" tfsdk:"description"`
 
 	// Distribution If this is an operating system image, this is the name of the distribution. If this is a backup image, this is the name of the distribution the server is using.
-	Distribution *string `json:"distribution"`
+	Distribution *string `json:"distribution" tfsdk:"distribution"`
 
 	// DistributionInfo This object may provide further information about the distribution.
-	DistributionInfo *DistributionInfo `json:"distribution_info,omitempty"`
+	DistributionInfo *DistributionInfo `json:"distribution_info,omitempty" tfsdk:"distribution_info"`
 
 	// DistributionSurcharges If this is not null the use of this image may incur surcharges above the base cost of the server. All costs are in AU$.
-	DistributionSurcharges *DistributionSurcharges `json:"distribution_surcharges"`
+	DistributionSurcharges *DistributionSurcharges `json:"distribution_surcharges" tfsdk:"distribution_surcharges"`
 
 	// ErrorMessage If the image creation failed this may provide further information.
-	ErrorMessage *string `json:"error_message"`
+	ErrorMessage *string `json:"error_message" tfsdk:"error_message"`
 
 	// FullName If this is an operating system image, this is the name and version of the distribution. If this is a backup image, this is the server hostname and label of the backup if it exists, otherwise it is the server hostname and UTC timestamp of the creation of the image.
-	FullName *string `json:"full_name"`
+	FullName *string `json:"full_name" tfsdk:"full_name"`
 
 	// Id The ID of this image.
-	Id *int64 `json:"id,omitempty"`
+	Id *int64 `json:"id,omitempty" tfsdk:"id"`
 
 	// MinDiskSize For a distribution image this is the minimum disk size in GB required to install the operating system. For a backup image this is the minimum total disk size in GB required to restore the backup.
-	MinDiskSize *int32 `json:"min_disk_size,omitempty"`
+	MinDiskSize *int32 `json:"min_disk_size,omitempty" tfsdk:"min_disk_size"`
 
 	// MinMemoryMegabytes This is minimum memory in MB necessary to support this operating system (or the base operating system for a backup image).
-	MinMemoryMegabytes *int32 `json:"min_memory_megabytes"`
+	MinMemoryMegabytes *int32 `json:"min_memory_megabytes" tfsdk:"min_memory_megabytes"`
 
 	// Name If this is an operating system image, this is the name of the operating system version. If this is a backup image, this is the label of the backup if it exists, otherwise it is the UTC timestamp of the creation of the image.
-	Name *string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty" tfsdk:"name"`
 
 	// Public A public image is available to all users. A private image is available only to the account that created the image.
-	Public *bool `json:"public,omitempty"`
+	Public *bool `json:"public,omitempty" tfsdk:"public"`
 
 	// Regions The slugs of the regions where the image is available for use.
-	Regions *[]string `json:"regions,omitempty"`
+	Regions *[]string `json:"regions,omitempty" tfsdk:"regions"`
 
 	// SizeGigabytes For a distribution image this is the disk size used in GB by the operating system on initial install. For a backup image this is the size of the compressed backup image in GB.
-	SizeGigabytes *float64 `json:"size_gigabytes,omitempty"`
+	SizeGigabytes *float64 `json:"size_gigabytes,omitempty" tfsdk:"size_gigabytes"`
 
 	// Slug If this is an operating system image this is a slug which may be used as an alternative to the ID as a reference.
-	Slug   *string      `json:"slug"`
-	Status *ImageStatus `json:"status,omitempty"`
-	Type   *ImageType   `json:"type,omitempty"`
+	Slug   *string      `json:"slug" tfsdk:"slug"`
+	Status *ImageStatus `json:"status,omitempty" tfsdk:"status"`
+	Type   *ImageType   `json:"type,omitempty" tfsdk:"type"`
 }
 
 // ImageDiskDownload defines model for ImageDiskDownload.
@@ -1642,13 +1636,6 @@ type ImageOptions struct {
 	// UserData If provided this will be used to initialise the new server. This must be left null if the Image does not support UserData, see DistributionInfo.Features for more information.
 	UserData *string `json:"user_data"`
 }
-
-// ImageQueryType
-// | Value | Description |
-// | ----- | ----------- |
-// | distribution | Base operating system images. |
-// | backup | A backup image of a server. |
-type ImageQueryType string
 
 // ImageResponse defines model for ImageResponse.
 type ImageResponse struct {
@@ -3204,7 +3191,7 @@ type PutDomainsDomainNameRecordsRecordIdParamsDomainName1 = string
 // GetImagesParams defines parameters for GetImages.
 type GetImagesParams struct {
 	// Type Queries for distribution will include images that have pre-installed applications.
-	Type *ImageQueryType `form:"type,omitempty" json:"type,omitempty"`
+	Type *string `form:"type,omitempty" json:"type,omitempty"`
 
 	// Private Provide 'true' to only list private images. 'false' has no effect.
 	Private *bool `form:"private,omitempty" json:"private,omitempty"`
