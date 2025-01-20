@@ -78,11 +78,6 @@ data "binarylane_server_firewall_rules" "test" {
 				),
 			},
 			// ImportState testing
-			// {
-			// 	ResourceName:      "binarylane_server.test",
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// },
 			{
 				ResourceName:                         "binarylane_server_firewall_rules.test",
 				ImportState:                          true,

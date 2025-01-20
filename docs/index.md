@@ -22,17 +22,9 @@ terraform {
 }
 
 provider "binarylane" {
-  # api_token = "" # Recommend setting with environment variable BINARYLANE_API_TOKEN
-}
+  api_token = var.binarylane_api_token
 
-# Create a new server
-resource "binarylane_server" "example" {
-  name              = "tf-example-basic"
-  region            = "per" # or "syd", "mel", "bne", "sin"
-  image             = "ubuntu-24.04"
-  size              = "std-min"
-  public_ipv4_count = 1
-  # ...
+  # Or, set environment variable BINARYLANE_API_TOKEN
 }
 ```
 
@@ -41,5 +33,5 @@ resource "binarylane_server" "example" {
 
 ### Optional
 
-- `api_endpoint` (String) Binary Lane API endpoint. If not set checks env for `BINARYLANE_API_ENDPOINT`. Default: `https://api.binarylane.com.au/v2`.
-- `api_token` (String, Sensitive) Binary Lane API token. If not set checks env for `BINARYLANE_API_TOKEN`.
+- `api_endpoint` (String) Binary Lane API endpoint. Defaults to `https://api.binarylane.com.au/v2`, but can be overridden by setting this attribute or the `BINARYLANE_API_ENDPOINT` environment variable.
+- `api_token` (String, Sensitive) Binary Lane API token. If not defined, will default to `BINARYLANE_API_TOKEN` environment variable.

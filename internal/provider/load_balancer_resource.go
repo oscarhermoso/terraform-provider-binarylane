@@ -62,7 +62,9 @@ func (d *loadBalancerResource) Configure(_ context.Context, req resource.Configu
 
 func (r *loadBalancerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = resources.LoadBalancerResourceSchema(ctx)
-	// resp.Schema.Description = "TODO"
+	resp.Schema.Description = "Provides a BinaryLane Load Balancer resource. This can be used to create, update, and delete load balancers."
+	resp.Schema.MarkdownDescription = resp.Schema.Description +
+		" See [the docs](https://support.binarylane.com.au/support/solutions/articles/1000025661-load-balancer) for more information."
 
 	// Overrides
 	id := resp.Schema.Attributes["id"]

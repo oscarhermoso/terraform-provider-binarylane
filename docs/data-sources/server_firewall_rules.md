@@ -3,12 +3,12 @@
 page_title: "binarylane_server_firewall_rules Data Source - terraform-provider-binarylane"
 subcategory: ""
 description: |-
-  
+  Retrieve details about the External Firewall Rules assigned to a BinaryLane server.
 ---
 
 # binarylane_server_firewall_rules (Data Source)
 
-
+Retrieve details about the External Firewall Rules assigned to a BinaryLane server.
 
 ## Example Usage
 

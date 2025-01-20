@@ -41,12 +41,12 @@ func (p *binarylaneProvider) Schema(_ context.Context, _ provider.SchemaRequest,
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"api_endpoint": schema.StringAttribute{
-				MarkdownDescription: "Binary Lane API endpoint. If not set checks env for `BINARYLANE_API_ENDPOINT`. " +
-					"Default: `https://api.binarylane.com.au/v2`.",
+				MarkdownDescription: "Binary Lane API endpoint. Defaults to `https://api.binarylane.com.au/v2`, but can be " +
+					"overridden by setting this attribute or the `BINARYLANE_API_ENDPOINT` environment variable.",
 				Optional: true,
 			},
 			"api_token": schema.StringAttribute{
-				MarkdownDescription: "Binary Lane API token. If not set checks env for `BINARYLANE_API_TOKEN`.",
+				MarkdownDescription: "Binary Lane API token. If not defined, will default to `BINARYLANE_API_TOKEN` environment variable.",
 				Optional:            true,
 				Sensitive:           true,
 			},
