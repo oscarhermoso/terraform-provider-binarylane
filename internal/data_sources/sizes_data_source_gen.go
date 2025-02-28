@@ -63,7 +63,7 @@ func SizesDataSourceSchema(ctx context.Context) schema.Schema {
 							Description:         "The included memory for this size in MB.",
 							MarkdownDescription: "The included memory for this size in MB.",
 						},
-						"options1": schema.SingleNestedAttribute{
+						"options": schema.SingleNestedAttribute{
 							Attributes: map[string]schema.Attribute{
 								"backups_cost_per_backup_per_gigabyte": schema.Float64Attribute{
 									Computed:            true,
@@ -174,9 +174,9 @@ func SizesDataSourceSchema(ctx context.Context) schema.Schema {
 									MarkdownDescription: "The number of weekly backups included in the base size cost.",
 								},
 							},
-							CustomType: Options1Type{
+							CustomType: OptionsType{
 								ObjectType: types.ObjectType{
-									AttrTypes: Options1Value{}.AttributeTypes(ctx),
+									AttrTypes: OptionsValue{}.AttributeTypes(ctx),
 								},
 							},
 							Computed:            true,
@@ -409,22 +409,22 @@ func (t SizesType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue
 			fmt.Sprintf(`memory expected to be basetypes.Int64Value, was: %T`, memoryAttribute))
 	}
 
-	options1Attribute, ok := attributes["options1"]
+	optionsAttribute, ok := attributes["options"]
 
 	if !ok {
 		diags.AddError(
 			"Attribute Missing",
-			`options1 is missing from object`)
+			`options is missing from object`)
 
 		return nil, diags
 	}
 
-	options1Val, ok := options1Attribute.(basetypes.ObjectValue)
+	optionsVal, ok := optionsAttribute.(basetypes.ObjectValue)
 
 	if !ok {
 		diags.AddError(
 			"Attribute Wrong Type",
-			fmt.Sprintf(`options1 expected to be basetypes.ObjectValue, was: %T`, options1Attribute))
+			fmt.Sprintf(`options expected to be basetypes.ObjectValue, was: %T`, optionsAttribute))
 	}
 
 	priceHourlyAttribute, ok := attributes["price_hourly"]
@@ -618,7 +618,7 @@ func (t SizesType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue
 		Disk:                          diskVal,
 		ExcessTransferCostPerGigabyte: excessTransferCostPerGigabyteVal,
 		Memory:                        memoryVal,
-		Options1:                      options1Val,
+		Options:                       optionsVal,
 		PriceHourly:                   priceHourlyVal,
 		PriceMonthly:                  priceMonthlyVal,
 		Regions:                       regionsVal,
@@ -804,22 +804,22 @@ func NewSizesValue(attributeTypes map[string]attr.Type, attributes map[string]at
 			fmt.Sprintf(`memory expected to be basetypes.Int64Value, was: %T`, memoryAttribute))
 	}
 
-	options1Attribute, ok := attributes["options1"]
+	optionsAttribute, ok := attributes["options"]
 
 	if !ok {
 		diags.AddError(
 			"Attribute Missing",
-			`options1 is missing from object`)
+			`options is missing from object`)
 
 		return NewSizesValueUnknown(), diags
 	}
 
-	options1Val, ok := options1Attribute.(basetypes.ObjectValue)
+	optionsVal, ok := optionsAttribute.(basetypes.ObjectValue)
 
 	if !ok {
 		diags.AddError(
 			"Attribute Wrong Type",
-			fmt.Sprintf(`options1 expected to be basetypes.ObjectValue, was: %T`, options1Attribute))
+			fmt.Sprintf(`options expected to be basetypes.ObjectValue, was: %T`, optionsAttribute))
 	}
 
 	priceHourlyAttribute, ok := attributes["price_hourly"]
@@ -1013,7 +1013,7 @@ func NewSizesValue(attributeTypes map[string]attr.Type, attributes map[string]at
 		Disk:                          diskVal,
 		ExcessTransferCostPerGigabyte: excessTransferCostPerGigabyteVal,
 		Memory:                        memoryVal,
-		Options1:                      options1Val,
+		Options:                       optionsVal,
 		PriceHourly:                   priceHourlyVal,
 		PriceMonthly:                  priceMonthlyVal,
 		Regions:                       regionsVal,
@@ -1102,7 +1102,7 @@ type SizesValue struct {
 	Disk                          basetypes.Int64Value   `tfsdk:"disk"`
 	ExcessTransferCostPerGigabyte basetypes.Float64Value `tfsdk:"excess_transfer_cost_per_gigabyte"`
 	Memory                        basetypes.Int64Value   `tfsdk:"memory"`
-	Options1                      basetypes.ObjectValue  `tfsdk:"options1"`
+	Options                       basetypes.ObjectValue  `tfsdk:"options"`
 	PriceHourly                   basetypes.Float64Value `tfsdk:"price_hourly"`
 	PriceMonthly                  basetypes.Float64Value `tfsdk:"price_monthly"`
 	Regions                       basetypes.ListValue    `tfsdk:"regions"`
@@ -1128,8 +1128,8 @@ func (v SizesValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error)
 	attrTypes["disk"] = basetypes.Int64Type{}.TerraformType(ctx)
 	attrTypes["excess_transfer_cost_per_gigabyte"] = basetypes.Float64Type{}.TerraformType(ctx)
 	attrTypes["memory"] = basetypes.Int64Type{}.TerraformType(ctx)
-	attrTypes["options1"] = basetypes.ObjectType{
-		AttrTypes: Options1Value{}.AttributeTypes(ctx),
+	attrTypes["options"] = basetypes.ObjectType{
+		AttrTypes: OptionsValue{}.AttributeTypes(ctx),
 	}.TerraformType(ctx)
 	attrTypes["price_hourly"] = basetypes.Float64Type{}.TerraformType(ctx)
 	attrTypes["price_monthly"] = basetypes.Float64Type{}.TerraformType(ctx)
@@ -1202,13 +1202,13 @@ func (v SizesValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error)
 
 		vals["memory"] = val
 
-		val, err = v.Options1.ToTerraformValue(ctx)
+		val, err = v.Options.ToTerraformValue(ctx)
 
 		if err != nil {
 			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
 		}
 
-		vals["options1"] = val
+		vals["options"] = val
 
 		val, err = v.PriceHourly.ToTerraformValue(ctx)
 
@@ -1319,24 +1319,24 @@ func (v SizesValue) String() string {
 func (v SizesValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	var options1 basetypes.ObjectValue
+	var options basetypes.ObjectValue
 
-	if v.Options1.IsNull() {
-		options1 = types.ObjectNull(
-			Options1Value{}.AttributeTypes(ctx),
+	if v.Options.IsNull() {
+		options = types.ObjectNull(
+			OptionsValue{}.AttributeTypes(ctx),
 		)
 	}
 
-	if v.Options1.IsUnknown() {
-		options1 = types.ObjectUnknown(
-			Options1Value{}.AttributeTypes(ctx),
+	if v.Options.IsUnknown() {
+		options = types.ObjectUnknown(
+			OptionsValue{}.AttributeTypes(ctx),
 		)
 	}
 
-	if !v.Options1.IsNull() && !v.Options1.IsUnknown() {
-		options1 = types.ObjectValueMust(
-			Options1Value{}.AttributeTypes(ctx),
-			v.Options1.Attributes(),
+	if !v.Options.IsNull() && !v.Options.IsUnknown() {
+		options = types.ObjectValueMust(
+			OptionsValue{}.AttributeTypes(ctx),
+			v.Options.Attributes(),
 		)
 	}
 
@@ -1381,8 +1381,8 @@ func (v SizesValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, d
 			"disk":                              basetypes.Int64Type{},
 			"excess_transfer_cost_per_gigabyte": basetypes.Float64Type{},
 			"memory":                            basetypes.Int64Type{},
-			"options1": basetypes.ObjectType{
-				AttrTypes: Options1Value{}.AttributeTypes(ctx),
+			"options": basetypes.ObjectType{
+				AttrTypes: OptionsValue{}.AttributeTypes(ctx),
 			},
 			"price_hourly":  basetypes.Float64Type{},
 			"price_monthly": basetypes.Float64Type{},
@@ -1423,8 +1423,8 @@ func (v SizesValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, d
 			"disk":                              basetypes.Int64Type{},
 			"excess_transfer_cost_per_gigabyte": basetypes.Float64Type{},
 			"memory":                            basetypes.Int64Type{},
-			"options1": basetypes.ObjectType{
-				AttrTypes: Options1Value{}.AttributeTypes(ctx),
+			"options": basetypes.ObjectType{
+				AttrTypes: OptionsValue{}.AttributeTypes(ctx),
 			},
 			"price_hourly":  basetypes.Float64Type{},
 			"price_monthly": basetypes.Float64Type{},
@@ -1452,8 +1452,8 @@ func (v SizesValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, d
 		"disk":                              basetypes.Int64Type{},
 		"excess_transfer_cost_per_gigabyte": basetypes.Float64Type{},
 		"memory":                            basetypes.Int64Type{},
-		"options1": basetypes.ObjectType{
-			AttrTypes: Options1Value{}.AttributeTypes(ctx),
+		"options": basetypes.ObjectType{
+			AttrTypes: OptionsValue{}.AttributeTypes(ctx),
 		},
 		"price_hourly":  basetypes.Float64Type{},
 		"price_monthly": basetypes.Float64Type{},
@@ -1490,7 +1490,7 @@ func (v SizesValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, d
 			"disk":                              v.Disk,
 			"excess_transfer_cost_per_gigabyte": v.ExcessTransferCostPerGigabyte,
 			"memory":                            v.Memory,
-			"options1":                          options1,
+			"options":                           options,
 			"price_hourly":                      v.PriceHourly,
 			"price_monthly":                     v.PriceMonthly,
 			"regions":                           regionsVal,
@@ -1545,7 +1545,7 @@ func (v SizesValue) Equal(o attr.Value) bool {
 		return false
 	}
 
-	if !v.Options1.Equal(other.Options1) {
+	if !v.Options.Equal(other.Options) {
 		return false
 	}
 
@@ -1608,8 +1608,8 @@ func (v SizesValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 		"disk":                              basetypes.Int64Type{},
 		"excess_transfer_cost_per_gigabyte": basetypes.Float64Type{},
 		"memory":                            basetypes.Int64Type{},
-		"options1": basetypes.ObjectType{
-			AttrTypes: Options1Value{}.AttributeTypes(ctx),
+		"options": basetypes.ObjectType{
+			AttrTypes: OptionsValue{}.AttributeTypes(ctx),
 		},
 		"price_hourly":  basetypes.Float64Type{},
 		"price_monthly": basetypes.Float64Type{},
@@ -1630,14 +1630,14 @@ func (v SizesValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	}
 }
 
-var _ basetypes.ObjectTypable = Options1Type{}
+var _ basetypes.ObjectTypable = OptionsType{}
 
-type Options1Type struct {
+type OptionsType struct {
 	basetypes.ObjectType
 }
 
-func (t Options1Type) Equal(o attr.Type) bool {
-	other, ok := o.(Options1Type)
+func (t OptionsType) Equal(o attr.Type) bool {
+	other, ok := o.(OptionsType)
 
 	if !ok {
 		return false
@@ -1646,11 +1646,11 @@ func (t Options1Type) Equal(o attr.Type) bool {
 	return t.ObjectType.Equal(other.ObjectType)
 }
 
-func (t Options1Type) String() string {
-	return "Options1Type"
+func (t OptionsType) String() string {
+	return "OptionsType"
 }
 
-func (t Options1Type) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+func (t OptionsType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	attributes := in.Attributes()
@@ -1965,7 +1965,7 @@ func (t Options1Type) ValueFromObject(ctx context.Context, in basetypes.ObjectVa
 		return nil, diags
 	}
 
-	return Options1Value{
+	return OptionsValue{
 		BackupsCostPerBackupPerGigabyte:   backupsCostPerBackupPerGigabyteVal,
 		DailyBackups:                      dailyBackupsVal,
 		DiscountForNoPublicIpv4:           discountForNoPublicIpv4Val,
@@ -1987,19 +1987,19 @@ func (t Options1Type) ValueFromObject(ctx context.Context, in basetypes.ObjectVa
 	}, diags
 }
 
-func NewOptions1ValueNull() Options1Value {
-	return Options1Value{
+func NewOptionsValueNull() OptionsValue {
+	return OptionsValue{
 		state: attr.ValueStateNull,
 	}
 }
 
-func NewOptions1ValueUnknown() Options1Value {
-	return Options1Value{
+func NewOptionsValueUnknown() OptionsValue {
+	return OptionsValue{
 		state: attr.ValueStateUnknown,
 	}
 }
 
-func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (Options1Value, diag.Diagnostics) {
+func NewOptionsValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (OptionsValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
@@ -2010,11 +2010,11 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 
 		if !ok {
 			diags.AddError(
-				"Missing Options1Value Attribute Value",
-				"While creating a Options1Value value, a missing attribute value was detected. "+
-					"A Options1Value must contain values for all attributes, even if null or unknown. "+
+				"Missing OptionsValue Attribute Value",
+				"While creating a OptionsValue value, a missing attribute value was detected. "+
+					"A OptionsValue must contain values for all attributes, even if null or unknown. "+
 					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("Options1Value Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+					fmt.Sprintf("OptionsValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
 			)
 
 			continue
@@ -2022,12 +2022,12 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 
 		if !attributeType.Equal(attribute.Type(ctx)) {
 			diags.AddError(
-				"Invalid Options1Value Attribute Type",
-				"While creating a Options1Value value, an invalid attribute value was detected. "+
-					"A Options1Value must use a matching attribute type for the value. "+
+				"Invalid OptionsValue Attribute Type",
+				"While creating a OptionsValue value, an invalid attribute value was detected. "+
+					"A OptionsValue must use a matching attribute type for the value. "+
 					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("Options1Value Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
-					fmt.Sprintf("Options1Value Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+					fmt.Sprintf("OptionsValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("OptionsValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
 			)
 		}
 	}
@@ -2037,17 +2037,17 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 
 		if !ok {
 			diags.AddError(
-				"Extra Options1Value Attribute Value",
-				"While creating a Options1Value value, an extra attribute value was detected. "+
-					"A Options1Value must not contain values beyond the expected attribute types. "+
+				"Extra OptionsValue Attribute Value",
+				"While creating a OptionsValue value, an extra attribute value was detected. "+
+					"A OptionsValue must not contain values beyond the expected attribute types. "+
 					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("Extra Options1Value Attribute Name: %s", name),
+					fmt.Sprintf("Extra OptionsValue Attribute Name: %s", name),
 			)
 		}
 	}
 
 	if diags.HasError() {
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	backupsCostPerBackupPerGigabyteAttribute, ok := attributes["backups_cost_per_backup_per_gigabyte"]
@@ -2057,7 +2057,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`backups_cost_per_backup_per_gigabyte is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	backupsCostPerBackupPerGigabyteVal, ok := backupsCostPerBackupPerGigabyteAttribute.(basetypes.Float64Value)
@@ -2075,7 +2075,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`daily_backups is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	dailyBackupsVal, ok := dailyBackupsAttribute.(basetypes.Int64Value)
@@ -2093,7 +2093,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`discount_for_no_public_ipv4 is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	discountForNoPublicIpv4Val, ok := discountForNoPublicIpv4Attribute.(basetypes.Float64Value)
@@ -2111,7 +2111,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`disk_cost_per_additional_gigabyte is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	diskCostPerAdditionalGigabyteVal, ok := diskCostPerAdditionalGigabyteAttribute.(basetypes.Float64Value)
@@ -2129,7 +2129,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`disk_max is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	diskMaxVal, ok := diskMaxAttribute.(basetypes.Int64Value)
@@ -2147,7 +2147,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`disk_min is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	diskMinVal, ok := diskMinAttribute.(basetypes.Int64Value)
@@ -2165,7 +2165,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`ipv4_addresses_cost_per_address is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	ipv4AddressesCostPerAddressVal, ok := ipv4AddressesCostPerAddressAttribute.(basetypes.Float64Value)
@@ -2183,7 +2183,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`ipv4_addresses_max is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	ipv4AddressesMaxVal, ok := ipv4AddressesMaxAttribute.(basetypes.Int64Value)
@@ -2201,7 +2201,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`memory_cost_per_additional_megabyte is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	memoryCostPerAdditionalMegabyteVal, ok := memoryCostPerAdditionalMegabyteAttribute.(basetypes.Float64Value)
@@ -2219,7 +2219,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`memory_max is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	memoryMaxVal, ok := memoryMaxAttribute.(basetypes.Int64Value)
@@ -2237,7 +2237,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`monthly_backups is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	monthlyBackupsVal, ok := monthlyBackupsAttribute.(basetypes.Int64Value)
@@ -2255,7 +2255,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`offsite_backup_frequency_cost is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	offsiteBackupFrequencyCostVal, ok := offsiteBackupFrequencyCostAttribute.(basetypes.ObjectValue)
@@ -2273,7 +2273,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`offsite_backups_cost_per_gigabyte is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	offsiteBackupsCostPerGigabyteVal, ok := offsiteBackupsCostPerGigabyteAttribute.(basetypes.Float64Value)
@@ -2291,7 +2291,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`restricted_disk_values is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	restrictedDiskValuesVal, ok := restrictedDiskValuesAttribute.(basetypes.ListValue)
@@ -2309,7 +2309,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`transfer_cost_per_additional_gigabyte is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	transferCostPerAdditionalGigabyteVal, ok := transferCostPerAdditionalGigabyteAttribute.(basetypes.Float64Value)
@@ -2327,7 +2327,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`transfer_max is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	transferMaxVal, ok := transferMaxAttribute.(basetypes.Float64Value)
@@ -2345,7 +2345,7 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 			"Attribute Missing",
 			`weekly_backups is missing from object`)
 
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
 	weeklyBackupsVal, ok := weeklyBackupsAttribute.(basetypes.Int64Value)
@@ -2357,10 +2357,10 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 	}
 
 	if diags.HasError() {
-		return NewOptions1ValueUnknown(), diags
+		return NewOptionsValueUnknown(), diags
 	}
 
-	return Options1Value{
+	return OptionsValue{
 		BackupsCostPerBackupPerGigabyte:   backupsCostPerBackupPerGigabyteVal,
 		DailyBackups:                      dailyBackupsVal,
 		DiscountForNoPublicIpv4:           discountForNoPublicIpv4Val,
@@ -2382,8 +2382,8 @@ func NewOptions1Value(attributeTypes map[string]attr.Type, attributes map[string
 	}, diags
 }
 
-func NewOptions1ValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) Options1Value {
-	object, diags := NewOptions1Value(attributeTypes, attributes)
+func NewOptionsValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) OptionsValue {
+	object, diags := NewOptionsValue(attributeTypes, attributes)
 
 	if diags.HasError() {
 		// This could potentially be added to the diag package.
@@ -2397,15 +2397,15 @@ func NewOptions1ValueMust(attributeTypes map[string]attr.Type, attributes map[st
 				diagnostic.Detail()))
 		}
 
-		panic("NewOptions1ValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+		panic("NewOptionsValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
 	}
 
 	return object
 }
 
-func (t Options1Type) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+func (t OptionsType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
 	if in.Type() == nil {
-		return NewOptions1ValueNull(), nil
+		return NewOptionsValueNull(), nil
 	}
 
 	if !in.Type().Equal(t.TerraformType(ctx)) {
@@ -2413,11 +2413,11 @@ func (t Options1Type) ValueFromTerraform(ctx context.Context, in tftypes.Value) 
 	}
 
 	if !in.IsKnown() {
-		return NewOptions1ValueUnknown(), nil
+		return NewOptionsValueUnknown(), nil
 	}
 
 	if in.IsNull() {
-		return NewOptions1ValueNull(), nil
+		return NewOptionsValueNull(), nil
 	}
 
 	attributes := map[string]attr.Value{}
@@ -2440,16 +2440,16 @@ func (t Options1Type) ValueFromTerraform(ctx context.Context, in tftypes.Value) 
 		attributes[k] = a
 	}
 
-	return NewOptions1ValueMust(Options1Value{}.AttributeTypes(ctx), attributes), nil
+	return NewOptionsValueMust(OptionsValue{}.AttributeTypes(ctx), attributes), nil
 }
 
-func (t Options1Type) ValueType(ctx context.Context) attr.Value {
-	return Options1Value{}
+func (t OptionsType) ValueType(ctx context.Context) attr.Value {
+	return OptionsValue{}
 }
 
-var _ basetypes.ObjectValuable = Options1Value{}
+var _ basetypes.ObjectValuable = OptionsValue{}
 
-type Options1Value struct {
+type OptionsValue struct {
 	BackupsCostPerBackupPerGigabyte   basetypes.Float64Value `tfsdk:"backups_cost_per_backup_per_gigabyte"`
 	DailyBackups                      basetypes.Int64Value   `tfsdk:"daily_backups"`
 	DiscountForNoPublicIpv4           basetypes.Float64Value `tfsdk:"discount_for_no_public_ipv4"`
@@ -2470,7 +2470,7 @@ type Options1Value struct {
 	state                             attr.ValueState
 }
 
-func (v Options1Value) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+func (v OptionsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
 	attrTypes := make(map[string]tftypes.Type, 17)
 
 	var val tftypes.Value
@@ -2654,19 +2654,19 @@ func (v Options1Value) ToTerraformValue(ctx context.Context) (tftypes.Value, err
 	}
 }
 
-func (v Options1Value) IsNull() bool {
+func (v OptionsValue) IsNull() bool {
 	return v.state == attr.ValueStateNull
 }
 
-func (v Options1Value) IsUnknown() bool {
+func (v OptionsValue) IsUnknown() bool {
 	return v.state == attr.ValueStateUnknown
 }
 
-func (v Options1Value) String() string {
-	return "Options1Value"
+func (v OptionsValue) String() string {
+	return "OptionsValue"
 }
 
-func (v Options1Value) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+func (v OptionsValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	var offsiteBackupFrequencyCost basetypes.ObjectValue
@@ -2785,8 +2785,8 @@ func (v Options1Value) ToObjectValue(ctx context.Context) (basetypes.ObjectValue
 	return objVal, diags
 }
 
-func (v Options1Value) Equal(o attr.Value) bool {
-	other, ok := o.(Options1Value)
+func (v OptionsValue) Equal(o attr.Value) bool {
+	other, ok := o.(OptionsValue)
 
 	if !ok {
 		return false
@@ -2871,15 +2871,15 @@ func (v Options1Value) Equal(o attr.Value) bool {
 	return true
 }
 
-func (v Options1Value) Type(ctx context.Context) attr.Type {
-	return Options1Type{
+func (v OptionsValue) Type(ctx context.Context) attr.Type {
+	return OptionsType{
 		basetypes.ObjectType{
 			AttrTypes: v.AttributeTypes(ctx),
 		},
 	}
 }
 
-func (v Options1Value) AttributeTypes(ctx context.Context) map[string]attr.Type {
+func (v OptionsValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	return map[string]attr.Type{
 		"backups_cost_per_backup_per_gigabyte": basetypes.Float64Type{},
 		"daily_backups":                        basetypes.Int64Type{},

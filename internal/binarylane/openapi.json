@@ -8,7 +8,7 @@
       "url": "https://support.binarylane.com.au",
       "email": "support@binarylane.com.au"
     },
-    "version": "0.28.0",
+    "version": "0.29.0",
     "x-logo": {
       "url": "https://www.binarylane.com.au/res/images/binarylane/logo.png",
       "backgroundColor": "#000000",
@@ -38,9 +38,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -80,19 +77,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -148,9 +132,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -196,19 +177,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -236,9 +204,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -278,19 +243,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -346,9 +298,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -377,9 +326,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -420,19 +366,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -488,9 +421,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -518,9 +448,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -542,9 +469,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -600,29 +524,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -661,19 +562,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -720,19 +608,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -770,19 +645,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -875,19 +737,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -946,29 +795,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1025,19 +851,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1106,29 +919,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1176,19 +966,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1260,19 +1037,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1319,19 +1083,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1372,29 +1123,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1435,19 +1163,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1499,29 +1214,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1553,19 +1245,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1621,9 +1300,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1662,19 +1338,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1714,19 +1377,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1778,29 +1428,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1831,19 +1458,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1899,9 +1513,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1940,19 +1551,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -1980,9 +1578,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -2028,29 +1623,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -2094,29 +1666,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -2162,29 +1711,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -2228,29 +1754,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -2362,19 +1865,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -2413,29 +1903,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -2489,19 +1956,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -2598,29 +2052,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -2686,19 +2117,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -2775,6 +2193,9 @@
                   },
                   {
                     "$ref": "#/components/schemas/ChangePortBlocking"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ChangeRegion"
                   },
                   {
                     "$ref": "#/components/schemas/ChangeReverseName"
@@ -2892,6 +2313,7 @@
                     "change_source_and_destination_check": "#/components/schemas/ChangeSourceAndDestinationCheck",
                     "change_separate_private_network_interface": "#/components/schemas/ChangeSeparatePrivateNetworkInterface",
                     "change_reverse_name": "#/components/schemas/ChangeReverseName",
+                    "change_region": "#/components/schemas/ChangeRegion",
                     "change_port_blocking": "#/components/schemas/ChangePortBlocking",
                     "change_partner": "#/components/schemas/ChangePartner",
                     "change_offsite_backup_location": "#/components/schemas/ChangeOffsiteBackupLocation",
@@ -2924,29 +2346,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -2985,19 +2384,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -3038,19 +2424,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -3114,9 +2487,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -3155,19 +2525,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -3217,19 +2574,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -3269,19 +2613,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -3321,19 +2652,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -3399,19 +2717,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -3462,29 +2767,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -3551,19 +2833,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -3630,19 +2899,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -3683,19 +2939,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -3723,19 +2966,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -3801,19 +3031,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -3853,19 +3070,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -3905,29 +3109,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -3960,15 +3141,8 @@
             "in": "query",
             "description": "If null or not provided regions that support the size are included in the returned objects regardless of operating system. If this is provided it must be the id or slug of an operating system image and will cause only valid regions for the size and operating system to be included in the returned objects.",
             "schema": {
-              "oneOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "string"
-                }
-              ],
-              "example": 5
+              "example": 5,
+              "type": "string"
             }
           },
           {
@@ -4008,16 +3182,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
           }
         },
         "x-codeSamples": [
@@ -4054,16 +3218,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SoftwareResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -4195,26 +3349,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
           }
         },
         "x-codeSamples": [
@@ -4255,19 +3389,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -4321,29 +3442,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -4396,29 +3494,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -4450,29 +3525,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -4528,9 +3580,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -4569,19 +3618,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -4661,19 +3697,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -4726,29 +3749,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -4801,29 +3801,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -4876,29 +3853,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -4951,29 +3905,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -5026,29 +3957,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -5101,29 +4009,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -5176,29 +4061,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -5251,29 +4113,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -5326,29 +4165,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -5401,29 +4217,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -5476,29 +4269,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -5551,29 +4321,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -5626,29 +4373,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -5701,29 +4425,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -5776,29 +4477,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -5851,29 +4529,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -5926,29 +4581,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -6001,29 +4633,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -6076,29 +4685,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -6151,29 +4737,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -6226,29 +4789,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -6301,29 +4841,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -6376,29 +4893,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -6451,29 +4945,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -6526,29 +4997,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -6558,6 +5006,58 @@
           }
         ],
         "x-cli-command": "server action change-partner"
+      }
+    },
+    "/servers/{server_id}/actions#ChangeRegion": {
+      "post": {
+        "tags": [
+          "ServerActions"
+        ],
+        "summary": "Change the Region of a Server",
+        "description": "This is used to move a server to a different region.  \nPlease check our knowledge base article for the current requirements for servers to be able to move between regions.  \n  \n",
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "description": "The ID of the server on which the action should be performed.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeRegion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Accepted"
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "Curl",
+            "source": "curl -X POST \"https://api.binarylane.com.au/v2/servers/${server_id}/actions\"  \\\n-H \"Authorization: Bearer ${APITOKEN}\"  \\\n-H \"Content-Type: application/json\" -d \"${PAYLOAD}\""
+          }
+        ],
+        "x-cli-command": "server action change-region"
       }
     },
     "/servers/{server_id}/actions#DisableSelinux": {
@@ -6601,29 +5101,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -6676,29 +5153,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -6751,29 +5205,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -6826,29 +5257,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -6901,29 +5309,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -6976,29 +5361,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -7051,29 +5413,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -7126,29 +5465,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -7201,29 +5517,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -7276,29 +5569,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -7351,29 +5621,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -7426,29 +5673,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -7501,29 +5725,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -7576,29 +5777,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -7651,29 +5829,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -7726,29 +5881,6 @@
           },
           "202": {
             "description": "Accepted"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
           }
         },
         "x-codeSamples": [
@@ -9028,6 +7160,28 @@
           }
         },
         "description": "Change the Port Blocking for a Server"
+      },
+      "ChangeRegion": {
+        "required": [
+          "region",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "minLength": 1,
+            "enum": [
+              "change_region"
+            ],
+            "type": "string"
+          },
+          "region": {
+            "minLength": 1,
+            "type": "string",
+            "description": "The slug of the selected region."
+          }
+        },
+        "description": "Change the Region of a Server"
       },
       "ChangeReverseName": {
         "required": [
@@ -10344,7 +8498,7 @@
           "display_name": {
             "minLength": 1,
             "type": "string",
-            "description": "The name for this host.",
+            "description": "The name for this host. If this is a dedicated host this property will be empty.",
             "readOnly": true
           },
           "uptime_ms": {
@@ -11481,19 +9635,28 @@
             "type": "number",
             "description": "The additional cost per GB per month for enabling daily offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected.",
             "format": "double",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "daily_per_gigabyte"
+            }
           },
           "weekly_per_gigabyte": {
             "type": "number",
             "description": "The additional cost per GB per month for enabling weekly offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected.",
             "format": "double",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "weekly_per_gigabyte"
+            }
           },
           "monthly_per_gigabyte": {
             "type": "number",
             "description": "The additional cost per GB per month for enabling monthly offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected.",
             "format": "double",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "monthly_per_gigabyte"
+            }
           }
         },
         "description": "All costs are in AU$."
@@ -11722,36 +9885,6 @@
         },
         "description": "Power a Server On"
       },
-      "ProblemDetails": {
-        "required": [
-          "title"
-        ],
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "status": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "detail": {
-            "type": "string",
-            "nullable": true
-          },
-          "instance": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": {}
-      },
       "ProceedRequest": {
         "required": [
           "proceed"
@@ -11854,14 +9987,20 @@
             "type": "string",
             "description": "The unique slug for this region.",
             "readOnly": true,
-            "x-cli-format": 1
+            "x-cli-format": 1,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "slug"
+            }
           },
           "name": {
             "minLength": 1,
             "type": "string",
             "description": "The name of this region.",
             "readOnly": true,
-            "x-cli-format": 2
+            "x-cli-format": 2,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "name"
+            }
           },
           "sizes": {
             "type": "array",
@@ -11869,12 +10008,18 @@
               "type": "string"
             },
             "description": "The slugs of the sizes available in this region.",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "sizes"
+            }
           },
           "available": {
             "type": "boolean",
             "description": "Whether this region is available for the allocation of new resources.",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "available"
+            }
           },
           "features": {
             "type": "array",
@@ -11882,7 +10027,10 @@
               "type": "string"
             },
             "description": "A list of features available for resources in this region.",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "features"
+            }
           },
           "name_servers": {
             "type": "array",
@@ -11890,7 +10038,10 @@
               "type": "string"
             },
             "description": "A list of nameservers available for resources in this region.",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "name_servers"
+            }
           }
         }
       },
@@ -12715,6 +10866,9 @@
             "$ref": "#/components/schemas/ChangePortBlocking"
           },
           {
+            "$ref": "#/components/schemas/ChangeRegion"
+          },
+          {
             "$ref": "#/components/schemas/ChangeReverseName"
           },
           {
@@ -12821,6 +10975,7 @@
             "change_offsite_backup_location": "#/components/schemas/ChangeOffsiteBackupLocation",
             "change_partner": "#/components/schemas/ChangePartner",
             "change_port_blocking": "#/components/schemas/ChangePortBlocking",
+            "change_region": "#/components/schemas/ChangeRegion",
             "change_reverse_name": "#/components/schemas/ChangeReverseName",
             "change_separate_private_network_interface": "#/components/schemas/ChangeSeparatePrivateNetworkInterface",
             "change_source_and_destination_check": "#/components/schemas/ChangeSourceAndDestinationCheck",
@@ -12970,25 +11125,37 @@
             "type": "string",
             "description": "The slug of this size.",
             "readOnly": true,
-            "x-cli-format": 1
+            "x-cli-format": 1,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "slug"
+            }
           },
           "description": {
             "type": "string",
             "description": "A description of this size.",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "description"
+            }
           },
           "cpu_description": {
             "type": "string",
             "description": "A description of the CPU provided in this size.",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "cpu_description"
+            }
           },
           "storage_description": {
             "type": "string",
             "description": "A description of the storage provided in this size.",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "storage_description"
+            }
           },
           "size_type": {
             "allOf": [
@@ -12998,12 +11165,18 @@
             ],
             "description": "The type of this size, generally used to differentiate sizes optimized for different usages.",
             "readOnly": true,
-            "x-cli-format": 2
+            "x-cli-format": 2,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "size_type"
+            }
           },
           "available": {
             "type": "boolean",
             "description": "If this is false the size is not available for new servers.",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "available"
+            }
           },
           "regions": {
             "type": "array",
@@ -13011,7 +11184,10 @@
               "type": "string"
             },
             "description": "A list of region slugs where this size is available regardless of stock.\nIf this a response to a query that included a selected operating system this response will only include regions where that operating system is available on this size,\notherwise not all regions listed will support all operating systems on this size.",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "regions"
+            }
           },
           "regions_out_of_stock": {
             "type": "array",
@@ -13020,61 +11196,88 @@
             },
             "description": "A list of region slugs where the size is normally available but is currently not available due to lack of stock.",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "regions_out_of_stock"
+            }
           },
           "price_monthly": {
             "type": "number",
             "description": "Monthly Price in AU$.",
             "format": "double",
             "readOnly": true,
-            "x-cli-format": 8
+            "x-cli-format": 8,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "price_monthly"
+            }
           },
           "price_hourly": {
             "type": "number",
             "description": "Hourly price in AU$.",
             "format": "double",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "price_hourly"
+            }
           },
           "disk": {
             "type": "integer",
             "description": "The included storage for this size in GB.",
             "format": "int32",
             "readOnly": true,
-            "x-cli-format": 6
+            "x-cli-format": 6,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "disk"
+            }
           },
           "memory": {
             "type": "integer",
             "description": "The included memory for this size in MB.",
             "format": "int32",
             "readOnly": true,
-            "x-cli-format": 5
+            "x-cli-format": 5,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "memory"
+            }
           },
           "transfer": {
             "type": "number",
             "description": "The included data transfer for this size in TB.",
             "format": "double",
             "readOnly": true,
-            "x-cli-format": 7
+            "x-cli-format": 7,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "transfer"
+            }
           },
           "excess_transfer_cost_per_gigabyte": {
             "type": "number",
             "description": "The excess charged for any transfer above the included data transfer in AU$ per GB.",
             "format": "double",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "excess_transfer_cost_per_gigabyte"
+            }
           },
           "vcpus": {
             "type": "integer",
             "description": "The count of virtual CPUs for this size. See vcpu_units for a description of how each virtual CPU maps to the underlying hardware.",
             "format": "int32",
             "readOnly": true,
-            "x-cli-format": 3
+            "x-cli-format": 3,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "vcpus"
+            }
           },
           "vcpu_units": {
             "minLength": 1,
             "type": "string",
             "description": "This is the unit that the vcpus field counts, e.g. \"core\" or \"thread\".",
             "readOnly": true,
-            "x-cli-format": 4
+            "x-cli-format": 4,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "vcpu_units"
+            }
           },
           "options": {
             "allOf": [
@@ -13082,7 +11285,10 @@
                 "$ref": "#/components/schemas/SizeOptions"
               }
             ],
-            "description": "Available add-ons (optional features not included in the base price) for the size. All costs are in AU$ per month (pro-rated)."
+            "description": "Available add-ons (optional features not included in the base price) for the size. All costs are in AU$ per month (pro-rated).",
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "options"
+            }
           }
         }
       },
@@ -13111,19 +11317,28 @@
             "type": "integer",
             "description": "The minimum storage in GB permitted on this size.",
             "format": "int32",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "disk_min"
+            }
           },
           "disk_max": {
             "type": "integer",
             "description": "The maximum storage in GB permitted on this size.",
             "format": "int32",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "disk_max"
+            }
           },
           "disk_cost_per_additional_gigabyte": {
             "type": "number",
             "description": "The additional cost per GB per month for additional storage space.",
             "format": "double",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "disk_cost_per_additional_gigabyte"
+            }
           },
           "restricted_disk_values": {
             "type": "array",
@@ -13133,79 +11348,118 @@
             },
             "description": "If this is null the normal valid values in the documentation for SizeOptionsRequest are used, otherwise only these values (in GB) are permitted.",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "restricted_disk_values"
+            }
           },
           "memory_max": {
             "type": "integer",
             "description": "The maximum memory in MB permitted on this size.",
             "format": "int32",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "memory_max"
+            }
           },
           "memory_cost_per_additional_megabyte": {
             "type": "number",
             "description": "The additional cost per MB per month for additional memory.",
             "format": "double",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "memory_cost_per_additional_megabyte"
+            }
           },
           "transfer_max": {
             "type": "number",
             "description": "The maximum transfer in TB permitted for this size.",
             "format": "double",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "transfer_max"
+            }
           },
           "transfer_cost_per_additional_gigabyte": {
             "type": "number",
             "description": "The additional cost per GB per month for additional included transfer.",
             "format": "double",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "transfer_cost_per_additional_gigabyte"
+            }
           },
           "ipv4_addresses_max": {
             "type": "integer",
             "description": "The maximum number of IPv4 addresses permitted on this size.",
             "format": "int32",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "ipv4_addresses_max"
+            }
           },
           "ipv4_addresses_cost_per_address": {
             "type": "number",
             "description": "The additional cost per public IPv4 address per month for additional IPv4 addresses.",
             "format": "double",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "ipv4_addresses_cost_per_address"
+            }
           },
           "discount_for_no_public_ipv4": {
             "type": "number",
             "description": "This is the discount (if any) that is applied if no public IPv4 addresses are selected.",
             "format": "double",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "discount_for_no_public_ipv4"
+            }
           },
           "daily_backups": {
             "type": "integer",
             "description": "The number of daily backups included in the base size cost.",
             "format": "int32",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "daily_backups"
+            }
           },
           "weekly_backups": {
             "type": "integer",
             "description": "The number of weekly backups included in the base size cost.",
             "format": "int32",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "weekly_backups"
+            }
           },
           "monthly_backups": {
             "type": "integer",
             "description": "The number of monthly backups included in the base size cost.",
             "format": "int32",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "monthly_backups"
+            }
           },
           "backups_cost_per_backup_per_gigabyte": {
             "type": "number",
             "description": "The cost per GB of storage of each selected backup. See the API support document for how to calculate the final cost of backups based on the options selected.",
             "format": "double",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "backups_cost_per_backup_per_gigabyte"
+            }
           },
           "offsite_backups_cost_per_gigabyte": {
             "type": "number",
             "description": "The additional cost per GB of storage for enabling offsite backups. See the API support document for how to calculate the final cost of backups based on the options selected.",
             "format": "double",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "offsite_backups_cost_per_gigabyte"
+            }
           },
           "offsite_backup_frequency_cost": {
             "allOf": [
@@ -13214,7 +11468,10 @@
               }
             ],
             "description": "The additional cost per GB of storage for enabling offsite backups based on highest frequency of backups currently enabled. All costs are in AU$.",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "offsite_backup_frequency_cost"
+            }
           }
         },
         "description": "Available add-ons (optional features not included in the base price) for the size. All costs are per month (pro-rated)."
@@ -13290,19 +11547,28 @@
             "minLength": 1,
             "type": "string",
             "description": "The slug of this size type.",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "slug"
+            }
           },
           "name": {
             "minLength": 1,
             "type": "string",
             "description": "The name of this size type.",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "name"
+            }
           },
           "description": {
             "type": "string",
             "description": "The description of this size type, generally used to indicate the intended use case for sizes of this type.",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "description"
+            }
           }
         }
       },
@@ -14045,47 +12311,6 @@
           "Whether we should assume the server creation was successful despite failing to ping the server.",
           "Whether we are permitted to perform an un-clean power off after the server failed to perform a clean shutdown."
         ]
-      },
-      "ValidationProblemDetails": {
-        "required": [
-          "errors",
-          "title"
-        ],
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "status": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "detail": {
-            "type": "string",
-            "nullable": true
-          },
-          "instance": {
-            "type": "string",
-            "nullable": true
-          },
-          "errors": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": {}
       },
       "VideoDevice": {
         "enum": [

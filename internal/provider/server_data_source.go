@@ -68,7 +68,7 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 		return
 	}
 	resp.Schema = *ds
-	resp.Schema.Description = "Retrieve details about a BinaryLane Load Balancer."
+	resp.Schema.Description = "Retrieve details about a BinaryLane Server."
 
 	// Overrides
 	id := resp.Schema.Attributes["id"]

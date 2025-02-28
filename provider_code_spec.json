@@ -434,7 +434,7 @@
 										}
 									},
 									{
-										"name": "options1",
+										"name": "options",
 										"single_nested": {
 											"computed_optional_required": "computed",
 											"attributes": [
