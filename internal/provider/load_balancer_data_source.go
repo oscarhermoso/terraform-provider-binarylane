@@ -62,7 +62,7 @@ func (d *loadBalancerDataSource) Schema(ctx context.Context, req datasource.Sche
 		return
 	}
 	resp.Schema = *ds
-	// resp.Schema.Description = "TODO"
+	resp.Schema.Description = "Retrieve details about a BinaryLane Load Balancer."
 }
 
 func (d *loadBalancerDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

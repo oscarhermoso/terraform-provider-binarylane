@@ -3,12 +3,12 @@
 page_title: "binarylane_load_balancer Data Source - terraform-provider-binarylane"
 subcategory: ""
 description: |-
-  
+  Retrieve details about a BinaryLane Load Balancer.
 ---
 
 # binarylane_load_balancer (Data Source)
 
-
+Retrieve details about a BinaryLane Load Balancer.
 
 ## Example Usage
 

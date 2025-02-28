@@ -7,15 +7,7 @@ terraform {
 }
 
 provider "binarylane" {
-  # api_token = "" # Recommend setting with environment variable BINARYLANE_API_TOKEN
-}
+  api_token = var.binarylane_api_token
 
-# Create a new server
-resource "binarylane_server" "example" {
-  name              = "tf-example-basic"
-  region            = "per" # or "syd", "mel", "bne", "sin"
-  image             = "ubuntu-24.04"
-  size              = "std-min"
-  public_ipv4_count = 1
-  # ...
+  # Or, set environment variable BINARYLANE_API_TOKEN
 }

@@ -3,12 +3,12 @@
 page_title: "binarylane_server Data Source - terraform-provider-binarylane"
 subcategory: ""
 description: |-
-  Provides a Binary Lane Server data source. This can be used to read existing server details.
+  Retrieve details about a BinaryLane Server.
 ---
 
 # binarylane_server (Data Source)
 
-Provides a Binary Lane Server data source. This can be used to read existing server details.
+Retrieve details about a BinaryLane Server.
 
 ## Example Usage
 

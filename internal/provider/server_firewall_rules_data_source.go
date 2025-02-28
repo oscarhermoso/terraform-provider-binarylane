@@ -43,7 +43,7 @@ func (d *serverFirewallRulesDataSource) Schema(ctx context.Context, req datasour
 		return
 	}
 	resp.Schema = *ds
-	// resp.Schema.Description = "TODO"
+	resp.Schema.Description = "Retrieve details about the External Firewall Rules assigned to a BinaryLane server."
 }
 
 func (d *serverFirewallRulesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

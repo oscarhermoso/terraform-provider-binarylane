@@ -67,7 +67,7 @@ go generate
 ```sh
 tfplugingen-framework scaffold resource \
     --output-dir ./internal/provider \
-    --name REPLACE_ME
+    --name REPLACE_ME # eg. server
 ```
 
 ```sh
@@ -163,8 +163,8 @@ Define the interfaces that the data source should implement:
 Add the API client to the data source:
 
 ```diff
-- type exampleResource struct{}
-+ type exampleResource struct {
+- type exampleDataSource struct{}
++ type exampleDataSource struct {
 + 	bc *BinarylaneClient
 + }
 ```

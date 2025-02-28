@@ -140,6 +140,11 @@ const (
 	ChangePortBlockingTypeChangePortBlocking ChangePortBlockingType = "change_port_blocking"
 )
 
+// Defines values for ChangeRegionType.
+const (
+	ChangeRegionTypeChangeRegion ChangeRegionType = "change_region"
+)
+
 // Defines values for ChangeReverseNameType.
 const (
 	ChangeReverseNameTypeChangeReverseName ChangeReverseNameType = "change_reverse_name"
@@ -230,12 +235,6 @@ const (
 	EnableIpv6TypeEnableIpv6 EnableIpv6Type = "enable_ipv6"
 )
 
-// Defines values for ImageQueryType.
-const (
-	ImageQueryTypeBackup       ImageQueryType = "backup"
-	ImageQueryTypeDistribution ImageQueryType = "distribution"
-)
-
 // Defines values for ImageStatus.
 const (
 	Available ImageStatus = "available"
@@ -246,9 +245,9 @@ const (
 
 // Defines values for ImageType.
 const (
-	ImageTypeBackup   ImageType = "backup"
-	ImageTypeCustom   ImageType = "custom"
-	ImageTypeSnapshot ImageType = "snapshot"
+	Backup   ImageType = "backup"
+	Custom   ImageType = "custom"
+	Snapshot ImageType = "snapshot"
 )
 
 // Defines values for IsRunningType.
@@ -948,6 +947,16 @@ type ChangePortBlocking struct {
 // ChangePortBlockingType defines model for ChangePortBlocking.Type.
 type ChangePortBlockingType string
 
+// ChangeRegion Change the Region of a Server
+type ChangeRegion struct {
+	// Region The slug of the selected region.
+	Region string           `json:"region"`
+	Type   ChangeRegionType `json:"type"`
+}
+
+// ChangeRegionType defines model for ChangeRegion.Type.
+type ChangeRegionType string
+
 // ChangeReverseName Change the Reverse Name for an IPv4 Address on a Server
 type ChangeReverseName struct {
 	// Ipv4Address The IPv4 address to set or clear the reverse name for.
@@ -1304,10 +1313,10 @@ type DistributionFeature string
 // DistributionInfo defines model for DistributionInfo.
 type DistributionInfo struct {
 	// Features Features supported by this distribution.
-	Features *[]DistributionFeature `json:"features,omitempty"`
+	Features *[]DistributionFeature `json:"features,omitempty" tfsdk:"features"`
 
 	// ImageId If this is a backup image, the operating system ID of the server at the time the backup was created.
-	ImageId *int64 `json:"image_id,omitempty"`
+	ImageId *int64 `json:"image_id,omitempty" tfsdk:"image_id"`
 
 	// PasswordRecovery Supported methods of password recovery.
 	//
@@ -1318,28 +1327,28 @@ type DistributionInfo struct {
 	// | offline-change | Password can be reset and new credentials sent (Requires restart). |
 	// | online-change | Password may be reset without requiring a reboot via installed QEMU Guest Agent. |
 	//
-	PasswordRecovery *PasswordRecoveryType `json:"password_recovery,omitempty"`
+	PasswordRecovery *PasswordRecoveryType `json:"password_recovery,omitempty" tfsdk:"password_recovery"`
 
 	// RemoteAccessUser User name to use when connecting via remote access (RDP or SSH).
-	RemoteAccessUser *string `json:"remote_access_user"`
+	RemoteAccessUser *string `json:"remote_access_user" tfsdk:"remote_access_user"`
 }
 
 // DistributionSurcharges defines model for DistributionSurcharges.
 type DistributionSurcharges struct {
 	// SurchargeBaseCost The additional cost for using this operating system as the base image for a size.
-	SurchargeBaseCost *float64 `json:"surcharge_base_cost"`
+	SurchargeBaseCost *float64 `json:"surcharge_base_cost" tfsdk:"surcharge_base_cost"`
 
 	// SurchargeMinVcpu The minimum vcpu count for surcharge calculations.
-	SurchargeMinVcpu *int32 `json:"surcharge_min_vcpu"`
+	SurchargeMinVcpu *int32 `json:"surcharge_min_vcpu" tfsdk:"surcharge_min_vcpu"`
 
 	// SurchargePerMemoryMaxMegabytes The maximum memory in MB that counts towards the surcharge_per_memory_mb. Any memory above this cap does not attract the surcharge.
-	SurchargePerMemoryMaxMegabytes *int32 `json:"surcharge_per_memory_max_megabytes"`
+	SurchargePerMemoryMaxMegabytes *int32 `json:"surcharge_per_memory_max_megabytes" tfsdk:"surcharge_per_memory_max_megabytes"`
 
 	// SurchargePerMemoryMegabyte The additional cost per MB for using this operating system as the base image for a size.
-	SurchargePerMemoryMegabyte *float64 `json:"surcharge_per_memory_megabyte"`
+	SurchargePerMemoryMegabyte *float64 `json:"surcharge_per_memory_megabyte" tfsdk:"surcharge_per_memory_megabyte"`
 
 	// SurchargePerVcpu The additional cost per vcpu for using this operating system as the base image for a size.
-	SurchargePerVcpu *float64 `json:"surcharge_per_vcpu"`
+	SurchargePerVcpu *float64 `json:"surcharge_per_vcpu" tfsdk:"surcharge_per_vcpu"`
 }
 
 // Domain defines model for Domain.
@@ -1534,7 +1543,7 @@ type HealthCheckProtocol = string
 
 // Host defines model for Host.
 type Host struct {
-	// DisplayName The name for this host.
+	// DisplayName The name for this host. If this is a dedicated host this property will be empty.
 	DisplayName *string `json:"display_name,omitempty"`
 
 	// StatusPage This is the URL of the status page of the host. This will normally only be set if the host is under maintenance.
@@ -1547,54 +1556,54 @@ type Host struct {
 // Image defines model for Image.
 type Image struct {
 	// BackupInfo If this image is a backup, this object will provide further information.
-	BackupInfo *BackupInfo `json:"backup_info"`
+	BackupInfo *BackupInfo `json:"backup_info" tfsdk:"backup_info"`
 
 	// CreatedAt If this is a backup image this is the date and time in ISO8601 format when the image was created.
-	CreatedAt *time.Time `json:"created_at"`
+	CreatedAt *time.Time `json:"created_at" tfsdk:"created_at"`
 
 	// Description A description that may provide further details or warnings about the image.
-	Description *string `json:"description"`
+	Description *string `json:"description" tfsdk:"description"`
 
 	// Distribution If this is an operating system image, this is the name of the distribution. If this is a backup image, this is the name of the distribution the server is using.
-	Distribution *string `json:"distribution"`
+	Distribution *string `json:"distribution" tfsdk:"distribution"`
 
 	// DistributionInfo This object may provide further information about the distribution.
-	DistributionInfo *DistributionInfo `json:"distribution_info,omitempty"`
+	DistributionInfo *DistributionInfo `json:"distribution_info,omitempty" tfsdk:"distribution_info"`
 
 	// DistributionSurcharges If this is not null the use of this image may incur surcharges above the base cost of the server. All costs are in AU$.
-	DistributionSurcharges *DistributionSurcharges `json:"distribution_surcharges"`
+	DistributionSurcharges *DistributionSurcharges `json:"distribution_surcharges" tfsdk:"distribution_surcharges"`
 
 	// ErrorMessage If the image creation failed this may provide further information.
-	ErrorMessage *string `json:"error_message"`
+	ErrorMessage *string `json:"error_message" tfsdk:"error_message"`
 
 	// FullName If this is an operating system image, this is the name and version of the distribution. If this is a backup image, this is the server hostname and label of the backup if it exists, otherwise it is the server hostname and UTC timestamp of the creation of the image.
-	FullName *string `json:"full_name"`
+	FullName *string `json:"full_name" tfsdk:"full_name"`
 
 	// Id The ID of this image.
-	Id *int64 `json:"id,omitempty"`
+	Id *int64 `json:"id,omitempty" tfsdk:"id"`
 
 	// MinDiskSize For a distribution image this is the minimum disk size in GB required to install the operating system. For a backup image this is the minimum total disk size in GB required to restore the backup.
-	MinDiskSize *int32 `json:"min_disk_size,omitempty"`
+	MinDiskSize *int32 `json:"min_disk_size,omitempty" tfsdk:"min_disk_size"`
 
 	// MinMemoryMegabytes This is minimum memory in MB necessary to support this operating system (or the base operating system for a backup image).
-	MinMemoryMegabytes *int32 `json:"min_memory_megabytes"`
+	MinMemoryMegabytes *int32 `json:"min_memory_megabytes" tfsdk:"min_memory_megabytes"`
 
 	// Name If this is an operating system image, this is the name of the operating system version. If this is a backup image, this is the label of the backup if it exists, otherwise it is the UTC timestamp of the creation of the image.
-	Name *string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty" tfsdk:"name"`
 
 	// Public A public image is available to all users. A private image is available only to the account that created the image.
-	Public *bool `json:"public,omitempty"`
+	Public *bool `json:"public,omitempty" tfsdk:"public"`
 
 	// Regions The slugs of the regions where the image is available for use.
-	Regions *[]string `json:"regions,omitempty"`
+	Regions *[]string `json:"regions,omitempty" tfsdk:"regions"`
 
 	// SizeGigabytes For a distribution image this is the disk size used in GB by the operating system on initial install. For a backup image this is the size of the compressed backup image in GB.
-	SizeGigabytes *float64 `json:"size_gigabytes,omitempty"`
+	SizeGigabytes *float64 `json:"size_gigabytes,omitempty" tfsdk:"size_gigabytes"`
 
 	// Slug If this is an operating system image this is a slug which may be used as an alternative to the ID as a reference.
-	Slug   *string      `json:"slug"`
-	Status *ImageStatus `json:"status,omitempty"`
-	Type   *ImageType   `json:"type,omitempty"`
+	Slug   *string      `json:"slug" tfsdk:"slug"`
+	Status *ImageStatus `json:"status,omitempty" tfsdk:"status"`
+	Type   *ImageType   `json:"type,omitempty" tfsdk:"type"`
 }
 
 // ImageDiskDownload defines model for ImageDiskDownload.
@@ -1642,13 +1651,6 @@ type ImageOptions struct {
 	// UserData If provided this will be used to initialise the new server. This must be left null if the Image does not support UserData, see DistributionInfo.Features for more information.
 	UserData *string `json:"user_data"`
 }
-
-// ImageQueryType
-// | Value | Description |
-// | ----- | ----------- |
-// | distribution | Base operating system images. |
-// | backup | A backup image of a server. |
-type ImageQueryType string
 
 // ImageResponse defines model for ImageResponse.
 type ImageResponse struct {
@@ -1967,13 +1969,13 @@ type Networks struct {
 // OffsiteBackupFrequencyCost All costs are in AU$.
 type OffsiteBackupFrequencyCost struct {
 	// DailyPerGigabyte The additional cost per GB per month for enabling daily offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected.
-	DailyPerGigabyte *float64 `json:"daily_per_gigabyte,omitempty"`
+	DailyPerGigabyte *float64 `json:"daily_per_gigabyte,omitempty" tfsdk:"daily_per_gigabyte"`
 
 	// MonthlyPerGigabyte The additional cost per GB per month for enabling monthly offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected.
-	MonthlyPerGigabyte *float64 `json:"monthly_per_gigabyte,omitempty"`
+	MonthlyPerGigabyte *float64 `json:"monthly_per_gigabyte,omitempty" tfsdk:"monthly_per_gigabyte"`
 
 	// WeeklyPerGigabyte The additional cost per GB per month for enabling weekly offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected.
-	WeeklyPerGigabyte *float64 `json:"weekly_per_gigabyte,omitempty"`
+	WeeklyPerGigabyte *float64 `json:"weekly_per_gigabyte,omitempty" tfsdk:"weekly_per_gigabyte"`
 }
 
 // OffsiteBackupSettings defines model for OffsiteBackupSettings.
@@ -2101,16 +2103,6 @@ type PowerOn struct {
 // PowerOnType defines model for PowerOn.Type.
 type PowerOnType string
 
-// ProblemDetails defines model for ProblemDetails.
-type ProblemDetails struct {
-	Detail               *string                `json:"detail"`
-	Instance             *string                `json:"instance"`
-	Status               *int32                 `json:"status"`
-	Title                *string                `json:"title"`
-	Type                 *string                `json:"type"`
-	AdditionalProperties map[string]interface{} `json:"-"`
-}
-
 // ProceedRequest defines model for ProceedRequest.
 type ProceedRequest struct {
 	// Proceed Please see the documentation for each type of interaction for the effect of providing 'true' or 'false' here.
@@ -2153,22 +2145,22 @@ type RebuildType string
 // Region defines model for Region.
 type Region struct {
 	// Available Whether this region is available for the allocation of new resources.
-	Available *bool `json:"available,omitempty"`
+	Available *bool `json:"available,omitempty" tfsdk:"available"`
 
 	// Features A list of features available for resources in this region.
-	Features *[]string `json:"features,omitempty"`
+	Features *[]string `json:"features,omitempty" tfsdk:"features"`
 
 	// Name The name of this region.
-	Name *string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty" tfsdk:"name"`
 
 	// NameServers A list of nameservers available for resources in this region.
-	NameServers *[]string `json:"name_servers,omitempty"`
+	NameServers *[]string `json:"name_servers,omitempty" tfsdk:"name_servers"`
 
 	// Sizes The slugs of the sizes available in this region.
-	Sizes *[]string `json:"sizes,omitempty"`
+	Sizes *[]string `json:"sizes,omitempty" tfsdk:"sizes"`
 
 	// Slug The unique slug for this region.
-	Slug *string `json:"slug,omitempty"`
+	Slug *string `json:"slug,omitempty" tfsdk:"slug"`
 }
 
 // RegionsResponse defines model for RegionsResponse.
@@ -2519,111 +2511,111 @@ type ShutdownType string
 // Size defines model for Size.
 type Size struct {
 	// Available If this is false the size is not available for new servers.
-	Available *bool `json:"available,omitempty"`
+	Available *bool `json:"available,omitempty" tfsdk:"available"`
 
 	// CpuDescription A description of the CPU provided in this size.
-	CpuDescription *string `json:"cpu_description"`
+	CpuDescription *string `json:"cpu_description" tfsdk:"cpu_description"`
 
 	// Description A description of this size.
-	Description *string `json:"description"`
+	Description *string `json:"description" tfsdk:"description"`
 
 	// Disk The included storage for this size in GB.
-	Disk *int32 `json:"disk,omitempty"`
+	Disk *int32 `json:"disk,omitempty" tfsdk:"disk"`
 
 	// ExcessTransferCostPerGigabyte The excess charged for any transfer above the included data transfer in AU$ per GB.
-	ExcessTransferCostPerGigabyte *float64 `json:"excess_transfer_cost_per_gigabyte,omitempty"`
+	ExcessTransferCostPerGigabyte *float64 `json:"excess_transfer_cost_per_gigabyte,omitempty" tfsdk:"excess_transfer_cost_per_gigabyte"`
 
 	// Memory The included memory for this size in MB.
-	Memory *int32 `json:"memory,omitempty"`
+	Memory *int32 `json:"memory,omitempty" tfsdk:"memory"`
 
 	// Options Available add-ons (optional features not included in the base price) for the size. All costs are in AU$ per month (pro-rated).
-	Options SizeOptions `json:"options"`
+	Options SizeOptions `json:"options" tfsdk:"options"`
 
 	// PriceHourly Hourly price in AU$.
-	PriceHourly *float64 `json:"price_hourly,omitempty"`
+	PriceHourly *float64 `json:"price_hourly,omitempty" tfsdk:"price_hourly"`
 
 	// PriceMonthly Monthly Price in AU$.
-	PriceMonthly *float64 `json:"price_monthly,omitempty"`
+	PriceMonthly *float64 `json:"price_monthly,omitempty" tfsdk:"price_monthly"`
 
 	// Regions A list of region slugs where this size is available regardless of stock.
 	// If this a response to a query that included a selected operating system this response will only include regions where that operating system is available on this size,
 	// otherwise not all regions listed will support all operating systems on this size.
-	Regions *[]string `json:"regions,omitempty"`
+	Regions *[]string `json:"regions,omitempty" tfsdk:"regions"`
 
 	// RegionsOutOfStock A list of region slugs where the size is normally available but is currently not available due to lack of stock.
-	RegionsOutOfStock *[]string `json:"regions_out_of_stock"`
+	RegionsOutOfStock *[]string `json:"regions_out_of_stock" tfsdk:"regions_out_of_stock"`
 
 	// SizeType The type of this size, generally used to differentiate sizes optimized for different usages.
-	SizeType *SizeType `json:"size_type,omitempty"`
+	SizeType *SizeType `json:"size_type,omitempty" tfsdk:"size_type"`
 
 	// Slug The slug of this size.
-	Slug *string `json:"slug,omitempty"`
+	Slug *string `json:"slug,omitempty" tfsdk:"slug"`
 
 	// StorageDescription A description of the storage provided in this size.
-	StorageDescription *string `json:"storage_description"`
+	StorageDescription *string `json:"storage_description" tfsdk:"storage_description"`
 
 	// Transfer The included data transfer for this size in TB.
-	Transfer *float64 `json:"transfer,omitempty"`
+	Transfer *float64 `json:"transfer,omitempty" tfsdk:"transfer"`
 
 	// VcpuUnits This is the unit that the vcpus field counts, e.g. "core" or "thread".
-	VcpuUnits *string `json:"vcpu_units,omitempty"`
+	VcpuUnits *string `json:"vcpu_units,omitempty" tfsdk:"vcpu_units"`
 
 	// Vcpus The count of virtual CPUs for this size. See vcpu_units for a description of how each virtual CPU maps to the underlying hardware.
-	Vcpus *int32 `json:"vcpus,omitempty"`
+	Vcpus *int32 `json:"vcpus,omitempty" tfsdk:"vcpus"`
 }
 
 // SizeOptions Available add-ons (optional features not included in the base price) for the size. All costs are per month (pro-rated).
 type SizeOptions struct {
 	// BackupsCostPerBackupPerGigabyte The cost per GB of storage of each selected backup. See the API support document for how to calculate the final cost of backups based on the options selected.
-	BackupsCostPerBackupPerGigabyte *float64 `json:"backups_cost_per_backup_per_gigabyte,omitempty"`
+	BackupsCostPerBackupPerGigabyte *float64 `json:"backups_cost_per_backup_per_gigabyte,omitempty" tfsdk:"backups_cost_per_backup_per_gigabyte"`
 
 	// DailyBackups The number of daily backups included in the base size cost.
-	DailyBackups *int32 `json:"daily_backups,omitempty"`
+	DailyBackups *int32 `json:"daily_backups,omitempty" tfsdk:"daily_backups"`
 
 	// DiscountForNoPublicIpv4 This is the discount (if any) that is applied if no public IPv4 addresses are selected.
-	DiscountForNoPublicIpv4 *float64 `json:"discount_for_no_public_ipv4,omitempty"`
+	DiscountForNoPublicIpv4 *float64 `json:"discount_for_no_public_ipv4,omitempty" tfsdk:"discount_for_no_public_ipv4"`
 
 	// DiskCostPerAdditionalGigabyte The additional cost per GB per month for additional storage space.
-	DiskCostPerAdditionalGigabyte *float64 `json:"disk_cost_per_additional_gigabyte,omitempty"`
+	DiskCostPerAdditionalGigabyte *float64 `json:"disk_cost_per_additional_gigabyte,omitempty" tfsdk:"disk_cost_per_additional_gigabyte"`
 
 	// DiskMax The maximum storage in GB permitted on this size.
-	DiskMax *int32 `json:"disk_max,omitempty"`
+	DiskMax *int32 `json:"disk_max,omitempty" tfsdk:"disk_max"`
 
 	// DiskMin The minimum storage in GB permitted on this size.
-	DiskMin *int32 `json:"disk_min,omitempty"`
+	DiskMin *int32 `json:"disk_min,omitempty" tfsdk:"disk_min"`
 
 	// Ipv4AddressesCostPerAddress The additional cost per public IPv4 address per month for additional IPv4 addresses.
-	Ipv4AddressesCostPerAddress *float64 `json:"ipv4_addresses_cost_per_address,omitempty"`
+	Ipv4AddressesCostPerAddress *float64 `json:"ipv4_addresses_cost_per_address,omitempty" tfsdk:"ipv4_addresses_cost_per_address"`
 
 	// Ipv4AddressesMax The maximum number of IPv4 addresses permitted on this size.
-	Ipv4AddressesMax *int32 `json:"ipv4_addresses_max,omitempty"`
+	Ipv4AddressesMax *int32 `json:"ipv4_addresses_max,omitempty" tfsdk:"ipv4_addresses_max"`
 
 	// MemoryCostPerAdditionalMegabyte The additional cost per MB per month for additional memory.
-	MemoryCostPerAdditionalMegabyte *float64 `json:"memory_cost_per_additional_megabyte,omitempty"`
+	MemoryCostPerAdditionalMegabyte *float64 `json:"memory_cost_per_additional_megabyte,omitempty" tfsdk:"memory_cost_per_additional_megabyte"`
 
 	// MemoryMax The maximum memory in MB permitted on this size.
-	MemoryMax *int32 `json:"memory_max,omitempty"`
+	MemoryMax *int32 `json:"memory_max,omitempty" tfsdk:"memory_max"`
 
 	// MonthlyBackups The number of monthly backups included in the base size cost.
-	MonthlyBackups *int32 `json:"monthly_backups,omitempty"`
+	MonthlyBackups *int32 `json:"monthly_backups,omitempty" tfsdk:"monthly_backups"`
 
 	// OffsiteBackupFrequencyCost The additional cost per GB of storage for enabling offsite backups based on highest frequency of backups currently enabled. All costs are in AU$.
-	OffsiteBackupFrequencyCost *OffsiteBackupFrequencyCost `json:"offsite_backup_frequency_cost,omitempty"`
+	OffsiteBackupFrequencyCost *OffsiteBackupFrequencyCost `json:"offsite_backup_frequency_cost,omitempty" tfsdk:"offsite_backup_frequency_cost"`
 
 	// OffsiteBackupsCostPerGigabyte The additional cost per GB of storage for enabling offsite backups. See the API support document for how to calculate the final cost of backups based on the options selected.
-	OffsiteBackupsCostPerGigabyte *float64 `json:"offsite_backups_cost_per_gigabyte,omitempty"`
+	OffsiteBackupsCostPerGigabyte *float64 `json:"offsite_backups_cost_per_gigabyte,omitempty" tfsdk:"offsite_backups_cost_per_gigabyte"`
 
 	// RestrictedDiskValues If this is null the normal valid values in the documentation for SizeOptionsRequest are used, otherwise only these values (in GB) are permitted.
-	RestrictedDiskValues *[]int32 `json:"restricted_disk_values"`
+	RestrictedDiskValues *[]int32 `json:"restricted_disk_values" tfsdk:"restricted_disk_values"`
 
 	// TransferCostPerAdditionalGigabyte The additional cost per GB per month for additional included transfer.
-	TransferCostPerAdditionalGigabyte *float64 `json:"transfer_cost_per_additional_gigabyte,omitempty"`
+	TransferCostPerAdditionalGigabyte *float64 `json:"transfer_cost_per_additional_gigabyte,omitempty" tfsdk:"transfer_cost_per_additional_gigabyte"`
 
 	// TransferMax The maximum transfer in TB permitted for this size.
-	TransferMax *float64 `json:"transfer_max,omitempty"`
+	TransferMax *float64 `json:"transfer_max,omitempty" tfsdk:"transfer_max"`
 
 	// WeeklyBackups The number of weekly backups included in the base size cost.
-	WeeklyBackups *int32 `json:"weekly_backups,omitempty"`
+	WeeklyBackups *int32 `json:"weekly_backups,omitempty" tfsdk:"weekly_backups"`
 }
 
 // SizeOptionsRequest defines model for SizeOptionsRequest.
@@ -2679,13 +2671,13 @@ type SizeOptionsRequest struct {
 // SizeType defines model for SizeType.
 type SizeType struct {
 	// Description The description of this size type, generally used to indicate the intended use case for sizes of this type.
-	Description *string `json:"description"`
+	Description *string `json:"description" tfsdk:"description"`
 
 	// Name The name of this size type.
-	Name *string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty" tfsdk:"name"`
 
 	// Slug The slug of this size type.
-	Slug *string `json:"slug,omitempty"`
+	Slug *string `json:"slug,omitempty" tfsdk:"slug"`
 }
 
 // SizesResponse defines model for SizesResponse.
@@ -2986,17 +2978,6 @@ type UserInteractionRequired struct {
 // | allow-unclean-power-off | Whether we are permitted to perform an un-clean power off after the server failed to perform a clean shutdown. |
 type UserInteractionType string
 
-// ValidationProblemDetails defines model for ValidationProblemDetails.
-type ValidationProblemDetails struct {
-	Detail               *string                `json:"detail"`
-	Errors               *map[string][]string   `json:"errors"`
-	Instance             *string                `json:"instance"`
-	Status               *int32                 `json:"status"`
-	Title                *string                `json:"title"`
-	Type                 *string                `json:"type"`
-	AdditionalProperties map[string]interface{} `json:"-"`
-}
-
 // VideoDevice
 // | Value | Description |
 // | ----- | ----------- |
@@ -3204,7 +3185,7 @@ type PutDomainsDomainNameRecordsRecordIdParamsDomainName1 = string
 // GetImagesParams defines parameters for GetImages.
 type GetImagesParams struct {
 	// Type Queries for distribution will include images that have pre-installed applications.
-	Type *ImageQueryType `form:"type,omitempty" json:"type,omitempty"`
+	Type *string `form:"type,omitempty" json:"type,omitempty"`
 
 	// Private Provide 'true' to only list private images. 'false' has no effect.
 	Private *bool `form:"private,omitempty" json:"private,omitempty"`
@@ -3390,9 +3371,7 @@ type GetSizesParams struct {
 	ServerId *int64 `form:"server_id,omitempty" json:"server_id,omitempty"`
 
 	// Image If null or not provided regions that support the size are included in the returned objects regardless of operating system. If this is provided it must be the id or slug of an operating system image and will cause only valid regions for the size and operating system to be included in the returned objects.
-	Image *struct {
-		union json.RawMessage
-	} `form:"image,omitempty" json:"image,omitempty"`
+	Image *string `form:"image,omitempty" json:"image,omitempty"`
 
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
@@ -3400,12 +3379,6 @@ type GetSizesParams struct {
 	// PerPage The number of results to show per page.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
-
-// GetSizesParamsImage0 defines parameters for GetSizes.
-type GetSizesParamsImage0 = int
-
-// GetSizesParamsImage1 defines parameters for GetSizes.
-type GetSizesParamsImage1 = string
 
 // GetSoftwareParams defines parameters for GetSoftware.
 type GetSoftwareParams struct {
@@ -3554,6 +3527,9 @@ type PostServersServerIdActionsChangePartnerJSONRequestBody = ChangePartner
 // PostServersServerIdActionsChangePortBlockingJSONRequestBody defines body for PostServersServerIdActionsChangePortBlocking for application/json ContentType.
 type PostServersServerIdActionsChangePortBlockingJSONRequestBody = ChangePortBlocking
 
+// PostServersServerIdActionsChangeRegionJSONRequestBody defines body for PostServersServerIdActionsChangeRegion for application/json ContentType.
+type PostServersServerIdActionsChangeRegionJSONRequestBody = ChangeRegion
+
 // PostServersServerIdActionsChangeReverseNameJSONRequestBody defines body for PostServersServerIdActionsChangeReverseName for application/json ContentType.
 type PostServersServerIdActionsChangeReverseNameJSONRequestBody = ChangeReverseName
 
@@ -3649,271 +3625,6 @@ type PatchVpcsVpcIdJSONRequestBody = PatchVpcsVpcIdJSONBody
 
 // PutVpcsVpcIdJSONRequestBody defines body for PutVpcsVpcId for application/json ContentType.
 type PutVpcsVpcIdJSONRequestBody = PutVpcsVpcIdJSONBody
-
-// Getter for additional properties for ProblemDetails. Returns the specified
-// element and whether it was found
-func (a ProblemDetails) Get(fieldName string) (value interface{}, found bool) {
-	if a.AdditionalProperties != nil {
-		value, found = a.AdditionalProperties[fieldName]
-	}
-	return
-}
-
-// Setter for additional properties for ProblemDetails
-func (a *ProblemDetails) Set(fieldName string, value interface{}) {
-	if a.AdditionalProperties == nil {
-		a.AdditionalProperties = make(map[string]interface{})
-	}
-	a.AdditionalProperties[fieldName] = value
-}
-
-// Override default JSON handling for ProblemDetails to handle AdditionalProperties
-func (a *ProblemDetails) UnmarshalJSON(b []byte) error {
-	object := make(map[string]json.RawMessage)
-	err := json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if raw, found := object["detail"]; found {
-		err = json.Unmarshal(raw, &a.Detail)
-		if err != nil {
-			return fmt.Errorf("error reading 'detail': %w", err)
-		}
-		delete(object, "detail")
-	}
-
-	if raw, found := object["instance"]; found {
-		err = json.Unmarshal(raw, &a.Instance)
-		if err != nil {
-			return fmt.Errorf("error reading 'instance': %w", err)
-		}
-		delete(object, "instance")
-	}
-
-	if raw, found := object["status"]; found {
-		err = json.Unmarshal(raw, &a.Status)
-		if err != nil {
-			return fmt.Errorf("error reading 'status': %w", err)
-		}
-		delete(object, "status")
-	}
-
-	if raw, found := object["title"]; found {
-		err = json.Unmarshal(raw, &a.Title)
-		if err != nil {
-			return fmt.Errorf("error reading 'title': %w", err)
-		}
-		delete(object, "title")
-	}
-
-	if raw, found := object["type"]; found {
-		err = json.Unmarshal(raw, &a.Type)
-		if err != nil {
-			return fmt.Errorf("error reading 'type': %w", err)
-		}
-		delete(object, "type")
-	}
-
-	if len(object) != 0 {
-		a.AdditionalProperties = make(map[string]interface{})
-		for fieldName, fieldBuf := range object {
-			var fieldVal interface{}
-			err := json.Unmarshal(fieldBuf, &fieldVal)
-			if err != nil {
-				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
-			}
-			a.AdditionalProperties[fieldName] = fieldVal
-		}
-	}
-	return nil
-}
-
-// Override default JSON handling for ProblemDetails to handle AdditionalProperties
-func (a ProblemDetails) MarshalJSON() ([]byte, error) {
-	var err error
-	object := make(map[string]json.RawMessage)
-
-	if a.Detail != nil {
-		object["detail"], err = json.Marshal(a.Detail)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'detail': %w", err)
-		}
-	}
-
-	if a.Instance != nil {
-		object["instance"], err = json.Marshal(a.Instance)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'instance': %w", err)
-		}
-	}
-
-	if a.Status != nil {
-		object["status"], err = json.Marshal(a.Status)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'status': %w", err)
-		}
-	}
-
-	object["title"], err = json.Marshal(a.Title)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling 'title': %w", err)
-	}
-
-	if a.Type != nil {
-		object["type"], err = json.Marshal(a.Type)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'type': %w", err)
-		}
-	}
-
-	for fieldName, field := range a.AdditionalProperties {
-		object[fieldName], err = json.Marshal(field)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
-		}
-	}
-	return json.Marshal(object)
-}
-
-// Getter for additional properties for ValidationProblemDetails. Returns the specified
-// element and whether it was found
-func (a ValidationProblemDetails) Get(fieldName string) (value interface{}, found bool) {
-	if a.AdditionalProperties != nil {
-		value, found = a.AdditionalProperties[fieldName]
-	}
-	return
-}
-
-// Setter for additional properties for ValidationProblemDetails
-func (a *ValidationProblemDetails) Set(fieldName string, value interface{}) {
-	if a.AdditionalProperties == nil {
-		a.AdditionalProperties = make(map[string]interface{})
-	}
-	a.AdditionalProperties[fieldName] = value
-}
-
-// Override default JSON handling for ValidationProblemDetails to handle AdditionalProperties
-func (a *ValidationProblemDetails) UnmarshalJSON(b []byte) error {
-	object := make(map[string]json.RawMessage)
-	err := json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if raw, found := object["detail"]; found {
-		err = json.Unmarshal(raw, &a.Detail)
-		if err != nil {
-			return fmt.Errorf("error reading 'detail': %w", err)
-		}
-		delete(object, "detail")
-	}
-
-	if raw, found := object["errors"]; found {
-		err = json.Unmarshal(raw, &a.Errors)
-		if err != nil {
-			return fmt.Errorf("error reading 'errors': %w", err)
-		}
-		delete(object, "errors")
-	}
-
-	if raw, found := object["instance"]; found {
-		err = json.Unmarshal(raw, &a.Instance)
-		if err != nil {
-			return fmt.Errorf("error reading 'instance': %w", err)
-		}
-		delete(object, "instance")
-	}
-
-	if raw, found := object["status"]; found {
-		err = json.Unmarshal(raw, &a.Status)
-		if err != nil {
-			return fmt.Errorf("error reading 'status': %w", err)
-		}
-		delete(object, "status")
-	}
-
-	if raw, found := object["title"]; found {
-		err = json.Unmarshal(raw, &a.Title)
-		if err != nil {
-			return fmt.Errorf("error reading 'title': %w", err)
-		}
-		delete(object, "title")
-	}
-
-	if raw, found := object["type"]; found {
-		err = json.Unmarshal(raw, &a.Type)
-		if err != nil {
-			return fmt.Errorf("error reading 'type': %w", err)
-		}
-		delete(object, "type")
-	}
-
-	if len(object) != 0 {
-		a.AdditionalProperties = make(map[string]interface{})
-		for fieldName, fieldBuf := range object {
-			var fieldVal interface{}
-			err := json.Unmarshal(fieldBuf, &fieldVal)
-			if err != nil {
-				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
-			}
-			a.AdditionalProperties[fieldName] = fieldVal
-		}
-	}
-	return nil
-}
-
-// Override default JSON handling for ValidationProblemDetails to handle AdditionalProperties
-func (a ValidationProblemDetails) MarshalJSON() ([]byte, error) {
-	var err error
-	object := make(map[string]json.RawMessage)
-
-	if a.Detail != nil {
-		object["detail"], err = json.Marshal(a.Detail)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'detail': %w", err)
-		}
-	}
-
-	object["errors"], err = json.Marshal(a.Errors)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling 'errors': %w", err)
-	}
-
-	if a.Instance != nil {
-		object["instance"], err = json.Marshal(a.Instance)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'instance': %w", err)
-		}
-	}
-
-	if a.Status != nil {
-		object["status"], err = json.Marshal(a.Status)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'status': %w", err)
-		}
-	}
-
-	object["title"], err = json.Marshal(a.Title)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling 'title': %w", err)
-	}
-
-	if a.Type != nil {
-		object["type"], err = json.Marshal(a.Type)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'type': %w", err)
-		}
-	}
-
-	for fieldName, field := range a.AdditionalProperties {
-		object[fieldName], err = json.Marshal(field)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
-		}
-	}
-	return json.Marshal(object)
-}
 
 // AsNetworkNetmask0 returns the union data inside the Network_Netmask as a NetworkNetmask0
 func (t Network_Netmask) AsNetworkNetmask0() (NetworkNetmask0, error) {
@@ -4418,6 +4129,36 @@ func (t *ServerAction) FromChangePortBlocking(v ChangePortBlocking) error {
 // MergeChangePortBlocking performs a merge with any union data inside the ServerAction, using the provided ChangePortBlocking
 func (t *ServerAction) MergeChangePortBlocking(v ChangePortBlocking) error {
 	t.Type = "change_port_blocking"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsChangeRegion returns the union data inside the ServerAction as a ChangeRegion
+func (t ServerAction) AsChangeRegion() (ChangeRegion, error) {
+	var body ChangeRegion
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromChangeRegion overwrites any union data inside the ServerAction as the provided ChangeRegion
+func (t *ServerAction) FromChangeRegion(v ChangeRegion) error {
+	t.Type = "change_region"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeChangeRegion performs a merge with any union data inside the ServerAction, using the provided ChangeRegion
+func (t *ServerAction) MergeChangeRegion(v ChangeRegion) error {
+	t.Type = "change_region"
 
 	b, err := json.Marshal(v)
 	if err != nil {
@@ -5309,6 +5050,8 @@ func (t ServerAction) ValueByDiscriminator() (interface{}, error) {
 		return t.AsChangePartner()
 	case "change_port_blocking":
 		return t.AsChangePortBlocking()
+	case "change_region":
+		return t.AsChangeRegion()
 	case "change_reverse_name":
 		return t.AsChangeReverseName()
 	case "change_separate_private_network_interface":

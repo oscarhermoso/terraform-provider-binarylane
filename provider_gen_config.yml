@@ -136,5 +136,35 @@ resources:
       ignores:
         - name
         - vpc
-# data_sources:
-# Currently, don't need to generate data sources as they use the same schema as resources
+data_sources:
+  images:
+    read:
+      path: /images
+      method: GET
+    schema:
+      ignores:
+        - links
+        - meta
+        - page
+        - per_page
+        - private
+  regions:
+    read:
+      path: /regions
+      method: GET
+    schema:
+      ignores:
+        - links
+        - meta
+        - page
+        - per_page
+  sizes:
+    read:
+      path: /sizes
+      method: GET
+    schema:
+      ignores:
+        - links
+        - meta
+        - page
+        - per_page

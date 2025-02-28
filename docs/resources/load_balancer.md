@@ -3,12 +3,12 @@
 page_title: "binarylane_load_balancer Resource - terraform-provider-binarylane"
 subcategory: ""
 description: |-
-  
+  Provides a BinaryLane Load Balancer resource. This can be used to create, update, and delete load balancers. See the docs https://support.binarylane.com.au/support/solutions/articles/1000025661-load-balancer for more information.
 ---
 
 # binarylane_load_balancer (Resource)
 
-
+Provides a BinaryLane Load Balancer resource. This can be used to create, update, and delete load balancers. See [the docs](https://support.binarylane.com.au/support/solutions/articles/1000025661-load-balancer) for more information.
 
 ## Example Usage
 

@@ -1,4 +1,699 @@
 {
+	"datasources": [
+		{
+			"name": "images",
+			"schema": {
+				"attributes": [
+					{
+						"name": "type",
+						"string": {
+							"computed_optional_required": "computed_optional",
+							"description": "Queries for distribution will include images that have pre-installed applications."
+						}
+					},
+					{
+						"name": "images",
+						"list_nested": {
+							"computed_optional_required": "computed",
+							"nested_object": {
+								"attributes": [
+									{
+										"name": "backup_info",
+										"single_nested": {
+											"computed_optional_required": "computed",
+											"attributes": [
+												{
+													"name": "backup_disks",
+													"list_nested": {
+														"computed_optional_required": "computed",
+														"nested_object": {
+															"attributes": [
+																{
+																	"name": "description",
+																	"string": {
+																		"computed_optional_required": "computed",
+																		"description": "A description of this disk."
+																	}
+																},
+																{
+																	"name": "id",
+																	"int64": {
+																		"computed_optional_required": "computed",
+																		"description": "The ID of this backup disk."
+																	}
+																},
+																{
+																	"name": "min_disk_size",
+																	"int64": {
+																		"computed_optional_required": "computed",
+																		"description": "This is the minimum disk size in GB required to restore this disk image."
+																	}
+																},
+																{
+																	"name": "size_gigabytes",
+																	"float64": {
+																		"computed_optional_required": "computed",
+																		"description": "This is the compressed size of the disk image in GB."
+																	}
+																}
+															]
+														},
+														"description": "A list of the individual disks that make up this backup."
+													}
+												},
+												{
+													"name": "iso",
+													"bool": {
+														"computed_optional_required": "computed",
+														"description": "If this is true the backup is an ISO image and cannot be restored or downloaded. ISO images may only be attached for use as a boot disk or an additional disk."
+													}
+												},
+												{
+													"name": "locked",
+													"bool": {
+														"computed_optional_required": "computed",
+														"description": "If this is true the backup is locked and cannot be replaced."
+													}
+												},
+												{
+													"name": "offsite",
+													"bool": {
+														"computed_optional_required": "computed",
+														"description": "If this is true, an attempt to create an offsite copy was made. This does not mean that the offsite copy attempt was successful or that the copy still exists."
+													}
+												},
+												{
+													"name": "server_id",
+													"int64": {
+														"computed_optional_required": "computed",
+														"description": "The server ID that was used to create this backup."
+													}
+												},
+												{
+													"name": "type",
+													"string": {
+														"computed_optional_required": "computed",
+														"description": "\n| Value | Description |\n| ----- | ----------- |\n| daily | A backup which is scheduled to be taken each day. |\n| weekly | A backup which is scheduled to be taken each week. |\n| monthly | A backup which is scheduled to be taken each month. |\n| temporary | A backup which is created on demand and only retained for a maximum of seven days. |\n\n"
+													}
+												}
+											],
+											"description": "If this image is a backup, this object will provide further information."
+										}
+									},
+									{
+										"name": "created_at",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "If this is a backup image this is the date and time in ISO8601 format when the image was created."
+										}
+									},
+									{
+										"name": "description",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "A description that may provide further details or warnings about the image."
+										}
+									},
+									{
+										"name": "distribution",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "If this is an operating system image, this is the name of the distribution. If this is a backup image, this is the name of the distribution the server is using."
+										}
+									},
+									{
+										"name": "distribution_info",
+										"single_nested": {
+											"computed_optional_required": "computed",
+											"attributes": [
+												{
+													"name": "features",
+													"list": {
+														"computed_optional_required": "computed",
+														"element_type": {
+															"string": {}
+														},
+														"description": "Features supported by this distribution."
+													}
+												},
+												{
+													"name": "image_id",
+													"int64": {
+														"computed_optional_required": "computed",
+														"description": "If this is a backup image, the operating system ID of the server at the time the backup was created."
+													}
+												},
+												{
+													"name": "password_recovery",
+													"string": {
+														"computed_optional_required": "computed",
+														"description": "Supported methods of password recovery.\n\n| Value | Description |\n| ----- | ----------- |\n| manual | Password must be reset manually using the recovery console and rescue disk. |\n| offline-clear | Password can be cleared for the admin/root user only. New password needs to be provided on login via the console (Requires restart). |\n| offline-change | Password can be reset and new credentials sent (Requires restart). |\n| online-change | Password may be reset without requiring a reboot via installed QEMU Guest Agent. |\n\n"
+													}
+												},
+												{
+													"name": "remote_access_user",
+													"string": {
+														"computed_optional_required": "computed",
+														"description": "User name to use when connecting via remote access (RDP or SSH)."
+													}
+												}
+											],
+											"description": "This object may provide further information about the distribution."
+										}
+									},
+									{
+										"name": "distribution_surcharges",
+										"single_nested": {
+											"computed_optional_required": "computed",
+											"attributes": [
+												{
+													"name": "surcharge_base_cost",
+													"float64": {
+														"computed_optional_required": "computed",
+														"description": "The additional cost for using this operating system as the base image for a size."
+													}
+												},
+												{
+													"name": "surcharge_min_vcpu",
+													"int64": {
+														"computed_optional_required": "computed",
+														"description": "The minimum vcpu count for surcharge calculations."
+													}
+												},
+												{
+													"name": "surcharge_per_memory_max_megabytes",
+													"int64": {
+														"computed_optional_required": "computed",
+														"description": "The maximum memory in MB that counts towards the surcharge_per_memory_mb. Any memory above this cap does not attract the surcharge."
+													}
+												},
+												{
+													"name": "surcharge_per_memory_megabyte",
+													"float64": {
+														"computed_optional_required": "computed",
+														"description": "The additional cost per MB for using this operating system as the base image for a size."
+													}
+												},
+												{
+													"name": "surcharge_per_vcpu",
+													"float64": {
+														"computed_optional_required": "computed",
+														"description": "The additional cost per vcpu for using this operating system as the base image for a size."
+													}
+												}
+											],
+											"description": "If this is not null the use of this image may incur surcharges above the base cost of the server. All costs are in AU$."
+										}
+									},
+									{
+										"name": "error_message",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "If the image creation failed this may provide further information."
+										}
+									},
+									{
+										"name": "full_name",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "If this is an operating system image, this is the name and version of the distribution. If this is a backup image, this is the server hostname and label of the backup if it exists, otherwise it is the server hostname and UTC timestamp of the creation of the image."
+										}
+									},
+									{
+										"name": "id",
+										"int64": {
+											"computed_optional_required": "computed",
+											"description": "The ID of this image."
+										}
+									},
+									{
+										"name": "min_disk_size",
+										"int64": {
+											"computed_optional_required": "computed",
+											"description": "For a distribution image this is the minimum disk size in GB required to install the operating system. For a backup image this is the minimum total disk size in GB required to restore the backup."
+										}
+									},
+									{
+										"name": "min_memory_megabytes",
+										"int64": {
+											"computed_optional_required": "computed",
+											"description": "This is minimum memory in MB necessary to support this operating system (or the base operating system for a backup image)."
+										}
+									},
+									{
+										"name": "name",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "If this is an operating system image, this is the name of the operating system version. If this is a backup image, this is the label of the backup if it exists, otherwise it is the UTC timestamp of the creation of the image."
+										}
+									},
+									{
+										"name": "public",
+										"bool": {
+											"computed_optional_required": "computed",
+											"description": "A public image is available to all users. A private image is available only to the account that created the image."
+										}
+									},
+									{
+										"name": "regions",
+										"list": {
+											"computed_optional_required": "computed",
+											"element_type": {
+												"string": {}
+											},
+											"description": "The slugs of the regions where the image is available for use."
+										}
+									},
+									{
+										"name": "size_gigabytes",
+										"float64": {
+											"computed_optional_required": "computed",
+											"description": "For a distribution image this is the disk size used in GB by the operating system on initial install. For a backup image this is the size of the compressed backup image in GB."
+										}
+									},
+									{
+										"name": "slug",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "If this is an operating system image this is a slug which may be used as an alternative to the ID as a reference."
+										}
+									},
+									{
+										"name": "status",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "\n| Value | Description |\n| ----- | ----------- |\n| NEW | The image is new. |\n| available | The image is available for use. |\n| pending | The image is pending and is not yet available for use. |\n| deleted | The image has been deleted and is no longer available for use. |\n\n"
+										}
+									},
+									{
+										"name": "type",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "\n| Value | Description |\n| ----- | ----------- |\n| custom | An image uploaded by a user. |\n| snapshot | A snapshot. Snapshot creation is not currently supported so only distribution images will have this value. |\n| backup | A backup of a server. |\n\n"
+										}
+									}
+								]
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "regions",
+			"schema": {
+				"attributes": [
+					{
+						"name": "regions",
+						"list_nested": {
+							"computed_optional_required": "computed",
+							"nested_object": {
+								"attributes": [
+									{
+										"name": "available",
+										"bool": {
+											"computed_optional_required": "computed",
+											"description": "Whether this region is available for the allocation of new resources."
+										}
+									},
+									{
+										"name": "features",
+										"list": {
+											"computed_optional_required": "computed",
+											"element_type": {
+												"string": {}
+											},
+											"description": "A list of features available for resources in this region."
+										}
+									},
+									{
+										"name": "name",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "The name of this region."
+										}
+									},
+									{
+										"name": "name_servers",
+										"list": {
+											"computed_optional_required": "computed",
+											"element_type": {
+												"string": {}
+											},
+											"description": "A list of nameservers available for resources in this region."
+										}
+									},
+									{
+										"name": "sizes",
+										"list": {
+											"computed_optional_required": "computed",
+											"element_type": {
+												"string": {}
+											},
+											"description": "The slugs of the sizes available in this region."
+										}
+									},
+									{
+										"name": "slug",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "The unique slug for this region."
+										}
+									}
+								]
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "sizes",
+			"schema": {
+				"attributes": [
+					{
+						"name": "server_id",
+						"int64": {
+							"computed_optional_required": "computed_optional",
+							"description": "If supplied only sizes available for a resize the specified server will be returned. This parameter is only available when authenticated."
+						}
+					},
+					{
+						"name": "image",
+						"string": {
+							"computed_optional_required": "computed_optional",
+							"description": "If null or not provided regions that support the size are included in the returned objects regardless of operating system. If this is provided it must be the id or slug of an operating system image and will cause only valid regions for the size and operating system to be included in the returned objects."
+						}
+					},
+					{
+						"name": "sizes",
+						"list_nested": {
+							"computed_optional_required": "computed",
+							"nested_object": {
+								"attributes": [
+									{
+										"name": "available",
+										"bool": {
+											"computed_optional_required": "computed",
+											"description": "If this is false the size is not available for new servers."
+										}
+									},
+									{
+										"name": "cpu_description",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "A description of the CPU provided in this size."
+										}
+									},
+									{
+										"name": "description",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "A description of this size."
+										}
+									},
+									{
+										"name": "disk",
+										"int64": {
+											"computed_optional_required": "computed",
+											"description": "The included storage for this size in GB."
+										}
+									},
+									{
+										"name": "excess_transfer_cost_per_gigabyte",
+										"float64": {
+											"computed_optional_required": "computed",
+											"description": "The excess charged for any transfer above the included data transfer in AU$ per GB."
+										}
+									},
+									{
+										"name": "memory",
+										"int64": {
+											"computed_optional_required": "computed",
+											"description": "The included memory for this size in MB."
+										}
+									},
+									{
+										"name": "options",
+										"single_nested": {
+											"computed_optional_required": "computed",
+											"attributes": [
+												{
+													"name": "backups_cost_per_backup_per_gigabyte",
+													"float64": {
+														"computed_optional_required": "computed",
+														"description": "The cost per GB of storage of each selected backup. See the API support document for how to calculate the final cost of backups based on the options selected."
+													}
+												},
+												{
+													"name": "daily_backups",
+													"int64": {
+														"computed_optional_required": "computed",
+														"description": "The number of daily backups included in the base size cost."
+													}
+												},
+												{
+													"name": "discount_for_no_public_ipv4",
+													"float64": {
+														"computed_optional_required": "computed",
+														"description": "This is the discount (if any) that is applied if no public IPv4 addresses are selected."
+													}
+												},
+												{
+													"name": "disk_cost_per_additional_gigabyte",
+													"float64": {
+														"computed_optional_required": "computed",
+														"description": "The additional cost per GB per month for additional storage space."
+													}
+												},
+												{
+													"name": "disk_max",
+													"int64": {
+														"computed_optional_required": "computed",
+														"description": "The maximum storage in GB permitted on this size."
+													}
+												},
+												{
+													"name": "disk_min",
+													"int64": {
+														"computed_optional_required": "computed",
+														"description": "The minimum storage in GB permitted on this size."
+													}
+												},
+												{
+													"name": "ipv4_addresses_cost_per_address",
+													"float64": {
+														"computed_optional_required": "computed",
+														"description": "The additional cost per public IPv4 address per month for additional IPv4 addresses."
+													}
+												},
+												{
+													"name": "ipv4_addresses_max",
+													"int64": {
+														"computed_optional_required": "computed",
+														"description": "The maximum number of IPv4 addresses permitted on this size."
+													}
+												},
+												{
+													"name": "memory_cost_per_additional_megabyte",
+													"float64": {
+														"computed_optional_required": "computed",
+														"description": "The additional cost per MB per month for additional memory."
+													}
+												},
+												{
+													"name": "memory_max",
+													"int64": {
+														"computed_optional_required": "computed",
+														"description": "The maximum memory in MB permitted on this size."
+													}
+												},
+												{
+													"name": "monthly_backups",
+													"int64": {
+														"computed_optional_required": "computed",
+														"description": "The number of monthly backups included in the base size cost."
+													}
+												},
+												{
+													"name": "offsite_backup_frequency_cost",
+													"single_nested": {
+														"computed_optional_required": "computed",
+														"attributes": [
+															{
+																"name": "daily_per_gigabyte",
+																"float64": {
+																	"computed_optional_required": "computed",
+																	"description": "The additional cost per GB per month for enabling daily offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected."
+																}
+															},
+															{
+																"name": "monthly_per_gigabyte",
+																"float64": {
+																	"computed_optional_required": "computed",
+																	"description": "The additional cost per GB per month for enabling monthly offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected."
+																}
+															},
+															{
+																"name": "weekly_per_gigabyte",
+																"float64": {
+																	"computed_optional_required": "computed",
+																	"description": "The additional cost per GB per month for enabling weekly offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected."
+																}
+															}
+														],
+														"description": "The additional cost per GB of storage for enabling offsite backups based on highest frequency of backups currently enabled. All costs are in AU$."
+													}
+												},
+												{
+													"name": "offsite_backups_cost_per_gigabyte",
+													"float64": {
+														"computed_optional_required": "computed",
+														"description": "The additional cost per GB of storage for enabling offsite backups. See the API support document for how to calculate the final cost of backups based on the options selected."
+													}
+												},
+												{
+													"name": "restricted_disk_values",
+													"list": {
+														"computed_optional_required": "computed",
+														"element_type": {
+															"int64": {}
+														},
+														"description": "If this is null the normal valid values in the documentation for SizeOptionsRequest are used, otherwise only these values (in GB) are permitted."
+													}
+												},
+												{
+													"name": "transfer_cost_per_additional_gigabyte",
+													"float64": {
+														"computed_optional_required": "computed",
+														"description": "The additional cost per GB per month for additional included transfer."
+													}
+												},
+												{
+													"name": "transfer_max",
+													"float64": {
+														"computed_optional_required": "computed",
+														"description": "The maximum transfer in TB permitted for this size."
+													}
+												},
+												{
+													"name": "weekly_backups",
+													"int64": {
+														"computed_optional_required": "computed",
+														"description": "The number of weekly backups included in the base size cost."
+													}
+												}
+											],
+											"description": "Available add-ons (optional features not included in the base price) for the size. All costs are in AU$ per month (pro-rated)."
+										}
+									},
+									{
+										"name": "price_hourly",
+										"float64": {
+											"computed_optional_required": "computed",
+											"description": "Hourly price in AU$."
+										}
+									},
+									{
+										"name": "price_monthly",
+										"float64": {
+											"computed_optional_required": "computed",
+											"description": "Monthly Price in AU$."
+										}
+									},
+									{
+										"name": "regions",
+										"list": {
+											"computed_optional_required": "computed",
+											"element_type": {
+												"string": {}
+											},
+											"description": "A list of region slugs where this size is available regardless of stock.\nIf this a response to a query that included a selected operating system this response will only include regions where that operating system is available on this size,\notherwise not all regions listed will support all operating systems on this size."
+										}
+									},
+									{
+										"name": "regions_out_of_stock",
+										"list": {
+											"computed_optional_required": "computed",
+											"element_type": {
+												"string": {}
+											},
+											"description": "A list of region slugs where the size is normally available but is currently not available due to lack of stock."
+										}
+									},
+									{
+										"name": "size_type",
+										"single_nested": {
+											"computed_optional_required": "computed",
+											"attributes": [
+												{
+													"name": "description",
+													"string": {
+														"computed_optional_required": "computed",
+														"description": "The description of this size type, generally used to indicate the intended use case for sizes of this type."
+													}
+												},
+												{
+													"name": "name",
+													"string": {
+														"computed_optional_required": "computed",
+														"description": "The name of this size type."
+													}
+												},
+												{
+													"name": "slug",
+													"string": {
+														"computed_optional_required": "computed",
+														"description": "The slug of this size type."
+													}
+												}
+											],
+											"description": "The type of this size, generally used to differentiate sizes optimized for different usages."
+										}
+									},
+									{
+										"name": "slug",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "The slug of this size."
+										}
+									},
+									{
+										"name": "storage_description",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "A description of the storage provided in this size."
+										}
+									},
+									{
+										"name": "transfer",
+										"float64": {
+											"computed_optional_required": "computed",
+											"description": "The included data transfer for this size in TB."
+										}
+									},
+									{
+										"name": "vcpu_units",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "This is the unit that the vcpus field counts, e.g. \"core\" or \"thread\"."
+										}
+									},
+									{
+										"name": "vcpus",
+										"int64": {
+											"computed_optional_required": "computed",
+											"description": "The count of virtual CPUs for this size. See vcpu_units for a description of how each virtual CPU maps to the underlying hardware."
+										}
+									}
+								]
+							}
+						}
+					}
+				]
+			}
+		}
+	],
 	"provider": {
 		"name": "binarylane"
 	},
