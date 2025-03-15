@@ -36,20 +36,6 @@ const (
 	AddDiskTypeAddDisk AddDiskType = "add_disk"
 )
 
-// Defines values for AdvancedFeature.
-const (
-	CloudInit       AdvancedFeature = "cloud-init"
-	DriverDisk      AdvancedFeature = "driver-disk"
-	EmulatedDevices AdvancedFeature = "emulated-devices"
-	EmulatedHyperv  AdvancedFeature = "emulated-hyperv"
-	EmulatedTpm     AdvancedFeature = "emulated-tpm"
-	LocalRtc        AdvancedFeature = "local-rtc"
-	NestedVirt      AdvancedFeature = "nested-virt"
-	QemuGuestAgent  AdvancedFeature = "qemu-guest-agent"
-	UefiBoot        AdvancedFeature = "uefi-boot"
-	UnsetUuid       AdvancedFeature = "unset-uuid"
-)
-
 // Defines values for AdvancedFirewallRuleAction.
 const (
 	Accept AdvancedFirewallRuleAction = "accept"
@@ -581,7 +567,7 @@ type AddDiskType string
 // | cloud-init | (Read-Only) When this option is enabled the Cloud Server will be provided a datasource for the cloud-init service. |
 // | qemu-guest-agent | (Read-Only) When this option is enabled the server will allow QEMU Guest Agent to perform password reset without rebooting. |
 // | uefi-boot | (Read-Only) When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS. |
-type AdvancedFeature string
+type AdvancedFeature = string
 
 // AdvancedFirewallRule defines model for AdvancedFirewallRule.
 type AdvancedFirewallRule struct {
@@ -629,7 +615,7 @@ type AdvancedFirewallRulesResponse struct {
 // AdvancedServerFeatures defines model for AdvancedServerFeatures.
 type AdvancedServerFeatures struct {
 	// EnabledAdvancedFeatures A list of the currently enabled advanced features for this server.
-	EnabledAdvancedFeatures *[]AdvancedFeature `json:"enabled_advanced_features,omitempty"`
+	EnabledAdvancedFeatures *[]string `json:"enabled_advanced_features,omitempty"`
 
 	// MachineType The machine_type (corresponding to a KVM version) used for this server.
 	// A null value indicates automatic selection of the best KVM machine type supported by the host node.
@@ -809,7 +795,7 @@ type ChangeAdvancedFeatures struct {
 	AutomaticProcessorModel *bool `json:"automatic_processor_model"`
 
 	// EnabledAdvancedFeatures Do not provide or set to null to keep existing advanced features. Provide an empty array to disable all advanced features, otherwise provide an array with selected advanced features. If provided, any currently enabled advanced features that aren't included will be disabled.
-	EnabledAdvancedFeatures *[]AdvancedFeature `json:"enabled_advanced_features"`
+	EnabledAdvancedFeatures *[]string `json:"enabled_advanced_features"`
 
 	// MachineType Do not provide or set to null to keep existing machine type.
 	MachineType *VmMachineType `json:"machine_type"`

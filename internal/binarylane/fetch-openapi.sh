@@ -131,5 +131,12 @@ cat <<<$(jq '.components.schemas.SizeType.properties.slug += {"x-oapi-codegen-ex
 cat <<<$(jq '.components.schemas.SizeType.properties.name += {"x-oapi-codegen-extra-tags": {"tfsdk": "name"}}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.components.schemas.SizeType.properties.description += {"x-oapi-codegen-extra-tags": {"tfsdk": "description"}}' $OPENAPI_FILE) >$OPENAPI_FILE
 
+### Advanced Features
+# cat <<<$(jq '.components.schemas.AdvancedServerFeatures.properties.enabled_advanced_features += {"x-oapi-codegen-extra-tags": {"tfsdk": "advanced_features"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+# cat <<<$(jq '.components.schemas.ChangeAdvancedFeatures.properties.enabled_advanced_features += {"x-oapi-codegen-extra-tags": {"tfsdk": "advanced_features"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.AdvancedFeature |= del(.enum)' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.AdvancedServerFeatures.properties.enabled_advanced_features.items |= del(.["$ref"]) + {type:"string"}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.ChangeAdvancedFeatures.properties.enabled_advanced_features.items |= del(.["$ref"]) + {type:"string"}' $OPENAPI_FILE) >$OPENAPI_FILE
+
 # Edit description here because it's hard to override nested schema properties
 cat <<<$(jq '.components.schemas.ForwardingRule.properties.entry_protocol.description = "The protocol that traffic must match for the load balancer to forward it. Valid values are \"http\" and \"https\"."' $OPENAPI_FILE) >$OPENAPI_FILE

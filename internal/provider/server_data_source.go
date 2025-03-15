@@ -32,6 +32,7 @@ type serverDataModel struct {
 	Permalink            types.String `tfsdk:"permalink"`
 	Memory               types.Int32  `tfsdk:"memory"`
 	Disk                 types.Int32  `tfsdk:"disk"`
+	// AdvancedFeatures     types.Set    `tfsdk:"advanced_features"`
 }
 
 func (d *serverDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -170,6 +171,33 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 		Required:            false,
 		Computed:            true,
 	}
+
+	// advFeatureDescripton := `By default, server will have some advanced features enabled. To only enable specific advance ` +
+	// 	`features, provide as a list. Any currently enabled advanced features that aren't included in the list will be disabled.`
+	// advFeatureDescriptonMarkdown := advFeatureDescripton + `
+
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | ` + "`" + `emulated-hyperv` + "`" + ` | Enable HyperV (a hypervisor produced by Microsoft) support. Enabled by default on Windows servers, generally of no value for non-Windows servers. |
+	// | ` + "`" + `emulated-devices` + "`" + ` | When emulated devices is enabled, the KVM specific \"VirtIO\" disk drive and network devices are removed, and replaced with emulated versions of physical hardware: an old IDE HDD and an Intel E1000 network card.  Emulated devices are much slower than the VirtIO devices, and so this option should not be enabled unless absolutely necessary. |
+	// | ` + "`" + `nested-virt` + "`" + ` | When this option is enabled the functionality necessary to run your own KVM servers within your server is enabled. Note that all the networking limits - one MAC address per VPS, restricted to specific IPs - still apply to public cloud so this is feature is generally only useful in combination with Virtual Private Cloud. |
+	// | ` + "`" + `driver-disk` + "`" + ` | When this option is enabled a copy of the KVM driver disc for Windows (\"virtio-win.iso\") will be attached to your server as a virtual CD. This option can also be used in combination with your own attached backup when installing Windows. |
+	// | ` + "`" + `unset-uuid` + "`" + ` | When this option is NOT enabled a 128-bit unique identifier is exposed to your server through the virtual BIOS. Each server receives a different UUID. Some propriety licensed software utilise this identifier to \"tie\" the license to a specific server. |
+	// | ` + "`" + `local-rtc` + "`" + ` | When a server is booted the virtual BIOS receives the current date and time from the host node. The BIOS does not have an explicit timezone, so the timezone used is implicit and must be understood by the operating system. Most operating systems other than Windows expect the time to be UTC since it allows the operating system to control the timezone used when displaying the time. Our Windows installations have also been customized to use UTC, but when using your own installation of Windows this should be set to the host node's local timezone. |
+	// | ` + "`" + `emulated-tpm` + "`" + ` | When enabled this provides an emulated TPM v1.2 device to your Cloud Server. Warning: the TPM state is not backed up. |
+	// | ` + "`" + `cloud-init` + "`" + ` | (Read-Only) When this option is enabled the Cloud Server will be provided a datasource for the cloud-init service. |
+	// | ` + "`" + `qemu-guest-agent` + "`" + ` | (Read-Only) When this option is enabled the server will allow QEMU Guest Agent to perform password reset without rebooting. |
+	// | ` + "`" + `uefi-boot` + "`" + ` | (Read-Only) When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS. |
+	// `
+
+	// resp.Schema.Attributes["advanced_features"] = &schema.SetAttribute{
+	// 	ElementType:         basetypes.StringType{},
+	// 	Description:         advFeatureDescripton,
+	// 	MarkdownDescription: advFeatureDescriptonMarkdown,
+	// 	Optional:            false,
+	// 	Required:            false,
+	// 	Computed:            true,
+	// }
 }
 
 func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -211,6 +239,11 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
 	data.Memory = types.Int32Value(*serverResp.JSON200.Server.Memory)
 	data.Disk = types.Int32Value(*serverResp.JSON200.Server.Disk)
+
+	// serverRespAdvancedFeatures, diag := types.SetValueFrom(ctx, basetypes.StringType{}, serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures)
+	// diags.Append(diag...)
+	// data.AdvancedFeatures = serverRespAdvancedFeatures
+
 	publicIpv4Addresses := []string{}
 	privateIpv4Addresses := []string{}
 

@@ -18,3 +18,7 @@ resource "binarylane_server" "example" {
   public_ipv4_count = 1
   # Password will be generated automatically and mailed to the account holder
 }
+
+output "advanced_features" {
+  value = binarylane_server.example.advanced_features
+}

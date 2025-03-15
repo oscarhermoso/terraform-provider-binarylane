@@ -99,6 +99,7 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "permalink"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "source_and_destination_check", "false"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "backups", "true"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "advanced_features.#", "1"),
 
 					// Verify data source values
 					resource.TestCheckResourceAttrPair("data.binarylane_server.test", "id", "binarylane_server.test", "id"),
