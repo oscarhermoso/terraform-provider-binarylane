@@ -130,6 +130,11 @@ func (r *vpcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		)
 		return
 	}
+	if vpcResp.StatusCode() == http.StatusNotFound {
+		tflog.Warn(ctx, fmt.Sprintf("VPC not found, removing from state: id=%d", data.Id.ValueInt64()))
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if vpcResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code reading VPC",

@@ -576,6 +576,13 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 		)
 		return
 	}
+
+	if serverResp.StatusCode() == http.StatusNotFound {
+		tflog.Warn(ctx, fmt.Sprintf("Server not found, removing from state: id=%s, name=%s", data.Id.String(), data.Name.ValueString()))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	if serverResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Unexpected HTTP status code %s reading server: name=%s, id=%s", serverResp.Status(), data.Name.ValueString(), data.Id.String()),

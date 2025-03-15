@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -121,6 +122,11 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 			fmt.Sprintf("Error creating SSH Key: name=%s", data.Name.ValueString()),
 			err.Error(),
 		)
+		return
+	}
+	if sshResp.StatusCode() == http.StatusNotFound {
+		tflog.Warn(ctx, fmt.Sprintf("SSH Key not found, removing from state: name=%s", data.Name.String()))
+		resp.State.RemoveResource(ctx)
 		return
 	}
 	if sshResp.StatusCode() != http.StatusOK {
