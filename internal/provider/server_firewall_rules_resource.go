@@ -95,7 +95,7 @@ func (r *serverFirewallRulesResource) Create(ctx context.Context, req resource.C
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("Creating server firewall rules: server_id=%s", data.ServerId.String()))
-	serverResp, err := r.bc.client.PostServersServerIdActionsChangeAdvancedFirewallRulesWithResponse(
+	fwResp, err := r.bc.client.PostServersServerIdActionsChangeAdvancedFirewallRulesWithResponse(
 		ctx,
 		data.ServerId.ValueInt64(),
 		binarylane.PostServersServerIdActionsChangeAdvancedFirewallRulesJSONRequestBody{
@@ -109,10 +109,15 @@ func (r *serverFirewallRulesResource) Create(ctx context.Context, req resource.C
 		)
 		return
 	}
-	if serverResp.StatusCode() != http.StatusOK {
+	if fwResp.StatusCode() == http.StatusNotFound {
+		tflog.Warn(ctx, fmt.Sprintf("Server firewall rules not found, removing from state: server_id=%s", data.ServerId.String()))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if fwResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code creating server firewall rules",
-			fmt.Sprintf("Received %s creating server firewall rules: server_id=%s. Details: %s", serverResp.Status(), data.ServerId.String(), serverResp.Body))
+			fmt.Sprintf("Received %s creating server firewall rules: server_id=%s. Details: %s", fwResp.Status(), data.ServerId.String(), fwResp.Body))
 		return
 	}
 

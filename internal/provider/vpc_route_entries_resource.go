@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 var (
@@ -121,6 +122,11 @@ func (r *vpcRouteEntriesResource) Read(ctx context.Context, req resource.ReadReq
 			fmt.Sprintf("Error reading VPC route entries: vpc_id=%d", data.VpcId.ValueInt64()),
 			err.Error(),
 		)
+		return
+	}
+	if vpcResp.StatusCode() == http.StatusNotFound {
+		tflog.Warn(ctx, fmt.Sprintf("VPC route entries not found, removing from state: vpc_id=%d", data.VpcId.ValueInt64()))
+		resp.State.RemoveResource(ctx)
 		return
 	}
 	if vpcResp.StatusCode() != http.StatusOK {

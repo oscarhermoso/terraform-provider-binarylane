@@ -239,6 +239,12 @@ func (r *loadBalancerResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
+	if lbResp.StatusCode() == http.StatusNotFound {
+		tflog.Warn(ctx, fmt.Sprintf("Load balancer not found, removing from state: id=%s, name=%s", data.Id.String(), data.Name.ValueString()))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	if lbResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code reading load balancer",
