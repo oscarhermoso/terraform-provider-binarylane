@@ -54,25 +54,11 @@ type serverResource struct {
 type serverResourceModel struct {
 	serverDataModel
 
-	PublicIpv4Count           types.Int32           `tfsdk:"public_ipv4_count"`
-	SourceAndDestinationCheck types.Bool            `tfsdk:"source_and_destination_check"`
-	Password                  types.String          `tfsdk:"password"`
-	PasswordChangeSupported   types.Bool            `tfsdk:"password_change_supported"`
-	Timeouts                  timeouts.Value        `tfsdk:"timeouts"`
-	AdvancedFeatures          advancedFeaturesModel `tfsdk:"advanced_features"`
-}
-
-type advancedFeaturesModel struct {
-	EmulatedHyperV  types.Bool `tfsdk:"emulated_hyperv"`
-	EmulatedDevices types.Bool `tfsdk:"emulated_devices"`
-	NestedVirt      types.Bool `tfsdk:"nested_virt"`
-	DriverDisk      types.Bool `tfsdk:"driver_disk"`
-	UnsetUUID       types.Bool `tfsdk:"unset_uuid"`
-	LocalRTC        types.Bool `tfsdk:"local_rtc"`
-	EmulatedTPM     types.Bool `tfsdk:"emulated_tpm"`
-	CloudInit       types.Bool `tfsdk:"cloud_init"`
-	QemuGuestAgent  types.Bool `tfsdk:"qemu_guest_agent"`
-	UefiBoot        types.Bool `tfsdk:"uefi_boot"`
+	PublicIpv4Count           types.Int32    `tfsdk:"public_ipv4_count"`
+	SourceAndDestinationCheck types.Bool     `tfsdk:"source_and_destination_check"`
+	Password                  types.String   `tfsdk:"password"`
+	PasswordChangeSupported   types.Bool     `tfsdk:"password_change_supported"`
+	Timeouts                  timeouts.Value `tfsdk:"timeouts"`
 }
 
 func (d *serverResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -97,12 +83,12 @@ func (r *serverResource) Metadata(ctx context.Context, req resource.MetadataRequ
 	resp.TypeName = req.ProviderTypeName + "_server"
 }
 
-func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = resources.ServerResourceSchema(ctx)
+func serverSchema(ctx context.Context) schema.Schema {
+	s := resources.ServerResourceSchema(ctx)
 
 	// Overrides
-	id := resp.Schema.Attributes["id"]
-	resp.Schema.Attributes["id"] = &schema.Int64Attribute{
+	id := s.Attributes["id"]
+	s.Attributes["id"] = &schema.Int64Attribute{
 		Description:         id.GetDescription(),
 		MarkdownDescription: id.GetMarkdownDescription(),
 		// read only
@@ -115,8 +101,8 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 	}
 
 	imageDescription := "The slug of the selected operating system, such as `debian-12`. You can fetch a full list of images from the BinaryLane API."
-	image := resp.Schema.Attributes["image"]
-	resp.Schema.Attributes["image"] = &schema.StringAttribute{
+	image := s.Attributes["image"]
+	s.Attributes["image"] = &schema.StringAttribute{
 		Description:         imageDescription,
 		MarkdownDescription: imageDescription,
 		Required:            image.IsRequired(),
@@ -128,7 +114,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 	}
 
 	backupsDescription := "If `true` this will enable two daily backups for the server. By default, backups are disabled."
-	resp.Schema.Attributes["backups"] = &schema.BoolAttribute{
+	s.Attributes["backups"] = &schema.BoolAttribute{
 		Description:         backupsDescription,
 		MarkdownDescription: backupsDescription,
 		Optional:            true,
@@ -136,24 +122,24 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Default:             booldefault.StaticBool(false), // Add default to backups
 	}
 
-	user_data := resp.Schema.Attributes["user_data"]
-	resp.Schema.Attributes["user_data"] = &schema.StringAttribute{
+	user_data := s.Attributes["user_data"]
+	s.Attributes["user_data"] = &schema.StringAttribute{
 		Description:         user_data.GetDescription(),
 		MarkdownDescription: user_data.GetMarkdownDescription(),
 		Optional:            true,  // Optional as not all servers have an initialization script
 		Computed:            false, // User defined
 	}
 
-	vpcId := resp.Schema.Attributes["vpc_id"]
-	resp.Schema.Attributes["vpc_id"] = &schema.Int64Attribute{
+	vpcId := s.Attributes["vpc_id"]
+	s.Attributes["vpc_id"] = &schema.Int64Attribute{
 		Description:         vpcId.GetDescription(),
 		MarkdownDescription: vpcId.GetMarkdownDescription(),
 		Optional:            vpcId.IsOptional(),
 		Computed:            false, // vpc_id is not computed, defined at creation
 	}
 
-	portBlocking := resp.Schema.Attributes["port_blocking"]
-	resp.Schema.Attributes["port_blocking"] = &schema.BoolAttribute{
+	portBlocking := s.Attributes["port_blocking"]
+	s.Attributes["port_blocking"] = &schema.BoolAttribute{
 		Description:         portBlocking.GetDescription(),
 		MarkdownDescription: portBlocking.GetMarkdownDescription(),
 		Optional:            portBlocking.IsOptional(),
@@ -161,8 +147,8 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		Default:             booldefault.StaticBool(true), // Add default to port_blocking
 	}
 
-	region := resp.Schema.Attributes["region"].(schema.StringAttribute)
-	resp.Schema.Attributes["region"] = &schema.StringAttribute{
+	region := s.Attributes["region"].(schema.StringAttribute)
+	s.Attributes["region"] = &schema.StringAttribute{
 		Description:         region.GetDescription(),
 		MarkdownDescription: region.GetMarkdownDescription(),
 		Optional:            region.IsOptional(),
@@ -174,8 +160,8 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		},
 	}
 
-	sshKeys := resp.Schema.Attributes["ssh_keys"]
-	resp.Schema.Attributes["ssh_keys"] = &schema.ListAttribute{
+	sshKeys := s.Attributes["ssh_keys"]
+	s.Attributes["ssh_keys"] = &schema.ListAttribute{
 		ElementType:         types.Int64Type,
 		Description:         sshKeys.GetMarkdownDescription(),
 		MarkdownDescription: sshKeys.GetDescription(),
@@ -188,8 +174,8 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 
 	userDataDescription := "A script or cloud-config YAML file to configure the server. Can only be specified if the OS image supports UserData (i.e. not Windows)." +
 		" See more: https://cloudinit.readthedocs.io/en/latest/explanation/format.html#user-data-script"
-	userData := resp.Schema.Attributes["user_data"]
-	resp.Schema.Attributes["user_data"] = &schema.StringAttribute{
+	userData := s.Attributes["user_data"]
+	s.Attributes["user_data"] = &schema.StringAttribute{
 		Description:         userDataDescription,
 		MarkdownDescription: userDataDescription,
 		Required:            userData.IsRequired(),
@@ -205,7 +191,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		"If this is provided the specified or default remote user's account password will be set to this value. " +
 			"Only valid if the server supports password change actions. If omitted and the server supports password " +
 			"change actions a random password will be generated and emailed to the account email address."
-	resp.Schema.Attributes["password"] = &schema.StringAttribute{
+	s.Attributes["password"] = &schema.StringAttribute{
 		Description:         pwDescription,
 		MarkdownDescription: pwDescription,
 		Optional:            true,  // Password optional, if not set will be emailed to user
@@ -214,7 +200,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 	}
 
 	publicIpv4CountDescription := "The number of public IPv4 addresses to assign to the server."
-	resp.Schema.Attributes["public_ipv4_count"] = &schema.Int32Attribute{
+	s.Attributes["public_ipv4_count"] = &schema.Int32Attribute{
 		Description:         publicIpv4CountDescription,
 		MarkdownDescription: publicIpv4CountDescription,
 		Required:            true,
@@ -227,7 +213,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 	}
 
 	publicIpv4AddressesDescription := "The public IPv4 addresses assigned to the server."
-	resp.Schema.Attributes["public_ipv4_addresses"] = &schema.ListAttribute{
+	s.Attributes["public_ipv4_addresses"] = &schema.ListAttribute{
 		Description:         publicIpv4AddressesDescription,
 		MarkdownDescription: publicIpv4AddressesDescription,
 		ElementType:         types.StringType,
@@ -244,7 +230,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		"to incorrect network configuration. When `source_and_destination_check` is `false`, your Cloud Server will be able " +
 		"to send and receive packets addressed to any server. This is typically used when you want to use " +
 		"your Cloud Server as a VPN endpoint, a NAT server to provide internet access, or IP forwarding."
-	resp.Schema.Attributes["source_and_destination_check"] = &schema.BoolAttribute{
+	s.Attributes["source_and_destination_check"] = &schema.BoolAttribute{
 		Description:         sourceDestCheckDescription,
 		MarkdownDescription: sourceDestCheckDescription,
 		Optional:            true,
@@ -258,7 +244,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 	}
 
 	privateIpv4AddressesDescription := "The private IPv4 addresses assigned to the server."
-	resp.Schema.Attributes["private_ipv4_addresses"] = &schema.ListAttribute{
+	s.Attributes["private_ipv4_addresses"] = &schema.ListAttribute{
 		Description:         privateIpv4AddressesDescription,
 		MarkdownDescription: privateIpv4AddressesDescription,
 		ElementType:         types.StringType,
@@ -271,7 +257,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		},
 	}
 
-	resp.Schema.Attributes["permalink"] = &schema.StringAttribute{
+	s.Attributes["permalink"] = &schema.StringAttribute{
 		Description:         "A randomly generated two-word identifier assigned to servers in regions that support this feature",
 		MarkdownDescription: "A randomly generated two-word identifier assigned to servers in regions that support this feature",
 		// read only
@@ -286,7 +272,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 	pwChangeDescription := "If this is true then the `password` attribute can be changed with Terraform. " +
 		"If this is false then the `password` attribute can only be replaced with a null/empty value, which will clear " +
 		"the root/administrator password allowing the password to be changed via the web console."
-	resp.Schema.Attributes["password_change_supported"] = &schema.BoolAttribute{
+	s.Attributes["password_change_supported"] = &schema.BoolAttribute{
 		Description:         pwChangeDescription,
 		MarkdownDescription: pwChangeDescription,
 		// read only
@@ -308,7 +294,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
   - \> 16384 MB must be a multiple of 2048
   - \> 24576 MB must be a multiple of 4096`
 
-	resp.Schema.Attributes["memory"] = &schema.Int32Attribute{
+	s.Attributes["memory"] = &schema.Int32Attribute{
 		Description:         memoryDescription + memoryValidValues,
 		MarkdownDescription: memoryDescription + memoryValidValuesMarkdown,
 		Optional:            true,
@@ -331,7 +317,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
   - \> 60 GB must be a multiple of 10
   - \> 200 GB must be a multiple of 100`
 
-	resp.Schema.Attributes["disk"] = &schema.Int32Attribute{
+	s.Attributes["disk"] = &schema.Int32Attribute{
 		Description:         diskDescription + diskValidValues,
 		MarkdownDescription: diskDescription + diskValidValuesMarkdown,
 		Optional:            true,
@@ -345,16 +331,29 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 		},
 	}
 
-	resp.Schema.Attributes["timeouts"] =
+	s.Attributes["timeouts"] =
 		timeouts.Attributes(ctx, timeouts.Opts{
 			Create: true,
 			Update: true,
 		})
 
-	resp.Schema.Attributes["advanced_features"] = &schema.SingleNestedAttribute{
-		Optional:   true,
-		Computed:   true,
-		CustomType: basetypes.ObjectType{},
+	s.Attributes["advanced_features"] = &schema.SingleNestedAttribute{
+		Optional: true,
+		Computed: true,
+		CustomType: basetypes.ObjectType{
+			AttrTypes: map[string]attr.Type{
+				"emulated_hyperv":  types.BoolType,
+				"emulated_devices": types.BoolType,
+				"nested_virt":      types.BoolType,
+				"driver_disk":      types.BoolType,
+				"unset_uuid":       types.BoolType,
+				"local_rtc":        types.BoolType,
+				"emulated_tpm":     types.BoolType,
+				"cloud_init":       types.BoolType,
+				"qemu_guest_agent": types.BoolType,
+				"uefi_boot":        types.BoolType,
+			},
+		},
 		Attributes: map[string]schema.Attribute{
 			"emulated_hyperv": schema.BoolAttribute{
 				Description: "Enable HyperV (a hypervisor produced by Microsoft) support. Enabled by default on Windows " +
@@ -424,6 +423,12 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 			},
 		},
 	}
+
+	return s
+}
+
+func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = serverSchema(ctx)
 }
 
 func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
@@ -614,7 +619,7 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	data.SourceAndDestinationCheck = serverRespSourceDestCheck
 
 	advFeat := *serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
-	data.AdvancedFeatures = advancedFeaturesModel{
+	data.AdvancedFeatures = &advancedFeaturesModel{
 		EmulatedHyperV:  types.BoolValue(slices.Contains(advFeat, "emulated-hyperv")),
 		EmulatedDevices: types.BoolValue(slices.Contains(advFeat, "emulated-devices")),
 		EmulatedTPM:     types.BoolValue(slices.Contains(advFeat, "emulated-tpm")),
@@ -645,7 +650,7 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Update advanced features
-	err = r.updateAdvancedFeatures(ctx, data.Id.ValueInt64(), &config.AdvancedFeatures, &data.AdvancedFeatures)
+	err = r.updateAdvancedFeatures(ctx, data.Id.ValueInt64(), config.AdvancedFeatures, data.AdvancedFeatures)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating advanced features", err.Error())
 	}
@@ -1014,7 +1019,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 	}
 
-	err := r.updateAdvancedFeatures(ctx, state.Id.ValueInt64(), &config.AdvancedFeatures, &plan.AdvancedFeatures)
+	err := r.updateAdvancedFeatures(ctx, state.Id.ValueInt64(), config.AdvancedFeatures, plan.AdvancedFeatures)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating advanced features", err.Error())
 		return
@@ -1282,16 +1287,18 @@ func setServerResourceState(ctx context.Context, data *serverResourceModel, serv
 	data.Backups = types.BoolValue(serverResp.Server.NextBackupWindow != nil)
 
 	advFeat := *serverResp.Server.AdvancedFeatures.EnabledAdvancedFeatures
-	data.AdvancedFeatures.EmulatedHyperV = types.BoolValue(slices.Contains(advFeat, "emulated-hyperv"))
-	data.AdvancedFeatures.EmulatedDevices = types.BoolValue(slices.Contains(advFeat, "emulated-devices"))
-	data.AdvancedFeatures.EmulatedTPM = types.BoolValue(slices.Contains(advFeat, "nested-virt"))
-	data.AdvancedFeatures.DriverDisk = types.BoolValue(slices.Contains(advFeat, "driver-disk"))
-	data.AdvancedFeatures.UnsetUUID = types.BoolValue(slices.Contains(advFeat, "unset-uuid"))
-	data.AdvancedFeatures.LocalRTC = types.BoolValue(slices.Contains(advFeat, "local-rtc"))
-	data.AdvancedFeatures.EmulatedTPM = types.BoolValue(slices.Contains(advFeat, "emulated-tpm"))
-	data.AdvancedFeatures.CloudInit = types.BoolValue(slices.Contains(advFeat, "cloud-init"))
-	data.AdvancedFeatures.QemuGuestAgent = types.BoolValue(slices.Contains(advFeat, "qemu-guest-agent"))
-	data.AdvancedFeatures.UefiBoot = types.BoolValue(slices.Contains(advFeat, "uefi-boot"))
+	data.AdvancedFeatures = &advancedFeaturesModel{
+		EmulatedHyperV:  types.BoolValue(slices.Contains(advFeat, "emulated-hyperv")),
+		EmulatedDevices: types.BoolValue(slices.Contains(advFeat, "emulated-devices")),
+		NestedVirt:      types.BoolValue(slices.Contains(advFeat, "nested-virt")),
+		DriverDisk:      types.BoolValue(slices.Contains(advFeat, "driver-disk")),
+		UnsetUUID:       types.BoolValue(slices.Contains(advFeat, "unset-uuid")),
+		LocalRTC:        types.BoolValue(slices.Contains(advFeat, "local-rtc")),
+		EmulatedTPM:     types.BoolValue(slices.Contains(advFeat, "emulated-tpm")),
+		CloudInit:       types.BoolValue(slices.Contains(advFeat, "cloud-init")),
+		QemuGuestAgent:  types.BoolValue(slices.Contains(advFeat, "qemu-guest-agent")),
+		UefiBoot:        types.BoolValue(slices.Contains(advFeat, "uefi-boot")),
+	}
 
 	publicIpv4Addresses := []string{}
 	privateIpv4Addresses := []string{}
@@ -1331,7 +1338,7 @@ func (r *serverResource) updateAdvancedFeatures(
 	config *advancedFeaturesModel,
 	data *advancedFeaturesModel,
 ) error {
-	// If none of the writable advanced features have been specified by the user, we can skip the update
+	// If none of the writable advanced features have been modified by the user, we can skip the update
 	if (config.EmulatedHyperV.IsNull() || config.EmulatedHyperV.Equal(data.EmulatedHyperV)) &&
 		(config.EmulatedDevices.IsNull() || config.EmulatedDevices.Equal(data.EmulatedDevices)) &&
 		(config.EmulatedTPM.IsNull() || config.EmulatedTPM.Equal(data.EmulatedTPM)) &&

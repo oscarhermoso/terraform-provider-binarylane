@@ -27,17 +27,42 @@ data "binarylane_server" "example" {
 
 ### Read-Only
 
-- `backups` (Boolean) If `true`, the server will be backed up twice per day. By default, backups are disabled.
-- `disk` (Number) The amount of storage in GB assigned to the server.
-- `image` (String) The slug of the selected operating system.
-- `memory` (Number) The amount of memory in MB assigned to the server.
-- `name` (String) The hostname of your server, such as vps01.yourcompany.com.
+- `advanced_features` (Object) (see [below for nested schema](#nestedatt--advanced_features))
+- `backups` (Boolean) If `true` this will enable two daily backups for the server. By default, backups are disabled.
+- `disk` (Number) The total storage in GB for this server. Leave null to accept the default for the size Valid values:
+  - must be a multiple of 5
+  - \> 60 GB must be a multiple of 10
+  - \> 200 GB must be a multiple of 100
+- `image` (String) The slug of the selected operating system, such as `debian-12`. You can fetch a full list of images from the BinaryLane API.
+- `memory` (Number) The total memory in MB for this server. Leave null to accept the default size. Valid values:
+  - must be a multiple of 128
+  - \> 2048 MB must be a multiple of 1024
+  - \> 16384 MB must be a multiple of 2048
+  - \> 24576 MB must be a multiple of 4096
+- `name` (String) The hostname of your server, such as vps01.yourcompany.com. If not provided, the server will be created with a random name.
 - `permalink` (String) A randomly generated two-word identifier assigned to servers in regions that support this feature
 - `port_blocking` (Boolean) Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.
 - `private_ipv4_addresses` (List of String) The private IPv4 addresses assigned to the server.
 - `public_ipv4_addresses` (List of String) The public IPv4 addresses assigned to the server.
 - `region` (String) The slug of the selected region.
 - `size` (String) The slug of the selected size.
-- `ssh_keys` (List of Number) This is a list of SSH key ids that were added to the server during creation.
-- `user_data` (String) A script or cloud-config YAML file to configure the server.
-- `vpc_id` (Number) ID of the Virtual Private Cloud (VPC) the server is connected to.
+- `source_and_destination_check` (Boolean) This attribute can only be set if your server also has a `vpc_id` attribute set. When enabled (which is `true` by default), your server will only be able to send or receive packets that are directly addressed to one of the IP addresses associated with the Cloud Server. Generally, this is desirable behaviour because it prevents IP conflicts and other hard-to-diagnose networking faults due to incorrect network configuration. When `source_and_destination_check` is `false`, your Cloud Server will be able to send and receive packets addressed to any server. This is typically used when you want to use your Cloud Server as a VPN endpoint, a NAT server to provide internet access, or IP forwarding.
+- `ssh_keys` (List of Number) This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys.
+- `user_data` (String) A script or cloud-config YAML file to configure the server. Can only be specified if the OS image supports UserData (i.e. not Windows). See more: https://cloudinit.readthedocs.io/en/latest/explanation/format.html#user-data-script
+- `vpc_id` (Number) Leave null to use default (public) network for the selected region.
+
+<a id="nestedatt--advanced_features"></a>
+### Nested Schema for `advanced_features`
+
+Read-Only:
+
+- `cloud_init` (Boolean)
+- `driver_disk` (Boolean)
+- `emulated_devices` (Boolean)
+- `emulated_hyperv` (Boolean)
+- `emulated_tpm` (Boolean)
+- `local_rtc` (Boolean)
+- `nested_virt` (Boolean)
+- `qemu_guest_agent` (Boolean)
+- `uefi_boot` (Boolean)
+- `unset_uuid` (Boolean)

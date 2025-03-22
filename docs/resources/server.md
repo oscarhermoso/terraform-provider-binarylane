@@ -38,20 +38,7 @@ resource "binarylane_server" "example" {
 
 ### Optional
 
-- `advanced_features` (Set of String) By default, server will have some advanced features enabled. To only enable specific advance features, provide as a list. Any currently enabled advanced features that aren't included in the list will be disabled.
-
-	| Value | Description |
-	| ----- | ----------- |
-	| `emulated-hyperv` | Enable HyperV (a hypervisor produced by Microsoft) support. Enabled by default on Windows servers, generally of no value for non-Windows servers. |
-	| `emulated-devices` | When emulated devices is enabled, the KVM specific \"VirtIO\" disk drive and network devices are removed, and replaced with emulated versions of physical hardware: an old IDE HDD and an Intel E1000 network card.  Emulated devices are much slower than the VirtIO devices, and so this option should not be enabled unless absolutely necessary. |
-	| `nested-virt` | When this option is enabled the functionality necessary to run your own KVM servers within your server is enabled. Note that all the networking limits - one MAC address per VPS, restricted to specific IPs - still apply to public cloud so this is feature is generally only useful in combination with Virtual Private Cloud. |
-	| `driver-disk` | When this option is enabled a copy of the KVM driver disc for Windows (\"virtio-win.iso\") will be attached to your server as a virtual CD. This option can also be used in combination with your own attached backup when installing Windows. |
-	| `unset-uuid` | When this option is NOT enabled a 128-bit unique identifier is exposed to your server through the virtual BIOS. Each server receives a different UUID. Some propriety licensed software utilise this identifier to \"tie\" the license to a specific server. |
-	| `local-rtc` | When a server is booted the virtual BIOS receives the current date and time from the host node. The BIOS does not have an explicit timezone, so the timezone used is implicit and must be understood by the operating system. Most operating systems other than Windows expect the time to be UTC since it allows the operating system to control the timezone used when displaying the time. Our Windows installations have also been customized to use UTC, but when using your own installation of Windows this should be set to the host node's local timezone. |
-	| `emulated-tpm` | When enabled this provides an emulated TPM v1.2 device to your Cloud Server. Warning: the TPM state is not backed up. |
-	| `cloud-init` | (Read-Only) When this option is enabled the Cloud Server will be provided a datasource for the cloud-init service. |
-	| `qemu-guest-agent` | (Read-Only) When this option is enabled the server will allow QEMU Guest Agent to perform password reset without rebooting. |
-	| `uefi-boot` | (Read-Only) When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS. |
+- `advanced_features` (Attributes) (see [below for nested schema](#nestedatt--advanced_features))
 - `backups` (Boolean) If `true` this will enable two daily backups for the server. By default, backups are disabled.
 - `disk` (Number) The total storage in GB for this server. Leave null to accept the default for the size Valid values:
   - must be a multiple of 5
@@ -78,6 +65,26 @@ resource "binarylane_server" "example" {
 - `permalink` (String) A randomly generated two-word identifier assigned to servers in regions that support this feature
 - `private_ipv4_addresses` (List of String) The private IPv4 addresses assigned to the server.
 - `public_ipv4_addresses` (List of String) The public IPv4 addresses assigned to the server.
+
+<a id="nestedatt--advanced_features"></a>
+### Nested Schema for `advanced_features`
+
+Optional:
+
+- `driver_disk` (Boolean) When this option is enabled a copy of the KVM driver disc for Windows ("virtio-win.iso") will be attached to your server as a virtual CD. This option can also be used in combination with your own attached backup when installing Windows.
+- `emulated_devices` (Boolean) When emulated devices is enabled, the KVM specific "VirtIO" disk drive and network devices are removed, and replaced with emulated versions of physical hardware: an old IDE HDD and an Intel E1000 network card.  Emulated devices are much slower than the VirtIO devices, and so this option should not be enabled unless absolutely necessary.
+- `emulated_hyperv` (Boolean) Enable HyperV (a hypervisor produced by Microsoft) support. Enabled by default on Windows servers, generally of no value for non-Windows servers.
+- `emulated_tpm` (Boolean) When enabled this provides an emulated TPM v1.2 device to your Cloud Server. Warning: the TPM state is not backed up.
+- `local_rtc` (Boolean) When a server is booted the virtual BIOS receives the current date and time from the host node. The BIOS does not have an explicit timezone, so the timezone used is implicit and must be understood by the operating system. Most operating systems other than Windows expect the time to be UTC since it allows the operating system to control the timezone used when displaying the time. Our Windows installations have also been customized to use UTC, but when using your own installation of Windows this should be set to the host node's local timezone.
+- `nested_virt` (Boolean) When this option is enabled the functionality necessary to run your own KVM servers within your server is enabled. Note that all the networking limits - one MAC address per VPS, restricted to specific IPs - still apply to public cloud so this is feature is generally only useful in combination with Virtual Private Cloud.
+- `unset_uuid` (Boolean) When this option is NOT enabled a 128-bit unique identifier is exposed to your server through the virtual BIOS. Each server receives a different UUID. Some propriety licensed software utilise this identifier to "tie" the license to a specific server.
+
+Read-Only:
+
+- `cloud_init` (Boolean) When this option is enabled the Cloud Server will be provided a datasource for the cloud-init service.
+- `qemu_guest_agent` (Boolean) When this option is enabled the server will allow QEMU Guest Agent to perform password reset without rebooting.
+- `uefi_boot` (Boolean) When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS.
+
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 	"terraform-provider-binarylane/internal/resources"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -27,12 +27,25 @@ type serverDataSource struct {
 
 type serverDataModel struct {
 	resources.ServerModel
-	PublicIpv4Addresses  types.List   `tfsdk:"public_ipv4_addresses"`
-	PrivateIPv4Addresses types.List   `tfsdk:"private_ipv4_addresses"`
-	Permalink            types.String `tfsdk:"permalink"`
-	Memory               types.Int32  `tfsdk:"memory"`
-	Disk                 types.Int32  `tfsdk:"disk"`
-	// AdvancedFeatures     types.Set    `tfsdk:"advanced_features"`
+	PublicIpv4Addresses  types.List             `tfsdk:"public_ipv4_addresses"`
+	PrivateIPv4Addresses types.List             `tfsdk:"private_ipv4_addresses"`
+	Permalink            types.String           `tfsdk:"permalink"`
+	Memory               types.Int32            `tfsdk:"memory"`
+	Disk                 types.Int32            `tfsdk:"disk"`
+	AdvancedFeatures     *advancedFeaturesModel `tfsdk:"advanced_features"`
+}
+
+type advancedFeaturesModel struct {
+	EmulatedHyperV  types.Bool `tfsdk:"emulated_hyperv"`
+	EmulatedDevices types.Bool `tfsdk:"emulated_devices"`
+	NestedVirt      types.Bool `tfsdk:"nested_virt"`
+	DriverDisk      types.Bool `tfsdk:"driver_disk"`
+	UnsetUUID       types.Bool `tfsdk:"unset_uuid"`
+	LocalRTC        types.Bool `tfsdk:"local_rtc"`
+	EmulatedTPM     types.Bool `tfsdk:"emulated_tpm"`
+	CloudInit       types.Bool `tfsdk:"cloud_init"`
+	QemuGuestAgent  types.Bool `tfsdk:"qemu_guest_agent"`
+	UefiBoot        types.Bool `tfsdk:"uefi_boot"`
 }
 
 func (d *serverDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -59,10 +72,10 @@ func (d *serverDataSource) Metadata(ctx context.Context, req datasource.Metadata
 
 func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	ds, err := convertResourceSchemaToDataSourceSchema(
-		resources.ServerResourceSchema(ctx),
+		serverSchema(ctx),
 		AttributeConfig{
 			RequiredAttributes: &[]string{"id"},
-			ExcludedAttributes: &[]string{"password"},
+			ExcludedAttributes: &[]string{"password", "public_ipv4_count", "password", "password_change_supported", "timeouts"},
 		})
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to convert resource schema to data source schema", err.Error())
@@ -70,134 +83,6 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 	}
 	resp.Schema = *ds
 	resp.Schema.Description = "Retrieve details about a BinaryLane Server."
-
-	// Overrides
-	id := resp.Schema.Attributes["id"]
-	resp.Schema.Attributes["id"] = schema.Int64Attribute{
-		Description:         id.GetDescription(),
-		MarkdownDescription: id.GetMarkdownDescription(),
-		Required:            true, // ID is required to find the server
-	}
-
-	nameDescription := "The hostname of your server, such as vps01.yourcompany.com."
-	resp.Schema.Attributes["name"] = &schema.StringAttribute{
-		Description:         nameDescription,
-		MarkdownDescription: nameDescription,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	backupsDescription := "If `true`, the server will be backed up twice per day. By default, backups are disabled."
-	resp.Schema.Attributes["backups"] = &schema.BoolAttribute{
-		Description:         backupsDescription,
-		MarkdownDescription: backupsDescription,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	sshKeysDescription := "This is a list of SSH key ids that were added to the server during creation."
-	resp.Schema.Attributes["ssh_keys"] = &schema.ListAttribute{
-		ElementType:         types.Int64Type,
-		Description:         sshKeysDescription,
-		MarkdownDescription: sshKeysDescription,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	userDataDescription := "A script or cloud-config YAML file to configure the server."
-	resp.Schema.Attributes["user_data"] = &schema.StringAttribute{
-		Description:         userDataDescription,
-		MarkdownDescription: userDataDescription,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	vpcIdDescription := "ID of the Virtual Private Cloud (VPC) the server is connected to."
-	resp.Schema.Attributes["vpc_id"] = &schema.Int64Attribute{
-		Description:         vpcIdDescription,
-		MarkdownDescription: vpcIdDescription,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	// Additional attributes
-	resp.Schema.Attributes["permalink"] = &schema.StringAttribute{
-		Description:         "A randomly generated two-word identifier assigned to servers in regions that support this feature",
-		MarkdownDescription: "A randomly generated two-word identifier assigned to servers in regions that support this feature",
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	publicIpv4AddressesDescription := "The public IPv4 addresses assigned to the server."
-	resp.Schema.Attributes["public_ipv4_addresses"] = &schema.ListAttribute{
-		Description:         publicIpv4AddressesDescription,
-		MarkdownDescription: publicIpv4AddressesDescription,
-		ElementType:         types.StringType,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	privateIpv4AddressesDescription := "The private IPv4 addresses assigned to the server."
-	resp.Schema.Attributes["private_ipv4_addresses"] = &schema.ListAttribute{
-		Description:         privateIpv4AddressesDescription,
-		MarkdownDescription: privateIpv4AddressesDescription,
-		ElementType:         types.StringType,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	memoryDescription := "The amount of memory in MB assigned to the server."
-	resp.Schema.Attributes["memory"] = &schema.Int32Attribute{
-		Description:         memoryDescription,
-		MarkdownDescription: memoryDescription,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	diskDescription := "The amount of storage in GB assigned to the server."
-	resp.Schema.Attributes["disk"] = &schema.Int32Attribute{
-		Description:         diskDescription,
-		MarkdownDescription: diskDescription,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	// advFeatureDescripton := `By default, server will have some advanced features enabled. To only enable specific advance ` +
-	// 	`features, provide as a list. Any currently enabled advanced features that aren't included in the list will be disabled.`
-	// advFeatureDescriptonMarkdown := advFeatureDescripton + `
-
-	// | Value | Description |
-	// | ----- | ----------- |
-	// | ` + "`" + `emulated-hyperv` + "`" + ` | Enable HyperV (a hypervisor produced by Microsoft) support. Enabled by default on Windows servers, generally of no value for non-Windows servers. |
-	// | ` + "`" + `emulated-devices` + "`" + ` | When emulated devices is enabled, the KVM specific \"VirtIO\" disk drive and network devices are removed, and replaced with emulated versions of physical hardware: an old IDE HDD and an Intel E1000 network card.  Emulated devices are much slower than the VirtIO devices, and so this option should not be enabled unless absolutely necessary. |
-	// | ` + "`" + `nested-virt` + "`" + ` | When this option is enabled the functionality necessary to run your own KVM servers within your server is enabled. Note that all the networking limits - one MAC address per VPS, restricted to specific IPs - still apply to public cloud so this is feature is generally only useful in combination with Virtual Private Cloud. |
-	// | ` + "`" + `driver-disk` + "`" + ` | When this option is enabled a copy of the KVM driver disc for Windows (\"virtio-win.iso\") will be attached to your server as a virtual CD. This option can also be used in combination with your own attached backup when installing Windows. |
-	// | ` + "`" + `unset-uuid` + "`" + ` | When this option is NOT enabled a 128-bit unique identifier is exposed to your server through the virtual BIOS. Each server receives a different UUID. Some propriety licensed software utilise this identifier to \"tie\" the license to a specific server. |
-	// | ` + "`" + `local-rtc` + "`" + ` | When a server is booted the virtual BIOS receives the current date and time from the host node. The BIOS does not have an explicit timezone, so the timezone used is implicit and must be understood by the operating system. Most operating systems other than Windows expect the time to be UTC since it allows the operating system to control the timezone used when displaying the time. Our Windows installations have also been customized to use UTC, but when using your own installation of Windows this should be set to the host node's local timezone. |
-	// | ` + "`" + `emulated-tpm` + "`" + ` | When enabled this provides an emulated TPM v1.2 device to your Cloud Server. Warning: the TPM state is not backed up. |
-	// | ` + "`" + `cloud-init` + "`" + ` | (Read-Only) When this option is enabled the Cloud Server will be provided a datasource for the cloud-init service. |
-	// | ` + "`" + `qemu-guest-agent` + "`" + ` | (Read-Only) When this option is enabled the server will allow QEMU Guest Agent to perform password reset without rebooting. |
-	// | ` + "`" + `uefi-boot` + "`" + ` | (Read-Only) When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS. |
-	// `
-
-	// resp.Schema.Attributes["advanced_features"] = &schema.SetAttribute{
-	// 	ElementType:         basetypes.StringType{},
-	// 	Description:         advFeatureDescripton,
-	// 	MarkdownDescription: advFeatureDescriptonMarkdown,
-	// 	Optional:            false,
-	// 	Required:            false,
-	// 	Computed:            true,
-	// }
 }
 
 func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -240,9 +125,19 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.Memory = types.Int32Value(*serverResp.JSON200.Server.Memory)
 	data.Disk = types.Int32Value(*serverResp.JSON200.Server.Disk)
 
-	// serverRespAdvancedFeatures, diag := types.SetValueFrom(ctx, basetypes.StringType{}, serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures)
-	// diags.Append(diag...)
-	// data.AdvancedFeatures = serverRespAdvancedFeatures
+	advFeat := *serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
+	data.AdvancedFeatures = &advancedFeaturesModel{
+		EmulatedHyperV:  types.BoolValue(slices.Contains(advFeat, "emulated-hyperv")),
+		EmulatedDevices: types.BoolValue(slices.Contains(advFeat, "emulated-devices")),
+		NestedVirt:      types.BoolValue(slices.Contains(advFeat, "nested-virt")),
+		DriverDisk:      types.BoolValue(slices.Contains(advFeat, "driver-disk")),
+		UnsetUUID:       types.BoolValue(slices.Contains(advFeat, "unset-uuid")),
+		LocalRTC:        types.BoolValue(slices.Contains(advFeat, "local-rtc")),
+		EmulatedTPM:     types.BoolValue(slices.Contains(advFeat, "emulated-tpm")),
+		CloudInit:       types.BoolValue(slices.Contains(advFeat, "cloud-init")),
+		QemuGuestAgent:  types.BoolValue(slices.Contains(advFeat, "qemu-guest-agent")),
+		UefiBoot:        types.BoolValue(slices.Contains(advFeat, "uefi-boot")),
+	}
 
 	publicIpv4Addresses := []string{}
 	privateIpv4Addresses := []string{}

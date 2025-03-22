@@ -125,6 +125,7 @@ func convertResourceAttrToDataSourceAttr(name string, attribute r_schema.Attribu
 			MarkdownDescription: attribute.GetMarkdownDescription(),
 			DeprecationMessage:  attribute.GetDeprecationMessage(),
 		}, nil
+
 	default:
 		if t, isList := attribute.(r_schema.ListNestedAttribute); isList {
 			nestedObjectAttrs := make(map[string]d_schema.Attribute)
@@ -164,7 +165,6 @@ func convertResourceAttrToDataSourceAttr(name string, attribute r_schema.Attribu
 				DeprecationMessage:  attribute.GetDeprecationMessage(),
 			}, nil
 		}
-
 		if t, isObject := attribute.(r_schema.SingleNestedAttribute); isObject {
 			attributeTypes := make(map[string]attr.Type, len(t.GetAttributes()))
 			for name, attribute := range t.GetAttributes() {
@@ -181,6 +181,19 @@ func convertResourceAttrToDataSourceAttr(name string, attribute r_schema.Attribu
 				MarkdownDescription: attribute.GetMarkdownDescription(),
 				DeprecationMessage:  attribute.GetDeprecationMessage(),
 				AttributeTypes:      attributeTypes,
+			}, nil
+		}
+
+		if t, isObject := attribute.GetType().(types.ObjectType); isObject {
+			return d_schema.ObjectAttribute{
+				AttributeTypes:      t.AttrTypes,
+				Description:         attribute.GetDescription(),
+				Required:            required,
+				Optional:            optional,
+				Computed:            !required,
+				Sensitive:           attribute.IsSensitive(),
+				MarkdownDescription: attribute.GetMarkdownDescription(),
+				DeprecationMessage:  attribute.GetDeprecationMessage(),
 			}, nil
 		}
 
