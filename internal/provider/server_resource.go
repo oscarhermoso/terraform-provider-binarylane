@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -54,11 +53,10 @@ type serverResource struct {
 type serverResourceModel struct {
 	serverDataModel
 
-	PublicIpv4Count           types.Int32    `tfsdk:"public_ipv4_count"`
-	SourceAndDestinationCheck types.Bool     `tfsdk:"source_and_destination_check"`
-	Password                  types.String   `tfsdk:"password"`
-	PasswordChangeSupported   types.Bool     `tfsdk:"password_change_supported"`
-	Timeouts                  timeouts.Value `tfsdk:"timeouts"`
+	PublicIpv4Count         types.Int32    `tfsdk:"public_ipv4_count"`
+	Password                types.String   `tfsdk:"password"`
+	PasswordChangeSupported types.Bool     `tfsdk:"password_change_supported"`
+	Timeouts                timeouts.Value `tfsdk:"timeouts"`
 }
 
 func (d *serverResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -337,93 +335,6 @@ func serverSchema(ctx context.Context) schema.Schema {
 			Update: true,
 		})
 
-	s.Attributes["advanced_features"] = &schema.SingleNestedAttribute{
-		Optional: true,
-		Computed: true,
-		CustomType: basetypes.ObjectType{
-			AttrTypes: map[string]attr.Type{
-				"emulated_hyperv":  types.BoolType,
-				"emulated_devices": types.BoolType,
-				"nested_virt":      types.BoolType,
-				"driver_disk":      types.BoolType,
-				"unset_uuid":       types.BoolType,
-				"local_rtc":        types.BoolType,
-				"emulated_tpm":     types.BoolType,
-				"cloud_init":       types.BoolType,
-				"qemu_guest_agent": types.BoolType,
-				"uefi_boot":        types.BoolType,
-			},
-		},
-		Attributes: map[string]schema.Attribute{
-			"emulated_hyperv": schema.BoolAttribute{
-				Description: "Enable HyperV (a hypervisor produced by Microsoft) support. Enabled by default on Windows " +
-					"servers, generally of no value for non-Windows servers.",
-				Optional: true,
-				Computed: true,
-			},
-			"emulated_devices": schema.BoolAttribute{
-				Description: "When emulated devices is enabled, the KVM specific \"VirtIO\" disk drive and network devices " +
-					"are removed, and replaced with emulated versions of physical hardware: an old IDE HDD and an Intel E1000 " +
-					"network card.  Emulated devices are much slower than the VirtIO devices, and so this option should not " +
-					"be enabled unless absolutely necessary.",
-				Optional: true,
-				Computed: true,
-			},
-			"nested_virt": schema.BoolAttribute{
-				Description: "When this option is enabled the functionality necessary to run your own KVM servers within " +
-					"your server is enabled. Note that all the networking limits - one MAC address per VPS, restricted to " +
-					"specific IPs - still apply to public cloud so this is feature is generally only useful in combination " +
-					"with Virtual Private Cloud.",
-				Optional: true,
-				Computed: true,
-			},
-			"driver_disk": schema.BoolAttribute{
-				Description: "When this option is enabled a copy of the KVM driver disc for Windows (\"virtio-win.iso\") " +
-					"will be attached to your server as a virtual CD. This option can also be used in combination with your " +
-					"own attached backup when installing Windows.",
-				Optional: true,
-				Computed: true,
-			},
-			"unset_uuid": schema.BoolAttribute{
-				Description: "When this option is NOT enabled a 128-bit unique identifier is exposed to your server through " +
-					"the virtual BIOS. Each server receives a different UUID. Some propriety licensed software utilise this " +
-					"identifier to \"tie\" the license to a specific server.",
-				Optional: true,
-				Computed: true,
-			},
-			"local_rtc": schema.BoolAttribute{
-				Description: "When a server is booted the virtual BIOS receives the current date and time from the host " +
-					"node. The BIOS does not have an explicit timezone, so the timezone used is implicit and must be " +
-					"understood by the operating system. Most operating systems other than Windows expect the time to be UTC " +
-					"since it allows the operating system to control the timezone used when displaying the time. Our Windows " +
-					"installations have also been customized to use UTC, but when using your own installation of Windows this " +
-					"should be set to the host node's local timezone.",
-				Optional: true,
-				Computed: true,
-			},
-			"emulated_tpm": schema.BoolAttribute{
-				Description: "When enabled this provides an emulated TPM v1.2 device to your Cloud Server. Warning: the TPM " +
-					"state is not backed up.",
-				Optional: true,
-				Computed: true,
-			},
-			"cloud_init": schema.BoolAttribute{
-				Description: "When this option is enabled the Cloud Server will be provided a datasource for the cloud-init " +
-					"service.",
-				Computed: true, // Read-only
-			},
-			"qemu_guest_agent": schema.BoolAttribute{
-				Description: "When this option is enabled the server will allow QEMU Guest Agent to perform password reset " +
-					"without rebooting.",
-				Computed: true, // Read-only
-			},
-			"uefi_boot": schema.BoolAttribute{
-				Description: "When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS.",
-				Computed:    true, // Read-only
-			},
-		},
-	}
-
 	return s
 }
 
@@ -618,18 +529,32 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	serverRespSourceDestCheck := types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
 	data.SourceAndDestinationCheck = serverRespSourceDestCheck
 
+	// TODO: Fix broken test, initial server creation completes with cloud_init = false, but should be true
+	//   Next steps, check response on server creation to see if cloud_init is set to true
+	// === NAME  TestServerResource
+	//   server_resource_test.go:30: Step 2/5 error running import: ImportStateVerify attributes not equivalent. Difference is shown below. The - symbol indicates attributes missing after import.
+	//         map[string]string{
+	//       -       "advanced_features.cloud_init": "false",
+	//       +       "advanced_features.cloud_init": "true",
+	//         }
 	advFeat := *serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
-	data.AdvancedFeatures = &advancedFeaturesModel{
-		EmulatedHyperV:  types.BoolValue(slices.Contains(advFeat, "emulated-hyperv")),
-		EmulatedDevices: types.BoolValue(slices.Contains(advFeat, "emulated-devices")),
-		EmulatedTPM:     types.BoolValue(slices.Contains(advFeat, "emulated-tpm")),
-		NestedVirt:      types.BoolValue(slices.Contains(advFeat, "nested-virt")),
-		DriverDisk:      types.BoolValue(slices.Contains(advFeat, "driver-disk")),
-		UnsetUUID:       types.BoolValue(slices.Contains(advFeat, "unset-uuid")),
-		LocalRTC:        types.BoolValue(slices.Contains(advFeat, "local-rtc")),
-		CloudInit:       types.BoolValue(slices.Contains(advFeat, "cloud-init")),
-		QemuGuestAgent:  types.BoolValue(slices.Contains(advFeat, "qemu-guest-agent")),
-		UefiBoot:        types.BoolValue(slices.Contains(advFeat, "uefi-boot")),
+	data.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
+		resources.AdvancedFeaturesValue{}.AttributeTypes(ctx),
+		map[string]attr.Value{
+			"emulated_hyperv":  types.BoolValue(slices.Contains(advFeat, "emulated-hyperv")),
+			"emulated_devices": types.BoolValue(slices.Contains(advFeat, "emulated-devices")),
+			"nested_virt":      types.BoolValue(slices.Contains(advFeat, "nested-virt")),
+			"driver_disk":      types.BoolValue(slices.Contains(advFeat, "driver-disk")),
+			"unset_uuid":       types.BoolValue(slices.Contains(advFeat, "unset-uuid")),
+			"local_rtc":        types.BoolValue(slices.Contains(advFeat, "local-rtc")),
+			"emulated_tpm":     types.BoolValue(slices.Contains(advFeat, "emulated-tpm")),
+			"cloud_init":       types.BoolValue(slices.Contains(advFeat, "cloud-init")),
+			"qemu_guest_agent": types.BoolValue(slices.Contains(advFeat, "qemu-guest-agent")),
+			"uefi_boot":        types.BoolValue(slices.Contains(advFeat, "uefi-boot")),
+		})
+	if diags.HasError() {
+		resp.Diagnostics.Append(diags...)
+		data.AdvancedFeatures = resources.NewAdvancedFeaturesValueUnknown()
 	}
 
 	publicIpv4Addresses := []string{}
@@ -648,9 +573,12 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Update advanced features
-	err = r.updateAdvancedFeatures(ctx, data.Id.ValueInt64(), config.AdvancedFeatures, data.AdvancedFeatures)
+	err = r.updateAdvancedFeatures(ctx, data.Id.ValueInt64(), &config.AdvancedFeatures, &data.AdvancedFeatures)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating advanced features", err.Error())
 	}
@@ -731,6 +659,7 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var diag diag.Diagnostics
 	var config, plan, state serverResourceModel
 
 	// Read Terraform plan data into the model
@@ -1019,9 +948,14 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 	}
 
-	err := r.updateAdvancedFeatures(ctx, state.Id.ValueInt64(), config.AdvancedFeatures, plan.AdvancedFeatures)
+	err := r.updateAdvancedFeatures(ctx, state.Id.ValueInt64(), &config.AdvancedFeatures, &state.AdvancedFeatures)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating advanced features", err.Error())
+		return
+	}
+	resp.Diagnostics.Append(diag...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -1287,17 +1221,22 @@ func setServerResourceState(ctx context.Context, data *serverResourceModel, serv
 	data.Backups = types.BoolValue(serverResp.Server.NextBackupWindow != nil)
 
 	advFeat := *serverResp.Server.AdvancedFeatures.EnabledAdvancedFeatures
-	data.AdvancedFeatures = &advancedFeaturesModel{
-		EmulatedHyperV:  types.BoolValue(slices.Contains(advFeat, "emulated-hyperv")),
-		EmulatedDevices: types.BoolValue(slices.Contains(advFeat, "emulated-devices")),
-		NestedVirt:      types.BoolValue(slices.Contains(advFeat, "nested-virt")),
-		DriverDisk:      types.BoolValue(slices.Contains(advFeat, "driver-disk")),
-		UnsetUUID:       types.BoolValue(slices.Contains(advFeat, "unset-uuid")),
-		LocalRTC:        types.BoolValue(slices.Contains(advFeat, "local-rtc")),
-		EmulatedTPM:     types.BoolValue(slices.Contains(advFeat, "emulated-tpm")),
-		CloudInit:       types.BoolValue(slices.Contains(advFeat, "cloud-init")),
-		QemuGuestAgent:  types.BoolValue(slices.Contains(advFeat, "qemu-guest-agent")),
-		UefiBoot:        types.BoolValue(slices.Contains(advFeat, "uefi-boot")),
+	data.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
+		resources.AdvancedFeaturesValue{}.AttributeTypes(ctx),
+		map[string]attr.Value{
+			"emulated_hyperv":  types.BoolValue(slices.Contains(advFeat, "emulated-hyperv")),
+			"emulated_devices": types.BoolValue(slices.Contains(advFeat, "emulated-devices")),
+			"nested_virt":      types.BoolValue(slices.Contains(advFeat, "nested-virt")),
+			"driver_disk":      types.BoolValue(slices.Contains(advFeat, "driver-disk")),
+			"unset_uuid":       types.BoolValue(slices.Contains(advFeat, "unset-uuid")),
+			"local_rtc":        types.BoolValue(slices.Contains(advFeat, "local-rtc")),
+			"emulated_tpm":     types.BoolValue(slices.Contains(advFeat, "emulated-tpm")),
+			"cloud_init":       types.BoolValue(slices.Contains(advFeat, "cloud-init")),
+			"qemu_guest_agent": types.BoolValue(slices.Contains(advFeat, "qemu-guest-agent")),
+			"uefi_boot":        types.BoolValue(slices.Contains(advFeat, "uefi-boot")),
+		})
+	if diags.HasError() {
+		data.AdvancedFeatures = resources.NewAdvancedFeaturesValueUnknown()
 	}
 
 	publicIpv4Addresses := []string{}
@@ -1335,17 +1274,17 @@ func setServerResourceState(ctx context.Context, data *serverResourceModel, serv
 func (r *serverResource) updateAdvancedFeatures(
 	ctx context.Context,
 	serverId int64,
-	config *advancedFeaturesModel,
-	data *advancedFeaturesModel,
+	config *resources.AdvancedFeaturesValue,
+	data *resources.AdvancedFeaturesValue,
 ) error {
 	// If none of the writable advanced features have been modified by the user, we can skip the update
-	if (config.EmulatedHyperV.IsNull() || config.EmulatedHyperV.Equal(data.EmulatedHyperV)) &&
+	if (config.EmulatedHyperv.IsNull() || config.EmulatedHyperv.Equal(data.EmulatedHyperv)) &&
 		(config.EmulatedDevices.IsNull() || config.EmulatedDevices.Equal(data.EmulatedDevices)) &&
-		(config.EmulatedTPM.IsNull() || config.EmulatedTPM.Equal(data.EmulatedTPM)) &&
+		(config.EmulatedTpm.IsNull() || config.EmulatedTpm.Equal(data.EmulatedTpm)) &&
 		(config.NestedVirt.IsNull() || config.NestedVirt.Equal(data.NestedVirt)) &&
 		(config.DriverDisk.IsNull() || config.DriverDisk.Equal(data.DriverDisk)) &&
-		(config.UnsetUUID.IsNull() || config.UnsetUUID.Equal(data.UnsetUUID)) &&
-		(config.LocalRTC.IsNull() || config.LocalRTC.Equal(data.LocalRTC)) {
+		(config.UnsetUuid.IsNull() || config.UnsetUuid.Equal(data.UnsetUuid)) &&
+		(config.LocalRtc.IsNull() || config.LocalRtc.Equal(data.LocalRtc)) {
 		return nil
 	}
 
@@ -1354,7 +1293,7 @@ func (r *serverResource) updateAdvancedFeatures(
 	enabledAdvancedFeatures := []string{}
 
 	// The enabled advanced features are flags that the user has configured, or are configured by default
-	emulatedHyperV := config.EmulatedHyperV.ValueBool() || config.EmulatedHyperV.IsNull() && data.EmulatedDevices.ValueBool()
+	emulatedHyperV := config.EmulatedHyperv.ValueBool() || config.EmulatedHyperv.IsNull() && data.EmulatedDevices.ValueBool()
 	if emulatedHyperV {
 		enabledAdvancedFeatures = append(enabledAdvancedFeatures, "emulated-hyperv")
 	}
@@ -1362,7 +1301,7 @@ func (r *serverResource) updateAdvancedFeatures(
 	if emulatedDevices {
 		enabledAdvancedFeatures = append(enabledAdvancedFeatures, "emulated-devices")
 	}
-	emulatedTPM := config.EmulatedTPM.ValueBool() || config.EmulatedTPM.IsNull() && data.EmulatedTPM.ValueBool()
+	emulatedTPM := config.EmulatedTpm.ValueBool() || config.EmulatedTpm.IsNull() && data.EmulatedTpm.ValueBool()
 	if emulatedTPM {
 		enabledAdvancedFeatures = append(enabledAdvancedFeatures, "emulated-tpm")
 	}
@@ -1374,11 +1313,11 @@ func (r *serverResource) updateAdvancedFeatures(
 	if driverDisk {
 		enabledAdvancedFeatures = append(enabledAdvancedFeatures, "driver-disk")
 	}
-	unsetUUID := config.UnsetUUID.ValueBool() || config.UnsetUUID.IsNull() && data.UnsetUUID.ValueBool()
+	unsetUUID := config.UnsetUuid.ValueBool() || config.UnsetUuid.IsNull() && data.UnsetUuid.ValueBool()
 	if unsetUUID {
 		enabledAdvancedFeatures = append(enabledAdvancedFeatures, "unset-uuid")
 	}
-	localRTC := config.LocalRTC.ValueBool() || config.LocalRTC.IsNull() && data.LocalRTC.ValueBool()
+	localRTC := config.LocalRtc.ValueBool() || config.LocalRtc.IsNull() && data.LocalRtc.ValueBool()
 	if localRTC {
 		enabledAdvancedFeatures = append(enabledAdvancedFeatures, "local-rtc")
 	}
@@ -1417,13 +1356,13 @@ func (r *serverResource) updateAdvancedFeatures(
 		return fmt.Errorf("failed to confirm advanced features for server was successful: %w", err)
 	}
 
-	data.EmulatedHyperV = types.BoolValue(emulatedHyperV)
+	data.EmulatedHyperv = types.BoolValue(emulatedHyperV)
 	data.EmulatedDevices = types.BoolValue(emulatedDevices)
-	data.EmulatedTPM = types.BoolValue(emulatedTPM)
+	data.EmulatedTpm = types.BoolValue(emulatedTPM)
 	data.NestedVirt = types.BoolValue(nestedVirt)
 	data.DriverDisk = types.BoolValue(driverDisk)
-	data.UnsetUUID = types.BoolValue(unsetUUID)
-	data.LocalRTC = types.BoolValue(localRTC)
+	data.UnsetUuid = types.BoolValue(unsetUUID)
+	data.LocalRtc = types.BoolValue(localRTC)
 	data.CloudInit = types.BoolValue(cloudInit)
 	data.QemuGuestAgent = types.BoolValue(qemuGuestAgent)
 	data.UefiBoot = types.BoolValue(uefiBoot)

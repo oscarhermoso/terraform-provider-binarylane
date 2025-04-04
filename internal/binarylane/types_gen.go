@@ -407,6 +407,7 @@ const (
 	PcI440fx5point0  VmMachineType = "pc_i440fx_5point0"
 	PcI440fx5point1  VmMachineType = "pc_i440fx_5point1"
 	PcI440fx7point2  VmMachineType = "pc_i440fx_7point2"
+	PcI440fx8point2  VmMachineType = "pc_i440fx_8point2"
 )
 
 // Account defines model for Account.
@@ -2976,13 +2977,14 @@ type VideoDevice string
 // VmMachineType
 // | Value | Description |
 // | ----- | ----------- |
-// | pc_i440fx_1point5 | PC I440 FX 1.5 |
-// | pc_i440fx_2point11 | PC I440 FX 2.11 |
-// | pc_i440fx_4point1 | PC I440 FX 4.1 |
-// | pc_i440fx_4point2 | PC I440 FX 4.2 |
-// | pc_i440fx_5point0 | PC I440 FX 5.0 |
-// | pc_i440fx_5point1 | PC I440 FX 5.1 |
-// | pc_i440fx_7point2 | PC I440 FX 7.2 |
+// | pc_i440fx_1point5 | PC i440FX 1.5 |
+// | pc_i440fx_2point11 | PC i440FX 2.11 |
+// | pc_i440fx_4point1 | PC i440FX 4.1 |
+// | pc_i440fx_4point2 | PC i440FX 4.2 |
+// | pc_i440fx_5point0 | PC i440FX 5.0 |
+// | pc_i440fx_5point1 | PC i440FX 5.1 |
+// | pc_i440fx_7point2 | PC i440FX 7.2 |
+// | pc_i440fx_8point2 | PC i440FX 8.2 |
 type VmMachineType string
 
 // Vpc defines model for Vpc.

@@ -7,7 +7,9 @@ import (
 	"slices"
 	"terraform-provider-binarylane/internal/resources"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -27,25 +29,12 @@ type serverDataSource struct {
 
 type serverDataModel struct {
 	resources.ServerModel
-	PublicIpv4Addresses  types.List             `tfsdk:"public_ipv4_addresses"`
-	PrivateIPv4Addresses types.List             `tfsdk:"private_ipv4_addresses"`
-	Permalink            types.String           `tfsdk:"permalink"`
-	Memory               types.Int32            `tfsdk:"memory"`
-	Disk                 types.Int32            `tfsdk:"disk"`
-	AdvancedFeatures     *advancedFeaturesModel `tfsdk:"advanced_features"`
-}
-
-type advancedFeaturesModel struct {
-	EmulatedHyperV  types.Bool `tfsdk:"emulated_hyperv"`
-	EmulatedDevices types.Bool `tfsdk:"emulated_devices"`
-	NestedVirt      types.Bool `tfsdk:"nested_virt"`
-	DriverDisk      types.Bool `tfsdk:"driver_disk"`
-	UnsetUUID       types.Bool `tfsdk:"unset_uuid"`
-	LocalRTC        types.Bool `tfsdk:"local_rtc"`
-	EmulatedTPM     types.Bool `tfsdk:"emulated_tpm"`
-	CloudInit       types.Bool `tfsdk:"cloud_init"`
-	QemuGuestAgent  types.Bool `tfsdk:"qemu_guest_agent"`
-	UefiBoot        types.Bool `tfsdk:"uefi_boot"`
+	PublicIpv4Addresses       types.List   `tfsdk:"public_ipv4_addresses"`
+	PrivateIPv4Addresses      types.List   `tfsdk:"private_ipv4_addresses"`
+	Permalink                 types.String `tfsdk:"permalink"`
+	Memory                    types.Int32  `tfsdk:"memory"`
+	Disk                      types.Int32  `tfsdk:"disk"`
+	SourceAndDestinationCheck types.Bool   `tfsdk:"source_and_destination_check"`
 }
 
 func (d *serverDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -86,6 +75,7 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 }
 
 func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var diag diag.Diagnostics
 	var data serverDataModel
 
 	// Read Terraform configuration data into the model
@@ -124,19 +114,25 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
 	data.Memory = types.Int32Value(*serverResp.JSON200.Server.Memory)
 	data.Disk = types.Int32Value(*serverResp.JSON200.Server.Disk)
+	data.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
 
 	advFeat := *serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
-	data.AdvancedFeatures = &advancedFeaturesModel{
-		EmulatedHyperV:  types.BoolValue(slices.Contains(advFeat, "emulated-hyperv")),
-		EmulatedDevices: types.BoolValue(slices.Contains(advFeat, "emulated-devices")),
-		NestedVirt:      types.BoolValue(slices.Contains(advFeat, "nested-virt")),
-		DriverDisk:      types.BoolValue(slices.Contains(advFeat, "driver-disk")),
-		UnsetUUID:       types.BoolValue(slices.Contains(advFeat, "unset-uuid")),
-		LocalRTC:        types.BoolValue(slices.Contains(advFeat, "local-rtc")),
-		EmulatedTPM:     types.BoolValue(slices.Contains(advFeat, "emulated-tpm")),
-		CloudInit:       types.BoolValue(slices.Contains(advFeat, "cloud-init")),
-		QemuGuestAgent:  types.BoolValue(slices.Contains(advFeat, "qemu-guest-agent")),
-		UefiBoot:        types.BoolValue(slices.Contains(advFeat, "uefi-boot")),
+	data.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
+		resources.AdvancedFeaturesValue{}.AttributeTypes(ctx),
+		map[string]attr.Value{
+			"emulated_hyperv":  types.BoolValue(slices.Contains(advFeat, "emulated-hyperv")),
+			"emulated_devices": types.BoolValue(slices.Contains(advFeat, "emulated-devices")),
+			"nested_virt":      types.BoolValue(slices.Contains(advFeat, "nested-virt")),
+			"driver_disk":      types.BoolValue(slices.Contains(advFeat, "driver-disk")),
+			"unset_uuid":       types.BoolValue(slices.Contains(advFeat, "unset-uuid")),
+			"local_rtc":        types.BoolValue(slices.Contains(advFeat, "local-rtc")),
+			"emulated_tpm":     types.BoolValue(slices.Contains(advFeat, "emulated-tpm")),
+			"cloud_init":       types.BoolValue(slices.Contains(advFeat, "cloud-init")),
+			"qemu_guest_agent": types.BoolValue(slices.Contains(advFeat, "qemu-guest-agent")),
+			"uefi_boot":        types.BoolValue(slices.Contains(advFeat, "uefi-boot")),
+		})
+	if diags.HasError() {
+		data.AdvancedFeatures = resources.NewAdvancedFeaturesValueUnknown()
 	}
 
 	publicIpv4Addresses := []string{}

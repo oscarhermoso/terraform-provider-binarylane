@@ -4,9 +4,17 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 )
@@ -14,6 +22,104 @@ import (
 func ServerResourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"advanced_features": schema.SingleNestedAttribute{
+				Attributes: map[string]schema.Attribute{
+					"cloud_init": schema.BoolAttribute{
+						Computed:            true,
+						Description:         "When this option is enabled the Cloud Server will be provided a datasource for the cloud-init service.",
+						MarkdownDescription: "When this option is enabled the Cloud Server will be provided a datasource for the cloud-init service.",
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+						},
+					},
+					"driver_disk": schema.BoolAttribute{
+						Optional:            true,
+						Computed:            true,
+						Description:         "When this option is enabled a copy of the KVM driver disc for Windows (\"virtio-win.iso\") will be attached to your server as a virtual CD. This option can also be used in combination with your own attached backup when installing Windows.",
+						MarkdownDescription: "When this option is enabled a copy of the KVM driver disc for Windows (\"virtio-win.iso\") will be attached to your server as a virtual CD. This option can also be used in combination with your own attached backup when installing Windows.",
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+						},
+					},
+					"emulated_devices": schema.BoolAttribute{
+						Optional:            true,
+						Computed:            true,
+						Description:         "When emulated devices is enabled, the KVM specific \"VirtIO\" disk drive and network devices are removed, and replaced with emulated versions of physical hardware: an old IDE HDD and an Intel E1000 network card.  Emulated devices are much slower than the VirtIO devices, and so this option should not be enabled unless absolutely necessary.",
+						MarkdownDescription: "When emulated devices is enabled, the KVM specific \"VirtIO\" disk drive and network devices are removed, and replaced with emulated versions of physical hardware: an old IDE HDD and an Intel E1000 network card.  Emulated devices are much slower than the VirtIO devices, and so this option should not be enabled unless absolutely necessary.",
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+						},
+					},
+					"emulated_hyperv": schema.BoolAttribute{
+						Optional:            true,
+						Computed:            true,
+						Description:         "Enable HyperV (a hypervisor produced by Microsoft) support. Enabled by default on Windows servers, generally of no value for non-Windows servers.",
+						MarkdownDescription: "Enable HyperV (a hypervisor produced by Microsoft) support. Enabled by default on Windows servers, generally of no value for non-Windows servers.",
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+						},
+					},
+					"emulated_tpm": schema.BoolAttribute{
+						Optional:            true,
+						Computed:            true,
+						Description:         "When enabled this provides an emulated TPM v1.2 device to your Cloud Server. Warning: the TPM state is not backed up.",
+						MarkdownDescription: "When enabled this provides an emulated TPM v1.2 device to your Cloud Server. Warning: the TPM state is not backed up.",
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+						},
+					},
+					"local_rtc": schema.BoolAttribute{
+						Optional:            true,
+						Computed:            true,
+						Description:         "When a server is booted the virtual BIOS receives the current date and time from the host node. The BIOS does not have an explicit timezone, so the timezone used is implicit and must be understood by the operating system. Most operating systems other than Windows expect the time to be UTC since it allows the operating system to control the timezone used when displaying the time. Our Windows installations have also been customized to use UTC, but when using your own installation of Windows this should be set to the host node's local timezone.",
+						MarkdownDescription: "When a server is booted the virtual BIOS receives the current date and time from the host node. The BIOS does not have an explicit timezone, so the timezone used is implicit and must be understood by the operating system. Most operating systems other than Windows expect the time to be UTC since it allows the operating system to control the timezone used when displaying the time. Our Windows installations have also been customized to use UTC, but when using your own installation of Windows this should be set to the host node's local timezone.",
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+						},
+					},
+					"nested_virt": schema.BoolAttribute{
+						Optional:            true,
+						Computed:            true,
+						Description:         "When this option is enabled the functionality necessary to run your own KVM servers within your server is enabled. Note that all the networking limits - one MAC address per VPS, restricted to specific IPs - still apply to public cloud so this feature is generally only useful in combination with Virtual Private Cloud.",
+						MarkdownDescription: "When this option is enabled the functionality necessary to run your own KVM servers within your server is enabled. Note that all the networking limits - one MAC address per VPS, restricted to specific IPs - still apply to public cloud so this feature is generally only useful in combination with Virtual Private Cloud.",
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+						},
+					},
+					"qemu_guest_agent": schema.BoolAttribute{
+						Computed:            true,
+						Description:         "When this option is enabled the server will allow QEMU Guest Agent to perform password reset without rebooting.",
+						MarkdownDescription: "When this option is enabled the server will allow QEMU Guest Agent to perform password reset without rebooting.",
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+						},
+					},
+					"uefi_boot": schema.BoolAttribute{
+						Computed:            true,
+						Description:         "When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS.",
+						MarkdownDescription: "When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS.",
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+						},
+					},
+					"unset_uuid": schema.BoolAttribute{
+						Optional:            true,
+						Computed:            true,
+						Description:         "When this option is NOT enabled a 128-bit unique identifier is exposed to your server through the virtual BIOS. Each server receives a different UUID. Some proprietary licensed software utilize this identifier to \"tie\" the license to a specific server.",
+						MarkdownDescription: "When this option is NOT enabled a 128-bit unique identifier is exposed to your server through the virtual BIOS. Each server receives a different UUID. Some proprietary licensed software utilize this identifier to \"tie\" the license to a specific server.",
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+						},
+					},
+				},
+				CustomType: AdvancedFeaturesType{
+					ObjectType: types.ObjectType{
+						AttrTypes: AdvancedFeaturesValue{}.AttributeTypes(ctx),
+					},
+				},
+				Optional: true,
+				Computed: true,
+			},
 			"backups": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
@@ -86,14 +192,834 @@ func ServerResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type ServerModel struct {
-	Backups      types.Bool   `tfsdk:"backups"`
-	Id           types.Int64  `tfsdk:"id"`
-	Image        types.String `tfsdk:"image"`
-	Name         types.String `tfsdk:"name"`
-	PortBlocking types.Bool   `tfsdk:"port_blocking"`
-	Region       types.String `tfsdk:"region"`
-	Size         types.String `tfsdk:"size"`
-	SshKeys      types.List   `tfsdk:"ssh_keys"`
-	UserData     types.String `tfsdk:"user_data"`
-	VpcId        types.Int64  `tfsdk:"vpc_id"`
+	AdvancedFeatures AdvancedFeaturesValue `tfsdk:"advanced_features"`
+	Backups          types.Bool            `tfsdk:"backups"`
+	Id               types.Int64           `tfsdk:"id"`
+	Image            types.String          `tfsdk:"image"`
+	Name             types.String          `tfsdk:"name"`
+	PortBlocking     types.Bool            `tfsdk:"port_blocking"`
+	Region           types.String          `tfsdk:"region"`
+	Size             types.String          `tfsdk:"size"`
+	SshKeys          types.List            `tfsdk:"ssh_keys"`
+	UserData         types.String          `tfsdk:"user_data"`
+	VpcId            types.Int64           `tfsdk:"vpc_id"`
+}
+
+var _ basetypes.ObjectTypable = AdvancedFeaturesType{}
+
+type AdvancedFeaturesType struct {
+	basetypes.ObjectType
+}
+
+func (t AdvancedFeaturesType) Equal(o attr.Type) bool {
+	other, ok := o.(AdvancedFeaturesType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t AdvancedFeaturesType) String() string {
+	return "AdvancedFeaturesType"
+}
+
+func (t AdvancedFeaturesType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	cloudInitAttribute, ok := attributes["cloud_init"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`cloud_init is missing from object`)
+
+		return nil, diags
+	}
+
+	cloudInitVal, ok := cloudInitAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`cloud_init expected to be basetypes.BoolValue, was: %T`, cloudInitAttribute))
+	}
+
+	driverDiskAttribute, ok := attributes["driver_disk"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`driver_disk is missing from object`)
+
+		return nil, diags
+	}
+
+	driverDiskVal, ok := driverDiskAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`driver_disk expected to be basetypes.BoolValue, was: %T`, driverDiskAttribute))
+	}
+
+	emulatedDevicesAttribute, ok := attributes["emulated_devices"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`emulated_devices is missing from object`)
+
+		return nil, diags
+	}
+
+	emulatedDevicesVal, ok := emulatedDevicesAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`emulated_devices expected to be basetypes.BoolValue, was: %T`, emulatedDevicesAttribute))
+	}
+
+	emulatedHypervAttribute, ok := attributes["emulated_hyperv"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`emulated_hyperv is missing from object`)
+
+		return nil, diags
+	}
+
+	emulatedHypervVal, ok := emulatedHypervAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`emulated_hyperv expected to be basetypes.BoolValue, was: %T`, emulatedHypervAttribute))
+	}
+
+	emulatedTpmAttribute, ok := attributes["emulated_tpm"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`emulated_tpm is missing from object`)
+
+		return nil, diags
+	}
+
+	emulatedTpmVal, ok := emulatedTpmAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`emulated_tpm expected to be basetypes.BoolValue, was: %T`, emulatedTpmAttribute))
+	}
+
+	localRtcAttribute, ok := attributes["local_rtc"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`local_rtc is missing from object`)
+
+		return nil, diags
+	}
+
+	localRtcVal, ok := localRtcAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`local_rtc expected to be basetypes.BoolValue, was: %T`, localRtcAttribute))
+	}
+
+	nestedVirtAttribute, ok := attributes["nested_virt"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`nested_virt is missing from object`)
+
+		return nil, diags
+	}
+
+	nestedVirtVal, ok := nestedVirtAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`nested_virt expected to be basetypes.BoolValue, was: %T`, nestedVirtAttribute))
+	}
+
+	qemuGuestAgentAttribute, ok := attributes["qemu_guest_agent"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`qemu_guest_agent is missing from object`)
+
+		return nil, diags
+	}
+
+	qemuGuestAgentVal, ok := qemuGuestAgentAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`qemu_guest_agent expected to be basetypes.BoolValue, was: %T`, qemuGuestAgentAttribute))
+	}
+
+	uefiBootAttribute, ok := attributes["uefi_boot"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`uefi_boot is missing from object`)
+
+		return nil, diags
+	}
+
+	uefiBootVal, ok := uefiBootAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`uefi_boot expected to be basetypes.BoolValue, was: %T`, uefiBootAttribute))
+	}
+
+	unsetUuidAttribute, ok := attributes["unset_uuid"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`unset_uuid is missing from object`)
+
+		return nil, diags
+	}
+
+	unsetUuidVal, ok := unsetUuidAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`unset_uuid expected to be basetypes.BoolValue, was: %T`, unsetUuidAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return AdvancedFeaturesValue{
+		CloudInit:       cloudInitVal,
+		DriverDisk:      driverDiskVal,
+		EmulatedDevices: emulatedDevicesVal,
+		EmulatedHyperv:  emulatedHypervVal,
+		EmulatedTpm:     emulatedTpmVal,
+		LocalRtc:        localRtcVal,
+		NestedVirt:      nestedVirtVal,
+		QemuGuestAgent:  qemuGuestAgentVal,
+		UefiBoot:        uefiBootVal,
+		UnsetUuid:       unsetUuidVal,
+		state:           attr.ValueStateKnown,
+	}, diags
+}
+
+func NewAdvancedFeaturesValueNull() AdvancedFeaturesValue {
+	return AdvancedFeaturesValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewAdvancedFeaturesValueUnknown() AdvancedFeaturesValue {
+	return AdvancedFeaturesValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewAdvancedFeaturesValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (AdvancedFeaturesValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing AdvancedFeaturesValue Attribute Value",
+				"While creating a AdvancedFeaturesValue value, a missing attribute value was detected. "+
+					"A AdvancedFeaturesValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("AdvancedFeaturesValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid AdvancedFeaturesValue Attribute Type",
+				"While creating a AdvancedFeaturesValue value, an invalid attribute value was detected. "+
+					"A AdvancedFeaturesValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("AdvancedFeaturesValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("AdvancedFeaturesValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra AdvancedFeaturesValue Attribute Value",
+				"While creating a AdvancedFeaturesValue value, an extra attribute value was detected. "+
+					"A AdvancedFeaturesValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra AdvancedFeaturesValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewAdvancedFeaturesValueUnknown(), diags
+	}
+
+	cloudInitAttribute, ok := attributes["cloud_init"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`cloud_init is missing from object`)
+
+		return NewAdvancedFeaturesValueUnknown(), diags
+	}
+
+	cloudInitVal, ok := cloudInitAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`cloud_init expected to be basetypes.BoolValue, was: %T`, cloudInitAttribute))
+	}
+
+	driverDiskAttribute, ok := attributes["driver_disk"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`driver_disk is missing from object`)
+
+		return NewAdvancedFeaturesValueUnknown(), diags
+	}
+
+	driverDiskVal, ok := driverDiskAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`driver_disk expected to be basetypes.BoolValue, was: %T`, driverDiskAttribute))
+	}
+
+	emulatedDevicesAttribute, ok := attributes["emulated_devices"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`emulated_devices is missing from object`)
+
+		return NewAdvancedFeaturesValueUnknown(), diags
+	}
+
+	emulatedDevicesVal, ok := emulatedDevicesAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`emulated_devices expected to be basetypes.BoolValue, was: %T`, emulatedDevicesAttribute))
+	}
+
+	emulatedHypervAttribute, ok := attributes["emulated_hyperv"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`emulated_hyperv is missing from object`)
+
+		return NewAdvancedFeaturesValueUnknown(), diags
+	}
+
+	emulatedHypervVal, ok := emulatedHypervAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`emulated_hyperv expected to be basetypes.BoolValue, was: %T`, emulatedHypervAttribute))
+	}
+
+	emulatedTpmAttribute, ok := attributes["emulated_tpm"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`emulated_tpm is missing from object`)
+
+		return NewAdvancedFeaturesValueUnknown(), diags
+	}
+
+	emulatedTpmVal, ok := emulatedTpmAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`emulated_tpm expected to be basetypes.BoolValue, was: %T`, emulatedTpmAttribute))
+	}
+
+	localRtcAttribute, ok := attributes["local_rtc"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`local_rtc is missing from object`)
+
+		return NewAdvancedFeaturesValueUnknown(), diags
+	}
+
+	localRtcVal, ok := localRtcAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`local_rtc expected to be basetypes.BoolValue, was: %T`, localRtcAttribute))
+	}
+
+	nestedVirtAttribute, ok := attributes["nested_virt"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`nested_virt is missing from object`)
+
+		return NewAdvancedFeaturesValueUnknown(), diags
+	}
+
+	nestedVirtVal, ok := nestedVirtAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`nested_virt expected to be basetypes.BoolValue, was: %T`, nestedVirtAttribute))
+	}
+
+	qemuGuestAgentAttribute, ok := attributes["qemu_guest_agent"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`qemu_guest_agent is missing from object`)
+
+		return NewAdvancedFeaturesValueUnknown(), diags
+	}
+
+	qemuGuestAgentVal, ok := qemuGuestAgentAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`qemu_guest_agent expected to be basetypes.BoolValue, was: %T`, qemuGuestAgentAttribute))
+	}
+
+	uefiBootAttribute, ok := attributes["uefi_boot"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`uefi_boot is missing from object`)
+
+		return NewAdvancedFeaturesValueUnknown(), diags
+	}
+
+	uefiBootVal, ok := uefiBootAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`uefi_boot expected to be basetypes.BoolValue, was: %T`, uefiBootAttribute))
+	}
+
+	unsetUuidAttribute, ok := attributes["unset_uuid"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`unset_uuid is missing from object`)
+
+		return NewAdvancedFeaturesValueUnknown(), diags
+	}
+
+	unsetUuidVal, ok := unsetUuidAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`unset_uuid expected to be basetypes.BoolValue, was: %T`, unsetUuidAttribute))
+	}
+
+	if diags.HasError() {
+		return NewAdvancedFeaturesValueUnknown(), diags
+	}
+
+	return AdvancedFeaturesValue{
+		CloudInit:       cloudInitVal,
+		DriverDisk:      driverDiskVal,
+		EmulatedDevices: emulatedDevicesVal,
+		EmulatedHyperv:  emulatedHypervVal,
+		EmulatedTpm:     emulatedTpmVal,
+		LocalRtc:        localRtcVal,
+		NestedVirt:      nestedVirtVal,
+		QemuGuestAgent:  qemuGuestAgentVal,
+		UefiBoot:        uefiBootVal,
+		UnsetUuid:       unsetUuidVal,
+		state:           attr.ValueStateKnown,
+	}, diags
+}
+
+func NewAdvancedFeaturesValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) AdvancedFeaturesValue {
+	object, diags := NewAdvancedFeaturesValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewAdvancedFeaturesValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t AdvancedFeaturesType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewAdvancedFeaturesValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewAdvancedFeaturesValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewAdvancedFeaturesValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewAdvancedFeaturesValueMust(AdvancedFeaturesValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t AdvancedFeaturesType) ValueType(ctx context.Context) attr.Value {
+	return AdvancedFeaturesValue{}
+}
+
+var _ basetypes.ObjectValuable = AdvancedFeaturesValue{}
+
+type AdvancedFeaturesValue struct {
+	CloudInit       basetypes.BoolValue `tfsdk:"cloud_init"`
+	DriverDisk      basetypes.BoolValue `tfsdk:"driver_disk"`
+	EmulatedDevices basetypes.BoolValue `tfsdk:"emulated_devices"`
+	EmulatedHyperv  basetypes.BoolValue `tfsdk:"emulated_hyperv"`
+	EmulatedTpm     basetypes.BoolValue `tfsdk:"emulated_tpm"`
+	LocalRtc        basetypes.BoolValue `tfsdk:"local_rtc"`
+	NestedVirt      basetypes.BoolValue `tfsdk:"nested_virt"`
+	QemuGuestAgent  basetypes.BoolValue `tfsdk:"qemu_guest_agent"`
+	UefiBoot        basetypes.BoolValue `tfsdk:"uefi_boot"`
+	UnsetUuid       basetypes.BoolValue `tfsdk:"unset_uuid"`
+	state           attr.ValueState
+}
+
+func (v AdvancedFeaturesValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 10)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["cloud_init"] = basetypes.BoolType{}.TerraformType(ctx)
+	attrTypes["driver_disk"] = basetypes.BoolType{}.TerraformType(ctx)
+	attrTypes["emulated_devices"] = basetypes.BoolType{}.TerraformType(ctx)
+	attrTypes["emulated_hyperv"] = basetypes.BoolType{}.TerraformType(ctx)
+	attrTypes["emulated_tpm"] = basetypes.BoolType{}.TerraformType(ctx)
+	attrTypes["local_rtc"] = basetypes.BoolType{}.TerraformType(ctx)
+	attrTypes["nested_virt"] = basetypes.BoolType{}.TerraformType(ctx)
+	attrTypes["qemu_guest_agent"] = basetypes.BoolType{}.TerraformType(ctx)
+	attrTypes["uefi_boot"] = basetypes.BoolType{}.TerraformType(ctx)
+	attrTypes["unset_uuid"] = basetypes.BoolType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 10)
+
+		val, err = v.CloudInit.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["cloud_init"] = val
+
+		val, err = v.DriverDisk.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["driver_disk"] = val
+
+		val, err = v.EmulatedDevices.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["emulated_devices"] = val
+
+		val, err = v.EmulatedHyperv.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["emulated_hyperv"] = val
+
+		val, err = v.EmulatedTpm.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["emulated_tpm"] = val
+
+		val, err = v.LocalRtc.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["local_rtc"] = val
+
+		val, err = v.NestedVirt.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["nested_virt"] = val
+
+		val, err = v.QemuGuestAgent.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["qemu_guest_agent"] = val
+
+		val, err = v.UefiBoot.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["uefi_boot"] = val
+
+		val, err = v.UnsetUuid.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["unset_uuid"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v AdvancedFeaturesValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v AdvancedFeaturesValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v AdvancedFeaturesValue) String() string {
+	return "AdvancedFeaturesValue"
+}
+
+func (v AdvancedFeaturesValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributeTypes := map[string]attr.Type{
+		"cloud_init":       basetypes.BoolType{},
+		"driver_disk":      basetypes.BoolType{},
+		"emulated_devices": basetypes.BoolType{},
+		"emulated_hyperv":  basetypes.BoolType{},
+		"emulated_tpm":     basetypes.BoolType{},
+		"local_rtc":        basetypes.BoolType{},
+		"nested_virt":      basetypes.BoolType{},
+		"qemu_guest_agent": basetypes.BoolType{},
+		"uefi_boot":        basetypes.BoolType{},
+		"unset_uuid":       basetypes.BoolType{},
+	}
+
+	if v.IsNull() {
+		return types.ObjectNull(attributeTypes), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(attributeTypes), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		attributeTypes,
+		map[string]attr.Value{
+			"cloud_init":       v.CloudInit,
+			"driver_disk":      v.DriverDisk,
+			"emulated_devices": v.EmulatedDevices,
+			"emulated_hyperv":  v.EmulatedHyperv,
+			"emulated_tpm":     v.EmulatedTpm,
+			"local_rtc":        v.LocalRtc,
+			"nested_virt":      v.NestedVirt,
+			"qemu_guest_agent": v.QemuGuestAgent,
+			"uefi_boot":        v.UefiBoot,
+			"unset_uuid":       v.UnsetUuid,
+		})
+
+	return objVal, diags
+}
+
+func (v AdvancedFeaturesValue) Equal(o attr.Value) bool {
+	other, ok := o.(AdvancedFeaturesValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.CloudInit.Equal(other.CloudInit) {
+		return false
+	}
+
+	if !v.DriverDisk.Equal(other.DriverDisk) {
+		return false
+	}
+
+	if !v.EmulatedDevices.Equal(other.EmulatedDevices) {
+		return false
+	}
+
+	if !v.EmulatedHyperv.Equal(other.EmulatedHyperv) {
+		return false
+	}
+
+	if !v.EmulatedTpm.Equal(other.EmulatedTpm) {
+		return false
+	}
+
+	if !v.LocalRtc.Equal(other.LocalRtc) {
+		return false
+	}
+
+	if !v.NestedVirt.Equal(other.NestedVirt) {
+		return false
+	}
+
+	if !v.QemuGuestAgent.Equal(other.QemuGuestAgent) {
+		return false
+	}
+
+	if !v.UefiBoot.Equal(other.UefiBoot) {
+		return false
+	}
+
+	if !v.UnsetUuid.Equal(other.UnsetUuid) {
+		return false
+	}
+
+	return true
+}
+
+func (v AdvancedFeaturesValue) Type(ctx context.Context) attr.Type {
+	return AdvancedFeaturesType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v AdvancedFeaturesValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"cloud_init":       basetypes.BoolType{},
+		"driver_disk":      basetypes.BoolType{},
+		"emulated_devices": basetypes.BoolType{},
+		"emulated_hyperv":  basetypes.BoolType{},
+		"emulated_tpm":     basetypes.BoolType{},
+		"local_rtc":        basetypes.BoolType{},
+		"nested_virt":      basetypes.BoolType{},
+		"qemu_guest_agent": basetypes.BoolType{},
+		"uefi_boot":        basetypes.BoolType{},
+		"unset_uuid":       basetypes.BoolType{},
+	}
 }

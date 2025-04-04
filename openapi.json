@@ -12324,18 +12324,20 @@
           "pc_i440fx_4point2",
           "pc_i440fx_5point0",
           "pc_i440fx_5point1",
-          "pc_i440fx_7point2"
+          "pc_i440fx_7point2",
+          "pc_i440fx_8point2"
         ],
         "type": "string",
-        "description": "\n| Value | Description |\n| ----- | ----------- |\n| pc_i440fx_1point5 | PC I440 FX 1.5 |\n| pc_i440fx_2point11 | PC I440 FX 2.11 |\n| pc_i440fx_4point1 | PC I440 FX 4.1 |\n| pc_i440fx_4point2 | PC I440 FX 4.2 |\n| pc_i440fx_5point0 | PC I440 FX 5.0 |\n| pc_i440fx_5point1 | PC I440 FX 5.1 |\n| pc_i440fx_7point2 | PC I440 FX 7.2 |\n\n",
+        "description": "\n| Value | Description |\n| ----- | ----------- |\n| pc_i440fx_1point5 | PC i440FX 1.5 |\n| pc_i440fx_2point11 | PC i440FX 2.11 |\n| pc_i440fx_4point1 | PC i440FX 4.1 |\n| pc_i440fx_4point2 | PC i440FX 4.2 |\n| pc_i440fx_5point0 | PC i440FX 5.0 |\n| pc_i440fx_5point1 | PC i440FX 5.1 |\n| pc_i440fx_7point2 | PC i440FX 7.2 |\n| pc_i440fx_8point2 | PC i440FX 8.2 |\n\n",
         "x-enum-descriptions": [
-          "PC I440 FX 1.5",
-          "PC I440 FX 2.11",
-          "PC I440 FX 4.1",
-          "PC I440 FX 4.2",
-          "PC I440 FX 5.0",
-          "PC I440 FX 5.1",
-          "PC I440 FX 7.2"
+          "PC i440FX 1.5",
+          "PC i440FX 2.11",
+          "PC i440FX 4.1",
+          "PC i440FX 4.2",
+          "PC i440FX 5.0",
+          "PC i440FX 5.1",
+          "PC i440FX 7.2",
+          "PC i440FX 8.2"
         ]
       },
       "Vpc": {

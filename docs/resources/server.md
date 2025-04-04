@@ -76,8 +76,8 @@ Optional:
 - `emulated_hyperv` (Boolean) Enable HyperV (a hypervisor produced by Microsoft) support. Enabled by default on Windows servers, generally of no value for non-Windows servers.
 - `emulated_tpm` (Boolean) When enabled this provides an emulated TPM v1.2 device to your Cloud Server. Warning: the TPM state is not backed up.
 - `local_rtc` (Boolean) When a server is booted the virtual BIOS receives the current date and time from the host node. The BIOS does not have an explicit timezone, so the timezone used is implicit and must be understood by the operating system. Most operating systems other than Windows expect the time to be UTC since it allows the operating system to control the timezone used when displaying the time. Our Windows installations have also been customized to use UTC, but when using your own installation of Windows this should be set to the host node's local timezone.
-- `nested_virt` (Boolean) When this option is enabled the functionality necessary to run your own KVM servers within your server is enabled. Note that all the networking limits - one MAC address per VPS, restricted to specific IPs - still apply to public cloud so this is feature is generally only useful in combination with Virtual Private Cloud.
-- `unset_uuid` (Boolean) When this option is NOT enabled a 128-bit unique identifier is exposed to your server through the virtual BIOS. Each server receives a different UUID. Some propriety licensed software utilise this identifier to "tie" the license to a specific server.
+- `nested_virt` (Boolean) When this option is enabled the functionality necessary to run your own KVM servers within your server is enabled. Note that all the networking limits - one MAC address per VPS, restricted to specific IPs - still apply to public cloud so this feature is generally only useful in combination with Virtual Private Cloud.
+- `unset_uuid` (Boolean) When this option is NOT enabled a 128-bit unique identifier is exposed to your server through the virtual BIOS. Each server receives a different UUID. Some proprietary licensed software utilize this identifier to "tie" the license to a specific server.
 
 Read-Only:
 

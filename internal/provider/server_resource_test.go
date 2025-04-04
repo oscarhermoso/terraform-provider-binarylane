@@ -99,7 +99,16 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "permalink"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "source_and_destination_check", "false"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "backups", "true"),
-					resource.TestCheckResourceAttr("binarylane_server.test", "advanced_features.#", "1"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "advanced_features.emulated_hyperv", "false"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "advanced_features.emulated_devices"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "advanced_features.nested_virt"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "advanced_features.driver_disk"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "advanced_features.unset_uuid"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "advanced_features.local_rtc"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "advanced_features.emulated_tpm"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "advanced_features.cloud_init"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "advanced_features.qemu_guest_agent"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "advanced_features.uefi_boot"),
 
 					// Verify data source values
 					resource.TestCheckResourceAttrPair("data.binarylane_server.test", "id", "binarylane_server.test", "id"),
@@ -116,6 +125,17 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "disk", "20"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "backups", "true"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "port_blocking", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "advanced_features.emulated_hyperv", "false"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test.test", "advanced_features.emulated_hyperv"),
+					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "advanced_features.emulated_devices"),
+					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "advanced_features.nested_virt"),
+					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "advanced_features.driver_disk"),
+					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "advanced_features.unset_uuid"),
+					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "advanced_features.local_rtc"),
+					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "advanced_features.emulated_tpm"),
+					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "advanced_features.cloud_init"),
+					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "advanced_features.qemu_guest_agent"),
+					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "advanced_features.uefi_boot"),
 				),
 			},
 			// Test import by ID
@@ -163,6 +183,9 @@ resource "binarylane_server" "test" {
   vpc_id            = null
   public_ipv4_count = 0
   ssh_keys          = [binarylane_ssh_key.updated.id]
+	advanced_features = {
+	  emulated_hyperv = true
+	}
 
 	# source_and_destination_check =  null  # defaults to null
 	# backups				  = false  # defaults to false
@@ -187,6 +210,7 @@ EOT
 					resource.TestCheckNoResourceAttr("binarylane_server.test", "vpc_id"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "ssh_keys.#", "1"),
 					resource.TestCheckResourceAttrPair("binarylane_server.test", "ssh_keys.0", "binarylane_ssh_key.updated", "id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "advanced_features.emulated_hyperv", "true"),
 					resource.TestCheckNoResourceAttr("binarylane_server.test", "source_and_destination_check"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "backups", "false"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "port_blocking", "true"),
