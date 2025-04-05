@@ -938,190 +938,70 @@
 									"name": "emulated_hyperv",
 									"bool": {
 										"computed_optional_required": "computed_optional",
-										"description": "Enable HyperV (a hypervisor produced by Microsoft) support. Enabled by default on Windows servers, generally of no value for non-Windows servers.",
-										"plan_modifiers": [
-											{
-												"custom": {
-													"imports": [
-														{
-															"path": "github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-														}
-													],
-													"schema_definition": "boolplanmodifier.UseStateForUnknown()"
-												}
-											}
-										]
+										"description": "Enable HyperV (a hypervisor produced by Microsoft) support. Enabled by default on Windows servers, generally of no value for non-Windows servers."
 									}
 								},
 								{
 									"name": "emulated_devices",
 									"bool": {
 										"computed_optional_required": "computed_optional",
-										"description": "When emulated devices is enabled, the KVM specific \"VirtIO\" disk drive and network devices are removed, and replaced with emulated versions of physical hardware: an old IDE HDD and an Intel E1000 network card.  Emulated devices are much slower than the VirtIO devices, and so this option should not be enabled unless absolutely necessary.",
-										"plan_modifiers": [
-											{
-												"custom": {
-													"imports": [
-														{
-															"path": "github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-														}
-													],
-													"schema_definition": "boolplanmodifier.UseStateForUnknown()"
-												}
-											}
-										]
+										"description": "When emulated devices is enabled, the KVM specific \"VirtIO\" disk drive and network devices are removed, and replaced with emulated versions of physical hardware: an old IDE HDD and an Intel E1000 network card.  Emulated devices are much slower than the VirtIO devices, and so this option should not be enabled unless absolutely necessary."
 									}
 								},
 								{
 									"name": "nested_virt",
 									"bool": {
 										"computed_optional_required": "computed_optional",
-										"description": "When this option is enabled the functionality necessary to run your own KVM servers within your server is enabled. Note that all the networking limits - one MAC address per VPS, restricted to specific IPs - still apply to public cloud so this feature is generally only useful in combination with Virtual Private Cloud.",
-										"plan_modifiers": [
-											{
-												"custom": {
-													"imports": [
-														{
-															"path": "github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-														}
-													],
-													"schema_definition": "boolplanmodifier.UseStateForUnknown()"
-												}
-											}
-										]
+										"description": "When this option is enabled the functionality necessary to run your own KVM servers within your server is enabled. Note that all the networking limits - one MAC address per VPS, restricted to specific IPs - still apply to public cloud so this feature is generally only useful in combination with Virtual Private Cloud."
 									}
 								},
 								{
 									"name": "driver_disk",
 									"bool": {
 										"computed_optional_required": "computed_optional",
-										"description": "When this option is enabled a copy of the KVM driver disc for Windows (\"virtio-win.iso\") will be attached to your server as a virtual CD. This option can also be used in combination with your own attached backup when installing Windows.",
-										"plan_modifiers": [
-											{
-												"custom": {
-													"imports": [
-														{
-															"path": "github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-														}
-													],
-													"schema_definition": "boolplanmodifier.UseStateForUnknown()"
-												}
-											}
-										]
+										"description": "When this option is enabled a copy of the KVM driver disc for Windows (\"virtio-win.iso\") will be attached to your server as a virtual CD. This option can also be used in combination with your own attached backup when installing Windows."
 									}
 								},
 								{
 									"name": "unset_uuid",
 									"bool": {
 										"computed_optional_required": "computed_optional",
-										"description": "When this option is NOT enabled a 128-bit unique identifier is exposed to your server through the virtual BIOS. Each server receives a different UUID. Some proprietary licensed software utilize this identifier to \"tie\" the license to a specific server.",
-										"plan_modifiers": [
-											{
-												"custom": {
-													"imports": [
-														{
-															"path": "github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-														}
-													],
-													"schema_definition": "boolplanmodifier.UseStateForUnknown()"
-												}
-											}
-										]
+										"description": "When this option is NOT enabled a 128-bit unique identifier is exposed to your server through the virtual BIOS. Each server receives a different UUID. Some proprietary licensed software utilize this identifier to \"tie\" the license to a specific server."
 									}
 								},
 								{
 									"name": "local_rtc",
 									"bool": {
 										"computed_optional_required": "computed_optional",
-										"description": "When a server is booted the virtual BIOS receives the current date and time from the host node. The BIOS does not have an explicit timezone, so the timezone used is implicit and must be understood by the operating system. Most operating systems other than Windows expect the time to be UTC since it allows the operating system to control the timezone used when displaying the time. Our Windows installations have also been customized to use UTC, but when using your own installation of Windows this should be set to the host node's local timezone.",
-										"plan_modifiers": [
-											{
-												"custom": {
-													"imports": [
-														{
-															"path": "github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-														}
-													],
-													"schema_definition": "boolplanmodifier.UseStateForUnknown()"
-												}
-											}
-										]
+										"description": "When a server is booted the virtual BIOS receives the current date and time from the host node. The BIOS does not have an explicit timezone, so the timezone used is implicit and must be understood by the operating system. Most operating systems other than Windows expect the time to be UTC since it allows the operating system to control the timezone used when displaying the time. Our Windows installations have also been customized to use UTC, but when using your own installation of Windows this should be set to the host node's local timezone."
 									}
 								},
 								{
 									"name": "emulated_tpm",
 									"bool": {
 										"computed_optional_required": "computed_optional",
-										"description": "When enabled this provides an emulated TPM v1.2 device to your Cloud Server. Warning: the TPM state is not backed up.",
-										"plan_modifiers": [
-											{
-												"custom": {
-													"imports": [
-														{
-															"path": "github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-														}
-													],
-													"schema_definition": "boolplanmodifier.UseStateForUnknown()"
-												}
-											}
-										]
+										"description": "When enabled this provides an emulated TPM v1.2 device to your Cloud Server. Warning: the TPM state is not backed up."
 									}
 								},
 								{
 									"name": "cloud_init",
 									"bool": {
 										"computed_optional_required": "computed",
-										"description": "When this option is enabled the Cloud Server will be provided a datasource for the cloud-init service.",
-										"plan_modifiers": [
-											{
-												"custom": {
-													"imports": [
-														{
-															"path": "github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-														}
-													],
-													"schema_definition": "boolplanmodifier.UseStateForUnknown()"
-												}
-											}
-										]
+										"description": "When this option is enabled the Cloud Server will be provided a datasource for the cloud-init service."
 									}
 								},
 								{
 									"name": "qemu_guest_agent",
 									"bool": {
 										"computed_optional_required": "computed",
-										"description": "When this option is enabled the server will allow QEMU Guest Agent to perform password reset without rebooting.",
-										"plan_modifiers": [
-											{
-												"custom": {
-													"imports": [
-														{
-															"path": "github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-														}
-													],
-													"schema_definition": "boolplanmodifier.UseStateForUnknown()"
-												}
-											}
-										]
+										"description": "When this option is enabled the server will allow QEMU Guest Agent to perform password reset without rebooting."
 									}
 								},
 								{
 									"name": "uefi_boot",
 									"bool": {
 										"computed_optional_required": "computed",
-										"description": "When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS.",
-										"plan_modifiers": [
-											{
-												"custom": {
-													"imports": [
-														{
-															"path": "github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-														}
-													],
-													"schema_definition": "boolplanmodifier.UseStateForUnknown()"
-												}
-											}
-										]
+										"description": "When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS."
 									}
 								}
 							]

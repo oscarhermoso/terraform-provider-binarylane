@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"slices"
@@ -420,6 +421,71 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		plan.Disk = state.Disk
 	}
 
+	if isAdvFeatUpdateNeeded(&plan.AdvancedFeatures, &state.AdvancedFeatures) {
+		advFeatResp, err := r.bc.client.GetServersServerIdAvailableAdvancedFeaturesWithResponse(ctx, state.Id.ValueInt64())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error fetching available advanced features for server: id=%s", state.Id.String()),
+				err.Error(),
+			)
+		} else if advFeatResp.StatusCode() != http.StatusOK {
+			resp.Diagnostics.AddError(
+				"Unexpected HTTP status code fetching available advanced features for server",
+				fmt.Sprintf("Received %s fetching available advanced features for server: id=%s. Details: %s", advFeatResp.Status(), state.Id.String(), advFeatResp.Body))
+		} else {
+			availableAdvFeat := *advFeatResp.JSON200.AvailableAdvancedServerFeatures.AdvancedFeatures
+			debugAdvFeatResp, _ := json.Marshal(advFeatResp.JSON200)
+			tflog.Debug(ctx, fmt.Sprintf("Recieved response for available advanced features: %s", debugAdvFeatResp))
+
+			// TODO: Continue from here, TF plan should fail if any of the advanced features are not available
+			// Below code currently not working
+
+			if plan.AdvancedFeatures.EmulatedHyperv.ValueBool() && !slices.Contains(availableAdvFeat, "emulated-hyperv") {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("advanced_features").AtMapKey("emulated_hyperv"),
+					"Emulated Hyper-V not available",
+					fmt.Sprintf("Emulated Hyper-V is not available for server %s", state.Name.String()),
+				)
+			} else if plan.AdvancedFeatures.EmulatedDevices.ValueBool() && !slices.Contains(availableAdvFeat, "emulated-devices") {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("advanced_features").AtMapKey("emulated_devices"),
+					"Emulated Devices not available",
+					fmt.Sprintf("Emulated Devices is not available for server %s", state.Name.String()),
+				)
+			} else if plan.AdvancedFeatures.EmulatedTpm.ValueBool() && !slices.Contains(availableAdvFeat, "emulated-tpm") {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("advanced_features").AtMapKey("emulated_tpm"),
+					"Emulated TPM not available",
+					fmt.Sprintf("Emulated TPM is not available for server %s", state.Name.String()),
+				)
+			} else if plan.AdvancedFeatures.NestedVirt.ValueBool() && !slices.Contains(availableAdvFeat, "nested-virt") {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("advanced_features").AtMapKey("nested_virt"),
+					"Nested Virtualization not available",
+					fmt.Sprintf("Nested Virtualization is not available for server %s", state.Name.String()),
+				)
+			} else if plan.AdvancedFeatures.DriverDisk.ValueBool() && !slices.Contains(availableAdvFeat, "driver-disk") {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("advanced_features").AtMapKey("driver_disk"),
+					"Driver Disk not available",
+					fmt.Sprintf("Driver Disk is not available for server %s", state.Name.String()),
+				)
+			} else if plan.AdvancedFeatures.UnsetUuid.ValueBool() && !slices.Contains(availableAdvFeat, "unset-uuid") {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("advanced_features").AtMapKey("unset_uuid"),
+					"Unset UUID not available",
+					fmt.Sprintf("Unset UUID is not available for server %s", state.Name.String()),
+				)
+			} else if plan.AdvancedFeatures.LocalRtc.ValueBool() && !slices.Contains(availableAdvFeat, "local-rtc") {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("advanced_features").AtMapKey("local_rtc"),
+					"Local RTC not available",
+					fmt.Sprintf("Local RTC is not available for server %s", state.Name.String()),
+				)
+			}
+		}
+	}
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
 }
@@ -529,14 +595,6 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	serverRespSourceDestCheck := types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
 	data.SourceAndDestinationCheck = serverRespSourceDestCheck
 
-	// TODO: Fix broken test, initial server creation completes with cloud_init = false, but should be true
-	//   Next steps, check response on server creation to see if cloud_init is set to true
-	// === NAME  TestServerResource
-	//   server_resource_test.go:30: Step 2/5 error running import: ImportStateVerify attributes not equivalent. Difference is shown below. The - symbol indicates attributes missing after import.
-	//         map[string]string{
-	//       -       "advanced_features.cloud_init": "false",
-	//       +       "advanced_features.cloud_init": "true",
-	//         }
 	advFeat := *serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
 	data.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
 		resources.AdvancedFeaturesValue{}.AttributeTypes(ctx),
@@ -583,6 +641,12 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 		resp.Diagnostics.AddError("Error updating advanced features", err.Error())
 	}
 
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Update source_and_destination_check if needed
 	if plannedSourceDestCheck.Equal(types.BoolPointerValue(Pointer(false))) {
 		err := r.updateSourceDestCheck(ctx, data.Id.ValueInt64(), false)
@@ -592,6 +656,11 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 		}
 		data.SourceAndDestinationCheck = plannedSourceDestCheck
 	}
+
+	// One extra read to check the final state of enabled_advanced_features, needed because
+	// some flags (like "cloud-init") are not set until the server is fully created. See #13
+	diag := r.fetchServerResourceState(ctx, &data)
+	resp.Diagnostics.Append(diag...)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -609,31 +678,7 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	// Read API call logic
 	tflog.Debug(ctx, fmt.Sprintf("Reading server: id=%s, name=%s", data.Id.String(), data.Name.ValueString()))
-
-	serverResp, err := r.bc.client.GetServersServerIdWithResponse(ctx, data.Id.ValueInt64())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error reading server: id=%s, name=%s", data.Id.String(), data.Name.ValueString()),
-			err.Error(),
-		)
-		return
-	}
-
-	if serverResp.StatusCode() == http.StatusNotFound {
-		tflog.Warn(ctx, fmt.Sprintf("Server not found, removing from state: id=%s, name=%s", data.Id.String(), data.Name.ValueString()))
-		resp.State.RemoveResource(ctx)
-		return
-	}
-
-	if serverResp.StatusCode() != http.StatusOK {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Unexpected HTTP status code %s reading server: name=%s, id=%s", serverResp.Status(), data.Name.ValueString(), data.Id.String()),
-			string(serverResp.Body),
-		)
-		return
-	}
-
-	diag := setServerResourceState(ctx, &data, serverResp.JSON200)
+	diag := r.fetchServerResourceState(ctx, &data)
 	resp.Diagnostics.Append(diag...)
 
 	// Get user data script
@@ -683,23 +728,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
-		serverResp, err := r.bc.client.GetServersServerIdWithResponse(ctx, state.Id.ValueInt64())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				fmt.Sprintf("Error reading server: id=%s, name=%s", state.Id.String(), state.Name.ValueString()),
-				err.Error(),
-			)
-			return
-		}
-		if serverResp.StatusCode() != http.StatusOK {
-			resp.Diagnostics.AddError(
-				fmt.Sprintf("Unexpected HTTP status code %s reading server: name=%s, id=%s", serverResp.Status(), state.Name.ValueString(), state.Id.String()),
-				string(serverResp.Body),
-			)
-			return
-		}
-
-		diag := setServerResourceState(ctx, &state, serverResp.JSON200)
+		diag := r.fetchServerResourceState(ctx, &state)
 		resp.Diagnostics.Append(diag...)
 
 		// Save updated data into Terraform state
@@ -1202,26 +1231,44 @@ func (r *serverResource) updateSourceDestCheck(
 	return nil
 }
 
-func setServerResourceState(ctx context.Context, data *serverResourceModel, serverResp *binarylane.ServerResponse) diag.Diagnostics {
+func (r *serverResource) fetchServerResourceState(ctx context.Context, state *serverResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	data.Id = types.Int64Value(*serverResp.Server.Id)
-	data.Name = types.StringValue(*serverResp.Server.Name)
-	data.Image = types.StringValue(*serverResp.Server.Image.Slug)
-	data.Region = types.StringValue(*serverResp.Server.Region.Slug)
-	data.Size = types.StringValue(*serverResp.Server.Size.Slug)
-	data.Backups = types.BoolValue(serverResp.Server.NextBackupWindow != nil)
-	data.PortBlocking = types.BoolValue(serverResp.Server.Networks.PortBlocking)
-	data.VpcId = types.Int64PointerValue(serverResp.Server.VpcId)
-	data.Permalink = types.StringValue(*serverResp.Server.Permalink)
-	data.PasswordChangeSupported = types.BoolValue(*serverResp.Server.PasswordChangeSupported)
-	data.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.Server.Networks.SourceAndDestinationCheck)
-	data.Memory = types.Int32Value(*serverResp.Server.Memory)
-	data.Disk = types.Int32Value(*serverResp.Server.Disk)
-	data.Backups = types.BoolValue(serverResp.Server.NextBackupWindow != nil)
+	serverResp, err := r.bc.client.GetServersServerIdWithResponse(ctx, state.Id.ValueInt64())
+	if err != nil {
+		return diag.Diagnostics{
+			diag.NewErrorDiagnostic(
+				fmt.Sprintf("Error reading server: id=%s, name=%s", state.Id.String(), state.Name.ValueString()),
+				err.Error(),
+			),
+		}
+	}
+	if serverResp.StatusCode() != http.StatusOK {
+		return diag.Diagnostics{
+			diag.NewErrorDiagnostic(
+				fmt.Sprintf("Unexpected HTTP status code %s reading server: name=%s, id=%s", serverResp.Status(), state.Name.ValueString(), state.Id.String()),
+				string(serverResp.Body),
+			),
+		}
+	}
 
-	advFeat := *serverResp.Server.AdvancedFeatures.EnabledAdvancedFeatures
-	data.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
+	state.Id = types.Int64Value(*serverResp.JSON200.Server.Id)
+	state.Name = types.StringValue(*serverResp.JSON200.Server.Name)
+	state.Image = types.StringValue(*serverResp.JSON200.Server.Image.Slug)
+	state.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
+	state.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
+	state.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
+	state.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
+	state.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
+	state.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
+	state.PasswordChangeSupported = types.BoolValue(*serverResp.JSON200.Server.PasswordChangeSupported)
+	state.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
+	state.Memory = types.Int32Value(*serverResp.JSON200.Server.Memory)
+	state.Disk = types.Int32Value(*serverResp.JSON200.Server.Disk)
+	state.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
+
+	advFeat := *serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
+	state.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
 		resources.AdvancedFeaturesValue{}.AttributeTypes(ctx),
 		map[string]attr.Value{
 			"emulated_hyperv":  types.BoolValue(slices.Contains(advFeat, "emulated-hyperv")),
@@ -1236,13 +1283,13 @@ func setServerResourceState(ctx context.Context, data *serverResourceModel, serv
 			"uefi_boot":        types.BoolValue(slices.Contains(advFeat, "uefi-boot")),
 		})
 	if diags.HasError() {
-		data.AdvancedFeatures = resources.NewAdvancedFeaturesValueUnknown()
+		state.AdvancedFeatures = resources.NewAdvancedFeaturesValueUnknown()
 	}
 
 	publicIpv4Addresses := []string{}
 	privateIpv4Addresses := []string{}
 
-	for _, v4address := range serverResp.Server.Networks.V4 {
+	for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
 		if v4address.Type == "public" {
 			publicIpv4Addresses = append(publicIpv4Addresses, v4address.IpAddress)
 		} else if v4address.Type == "private" {
@@ -1253,22 +1300,33 @@ func setServerResourceState(ctx context.Context, data *serverResourceModel, serv
 	tfPublicIpv4Addresses, diag := types.ListValueFrom(ctx, types.StringType, publicIpv4Addresses)
 	diags.Append(diag...)
 	if diag.HasError() {
-		data.PublicIpv4Addresses = types.ListUnknown(data.PublicIpv4Addresses.ElementType(ctx))
-		data.PublicIpv4Count = types.Int32Unknown()
+		state.PublicIpv4Addresses = types.ListUnknown(state.PublicIpv4Addresses.ElementType(ctx))
+		state.PublicIpv4Count = types.Int32Unknown()
 	} else {
-		data.PublicIpv4Addresses = tfPublicIpv4Addresses
-		data.PublicIpv4Count = types.Int32Value(int32(len(publicIpv4Addresses)))
+		state.PublicIpv4Addresses = tfPublicIpv4Addresses
+		state.PublicIpv4Count = types.Int32Value(int32(len(publicIpv4Addresses)))
 	}
 
 	tfPrivateIpv4Addresses, diag := types.ListValueFrom(ctx, types.StringType, privateIpv4Addresses)
 	diags.Append(diag...)
 	if diag.HasError() {
-		data.PrivateIPv4Addresses = types.ListUnknown(data.PrivateIPv4Addresses.ElementType(ctx))
+		state.PrivateIPv4Addresses = types.ListUnknown(state.PrivateIPv4Addresses.ElementType(ctx))
 	} else {
-		data.PrivateIPv4Addresses = tfPrivateIpv4Addresses
+		state.PrivateIPv4Addresses = tfPrivateIpv4Addresses
 	}
 
 	return diags
+}
+
+func isAdvFeatUpdateNeeded(config *resources.AdvancedFeaturesValue, data *resources.AdvancedFeaturesValue) bool {
+	// Check if any of the writable advanced features have been modified by the user
+	return (!config.EmulatedHyperv.IsNull() && config.EmulatedHyperv.Equal(data.EmulatedHyperv)) ||
+		(!config.EmulatedDevices.IsNull() && config.EmulatedDevices.Equal(data.EmulatedDevices)) ||
+		(!config.EmulatedTpm.IsNull() && config.EmulatedTpm.Equal(data.EmulatedTpm)) ||
+		(!config.NestedVirt.IsNull() && config.NestedVirt.Equal(data.NestedVirt)) ||
+		(!config.DriverDisk.IsNull() && config.DriverDisk.Equal(data.DriverDisk)) ||
+		(!config.UnsetUuid.IsNull() && config.UnsetUuid.Equal(data.UnsetUuid)) ||
+		(!config.LocalRtc.IsNull() && config.LocalRtc.Equal(data.LocalRtc))
 }
 
 func (r *serverResource) updateAdvancedFeatures(
@@ -1278,13 +1336,7 @@ func (r *serverResource) updateAdvancedFeatures(
 	data *resources.AdvancedFeaturesValue,
 ) error {
 	// If none of the writable advanced features have been modified by the user, we can skip the update
-	if (config.EmulatedHyperv.IsNull() || config.EmulatedHyperv.Equal(data.EmulatedHyperv)) &&
-		(config.EmulatedDevices.IsNull() || config.EmulatedDevices.Equal(data.EmulatedDevices)) &&
-		(config.EmulatedTpm.IsNull() || config.EmulatedTpm.Equal(data.EmulatedTpm)) &&
-		(config.NestedVirt.IsNull() || config.NestedVirt.Equal(data.NestedVirt)) &&
-		(config.DriverDisk.IsNull() || config.DriverDisk.Equal(data.DriverDisk)) &&
-		(config.UnsetUuid.IsNull() || config.UnsetUuid.Equal(data.UnsetUuid)) &&
-		(config.LocalRtc.IsNull() || config.LocalRtc.Equal(data.LocalRtc)) {
+	if !isAdvFeatUpdateNeeded(config, data) {
 		return nil
 	}
 

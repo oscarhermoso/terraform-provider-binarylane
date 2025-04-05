@@ -17,6 +17,16 @@ resource "binarylane_server" "example" {
   size              = "std-min" # 1 VPCU, 1 GB Memory,  20 GB NVME Storage, 1000 GB Data Transfer
   public_ipv4_count = 1
   # Password will be generated automatically and mailed to the account holder
+
+  advanced_features = {
+    driver_disk      = true
+    emulated_devices = true
+    emulated_hyperv  = true
+    emulated_tpm     = true
+    local_rtc        = true
+    nested_virt      = true
+    unset_uuid       = true
+  }
 }
 
 output "advanced_features" {

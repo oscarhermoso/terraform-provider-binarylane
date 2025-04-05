@@ -8,8 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -28,88 +26,58 @@ func ServerResourceSchema(ctx context.Context) schema.Schema {
 						Computed:            true,
 						Description:         "When this option is enabled the Cloud Server will be provided a datasource for the cloud-init service.",
 						MarkdownDescription: "When this option is enabled the Cloud Server will be provided a datasource for the cloud-init service.",
-						PlanModifiers: []planmodifier.Bool{
-							boolplanmodifier.UseStateForUnknown(),
-						},
 					},
 					"driver_disk": schema.BoolAttribute{
 						Optional:            true,
 						Computed:            true,
 						Description:         "When this option is enabled a copy of the KVM driver disc for Windows (\"virtio-win.iso\") will be attached to your server as a virtual CD. This option can also be used in combination with your own attached backup when installing Windows.",
 						MarkdownDescription: "When this option is enabled a copy of the KVM driver disc for Windows (\"virtio-win.iso\") will be attached to your server as a virtual CD. This option can also be used in combination with your own attached backup when installing Windows.",
-						PlanModifiers: []planmodifier.Bool{
-							boolplanmodifier.UseStateForUnknown(),
-						},
 					},
 					"emulated_devices": schema.BoolAttribute{
 						Optional:            true,
 						Computed:            true,
 						Description:         "When emulated devices is enabled, the KVM specific \"VirtIO\" disk drive and network devices are removed, and replaced with emulated versions of physical hardware: an old IDE HDD and an Intel E1000 network card.  Emulated devices are much slower than the VirtIO devices, and so this option should not be enabled unless absolutely necessary.",
 						MarkdownDescription: "When emulated devices is enabled, the KVM specific \"VirtIO\" disk drive and network devices are removed, and replaced with emulated versions of physical hardware: an old IDE HDD and an Intel E1000 network card.  Emulated devices are much slower than the VirtIO devices, and so this option should not be enabled unless absolutely necessary.",
-						PlanModifiers: []planmodifier.Bool{
-							boolplanmodifier.UseStateForUnknown(),
-						},
 					},
 					"emulated_hyperv": schema.BoolAttribute{
 						Optional:            true,
 						Computed:            true,
 						Description:         "Enable HyperV (a hypervisor produced by Microsoft) support. Enabled by default on Windows servers, generally of no value for non-Windows servers.",
 						MarkdownDescription: "Enable HyperV (a hypervisor produced by Microsoft) support. Enabled by default on Windows servers, generally of no value for non-Windows servers.",
-						PlanModifiers: []planmodifier.Bool{
-							boolplanmodifier.UseStateForUnknown(),
-						},
 					},
 					"emulated_tpm": schema.BoolAttribute{
 						Optional:            true,
 						Computed:            true,
 						Description:         "When enabled this provides an emulated TPM v1.2 device to your Cloud Server. Warning: the TPM state is not backed up.",
 						MarkdownDescription: "When enabled this provides an emulated TPM v1.2 device to your Cloud Server. Warning: the TPM state is not backed up.",
-						PlanModifiers: []planmodifier.Bool{
-							boolplanmodifier.UseStateForUnknown(),
-						},
 					},
 					"local_rtc": schema.BoolAttribute{
 						Optional:            true,
 						Computed:            true,
 						Description:         "When a server is booted the virtual BIOS receives the current date and time from the host node. The BIOS does not have an explicit timezone, so the timezone used is implicit and must be understood by the operating system. Most operating systems other than Windows expect the time to be UTC since it allows the operating system to control the timezone used when displaying the time. Our Windows installations have also been customized to use UTC, but when using your own installation of Windows this should be set to the host node's local timezone.",
 						MarkdownDescription: "When a server is booted the virtual BIOS receives the current date and time from the host node. The BIOS does not have an explicit timezone, so the timezone used is implicit and must be understood by the operating system. Most operating systems other than Windows expect the time to be UTC since it allows the operating system to control the timezone used when displaying the time. Our Windows installations have also been customized to use UTC, but when using your own installation of Windows this should be set to the host node's local timezone.",
-						PlanModifiers: []planmodifier.Bool{
-							boolplanmodifier.UseStateForUnknown(),
-						},
 					},
 					"nested_virt": schema.BoolAttribute{
 						Optional:            true,
 						Computed:            true,
 						Description:         "When this option is enabled the functionality necessary to run your own KVM servers within your server is enabled. Note that all the networking limits - one MAC address per VPS, restricted to specific IPs - still apply to public cloud so this feature is generally only useful in combination with Virtual Private Cloud.",
 						MarkdownDescription: "When this option is enabled the functionality necessary to run your own KVM servers within your server is enabled. Note that all the networking limits - one MAC address per VPS, restricted to specific IPs - still apply to public cloud so this feature is generally only useful in combination with Virtual Private Cloud.",
-						PlanModifiers: []planmodifier.Bool{
-							boolplanmodifier.UseStateForUnknown(),
-						},
 					},
 					"qemu_guest_agent": schema.BoolAttribute{
 						Computed:            true,
 						Description:         "When this option is enabled the server will allow QEMU Guest Agent to perform password reset without rebooting.",
 						MarkdownDescription: "When this option is enabled the server will allow QEMU Guest Agent to perform password reset without rebooting.",
-						PlanModifiers: []planmodifier.Bool{
-							boolplanmodifier.UseStateForUnknown(),
-						},
 					},
 					"uefi_boot": schema.BoolAttribute{
 						Computed:            true,
 						Description:         "When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS.",
 						MarkdownDescription: "When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS.",
-						PlanModifiers: []planmodifier.Bool{
-							boolplanmodifier.UseStateForUnknown(),
-						},
 					},
 					"unset_uuid": schema.BoolAttribute{
 						Optional:            true,
 						Computed:            true,
 						Description:         "When this option is NOT enabled a 128-bit unique identifier is exposed to your server through the virtual BIOS. Each server receives a different UUID. Some proprietary licensed software utilize this identifier to \"tie\" the license to a specific server.",
 						MarkdownDescription: "When this option is NOT enabled a 128-bit unique identifier is exposed to your server through the virtual BIOS. Each server receives a different UUID. Some proprietary licensed software utilize this identifier to \"tie\" the license to a specific server.",
-						PlanModifiers: []planmodifier.Bool{
-							boolplanmodifier.UseStateForUnknown(),
-						},
 					},
 				},
 				CustomType: AdvancedFeaturesType{
