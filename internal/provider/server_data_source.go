@@ -64,7 +64,7 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 		serverSchema(ctx),
 		AttributeConfig{
 			RequiredAttributes: &[]string{"id"},
-			ExcludedAttributes: &[]string{"password", "public_ipv4_count", "password", "password_change_supported", "timeouts"},
+			ExcludedAttributes: &[]string{"password", "public_ipv4_count", "password_change_supported", "timeouts"},
 		})
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to convert resource schema to data source schema", err.Error())
