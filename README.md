@@ -19,6 +19,7 @@ Planned features:
   - [x] Firewall Rules
   - [x] Cloud Init
   - [x] Updating server properties
+  - [x] "Advanced Features"
   - [ ] Customised Backups
   - [ ] Software
   - [ ] IPV6

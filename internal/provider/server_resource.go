@@ -344,7 +344,7 @@ func (r *serverResource) Schema(ctx context.Context, _ resource.SchemaRequest, r
 }
 
 func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	var plan, state serverResourceModel
+	var config, plan, state serverResourceModel
 
 	if req.Plan.Raw.IsNull() {
 		// Destruction plan, no modification needed
@@ -352,6 +352,7 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 	}
 
 	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -421,7 +422,7 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		plan.Disk = state.Disk
 	}
 
-	if isAdvFeatUpdateNeeded(&plan.AdvancedFeatures, &state.AdvancedFeatures) {
+	if isAdvFeatChanged(&config.AdvancedFeatures, &state.AdvancedFeatures) {
 		advFeatResp, err := r.bc.client.GetServersServerIdAvailableAdvancedFeaturesWithResponse(ctx, state.Id.ValueInt64())
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -433,52 +434,50 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 				"Unexpected HTTP status code fetching available advanced features for server",
 				fmt.Sprintf("Received %s fetching available advanced features for server: id=%s. Details: %s", advFeatResp.Status(), state.Id.String(), advFeatResp.Body))
 		} else {
-			availableAdvFeat := *advFeatResp.JSON200.AvailableAdvancedServerFeatures.AdvancedFeatures
 			debugAdvFeatResp, _ := json.Marshal(advFeatResp.JSON200)
 			tflog.Debug(ctx, fmt.Sprintf("Recieved response for available advanced features: %s", debugAdvFeatResp))
 
-			// TODO: Continue from here, TF plan should fail if any of the advanced features are not available
-			// Below code currently not working
+			availableAdvFeat := *advFeatResp.JSON200.AvailableAdvancedServerFeatures.AdvancedFeatures
 
 			if plan.AdvancedFeatures.EmulatedHyperv.ValueBool() && !slices.Contains(availableAdvFeat, "emulated-hyperv") {
 				resp.Diagnostics.AddAttributeError(
-					path.Root("advanced_features").AtMapKey("emulated_hyperv"),
+					path.Root("advanced_features").AtName("emulated_hyperv"),
 					"Emulated Hyper-V not available",
 					fmt.Sprintf("Emulated Hyper-V is not available for server %s", state.Name.String()),
 				)
 			} else if plan.AdvancedFeatures.EmulatedDevices.ValueBool() && !slices.Contains(availableAdvFeat, "emulated-devices") {
 				resp.Diagnostics.AddAttributeError(
-					path.Root("advanced_features").AtMapKey("emulated_devices"),
+					path.Root("advanced_features").AtName("emulated_devices"),
 					"Emulated Devices not available",
 					fmt.Sprintf("Emulated Devices is not available for server %s", state.Name.String()),
 				)
 			} else if plan.AdvancedFeatures.EmulatedTpm.ValueBool() && !slices.Contains(availableAdvFeat, "emulated-tpm") {
 				resp.Diagnostics.AddAttributeError(
-					path.Root("advanced_features").AtMapKey("emulated_tpm"),
+					path.Root("advanced_features").AtName("emulated_tpm"),
 					"Emulated TPM not available",
 					fmt.Sprintf("Emulated TPM is not available for server %s", state.Name.String()),
 				)
 			} else if plan.AdvancedFeatures.NestedVirt.ValueBool() && !slices.Contains(availableAdvFeat, "nested-virt") {
 				resp.Diagnostics.AddAttributeError(
-					path.Root("advanced_features").AtMapKey("nested_virt"),
+					path.Root("advanced_features").AtName("nested_virt"),
 					"Nested Virtualization not available",
 					fmt.Sprintf("Nested Virtualization is not available for server %s", state.Name.String()),
 				)
 			} else if plan.AdvancedFeatures.DriverDisk.ValueBool() && !slices.Contains(availableAdvFeat, "driver-disk") {
 				resp.Diagnostics.AddAttributeError(
-					path.Root("advanced_features").AtMapKey("driver_disk"),
+					path.Root("advanced_features").AtName("driver_disk"),
 					"Driver Disk not available",
 					fmt.Sprintf("Driver Disk is not available for server %s", state.Name.String()),
 				)
 			} else if plan.AdvancedFeatures.UnsetUuid.ValueBool() && !slices.Contains(availableAdvFeat, "unset-uuid") {
 				resp.Diagnostics.AddAttributeError(
-					path.Root("advanced_features").AtMapKey("unset_uuid"),
+					path.Root("advanced_features").AtName("unset_uuid"),
 					"Unset UUID not available",
 					fmt.Sprintf("Unset UUID is not available for server %s", state.Name.String()),
 				)
 			} else if plan.AdvancedFeatures.LocalRtc.ValueBool() && !slices.Contains(availableAdvFeat, "local-rtc") {
 				resp.Diagnostics.AddAttributeError(
-					path.Root("advanced_features").AtMapKey("local_rtc"),
+					path.Root("advanced_features").AtName("local_rtc"),
 					"Local RTC not available",
 					fmt.Sprintf("Local RTC is not available for server %s", state.Name.String()),
 				)
@@ -1318,15 +1317,15 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 	return diags
 }
 
-func isAdvFeatUpdateNeeded(config *resources.AdvancedFeaturesValue, data *resources.AdvancedFeaturesValue) bool {
+func isAdvFeatChanged(config *resources.AdvancedFeaturesValue, data *resources.AdvancedFeaturesValue) bool {
 	// Check if any of the writable advanced features have been modified by the user
-	return (!config.EmulatedHyperv.IsNull() && config.EmulatedHyperv.Equal(data.EmulatedHyperv)) ||
-		(!config.EmulatedDevices.IsNull() && config.EmulatedDevices.Equal(data.EmulatedDevices)) ||
-		(!config.EmulatedTpm.IsNull() && config.EmulatedTpm.Equal(data.EmulatedTpm)) ||
-		(!config.NestedVirt.IsNull() && config.NestedVirt.Equal(data.NestedVirt)) ||
-		(!config.DriverDisk.IsNull() && config.DriverDisk.Equal(data.DriverDisk)) ||
-		(!config.UnsetUuid.IsNull() && config.UnsetUuid.Equal(data.UnsetUuid)) ||
-		(!config.LocalRtc.IsNull() && config.LocalRtc.Equal(data.LocalRtc))
+	return (!config.EmulatedHyperv.IsNull() && !config.EmulatedHyperv.Equal(data.EmulatedHyperv)) ||
+		(!config.EmulatedDevices.IsNull() && !config.EmulatedDevices.Equal(data.EmulatedDevices)) ||
+		(!config.EmulatedTpm.IsNull() && !config.EmulatedTpm.Equal(data.EmulatedTpm)) ||
+		(!config.NestedVirt.IsNull() && !config.NestedVirt.Equal(data.NestedVirt)) ||
+		(!config.DriverDisk.IsNull() && !config.DriverDisk.Equal(data.DriverDisk)) ||
+		(!config.UnsetUuid.IsNull() && !config.UnsetUuid.Equal(data.UnsetUuid)) ||
+		(!config.LocalRtc.IsNull() && !config.LocalRtc.Equal(data.LocalRtc))
 }
 
 func (r *serverResource) updateAdvancedFeatures(
@@ -1336,7 +1335,7 @@ func (r *serverResource) updateAdvancedFeatures(
 	data *resources.AdvancedFeaturesValue,
 ) error {
 	// If none of the writable advanced features have been modified by the user, we can skip the update
-	if !isAdvFeatUpdateNeeded(config, data) {
+	if !isAdvFeatChanged(config, data) {
 		return nil
 	}
 
@@ -1400,7 +1399,7 @@ func (r *serverResource) updateAdvancedFeatures(
 		return fmt.Errorf("error changing advanced features for server: server_id=%d, error: %w", serverId, err)
 	}
 	if resp.StatusCode() != http.StatusOK {
-		return fmt.Errorf("unexpected HTTP status code advanced features for server: server_id=%d, details: %s", serverId, resp.Body)
+		return fmt.Errorf("unexpected HTTP status code updating advanced features for server: server_id=%d, details: %s", serverId, resp.Body)
 	}
 
 	err = r.waitForServerAction(ctx, serverId, *resp.JSON200.Action.Id)
