@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OPENAPI_FILE=$(dirname "$0")/openapi.json
+OPENAPI_FILE=$(dirname "$0")/../openapi.json
 
 # Fetch the latest OpenAPI spec
 curl https://api.binarylane.com.au/reference/openapi.json --output $OPENAPI_FILE
@@ -27,6 +27,10 @@ cat <<<$(jq '.paths["/account/keys/{key_id}"].delete.parameters[0].schema |= del
 cat <<<$(jq '.paths["/account/keys/{key_id}"].delete.parameters[0].schema |= del(.oneOf) + {type:"integer"}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.paths["/images"].get.parameters[0].schema |= del(.allOf) + {type:"string"}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.paths["/sizes"].get.parameters[1].schema |= del(.oneOf) + {type:"string"}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.AdvancedFeature |= del(.enum)' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.AdvancedServerFeatures.properties.enabled_advanced_features.items |= del(.["$ref"]) + {type:"string"}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.ChangeAdvancedFeatures.properties.enabled_advanced_features.items |= del(.["$ref"]) + {type:"string"}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.AvailableAdvancedServerFeatures.properties.advanced_features.items |= del(.["$ref"]) + {type:"string"}' $OPENAPI_FILE) >$OPENAPI_FILE
 
 # Remove the "/paths/{image_id}" path because its duplicated by "/images/{image_id_or_slug}"
 cat <<<$(jq 'del(.paths."/images/{image_id}")' $OPENAPI_FILE) >$OPENAPI_FILE

@@ -6266,18 +6266,6 @@
         "description": "Create an Additional Disk for a Server"
       },
       "AdvancedFeature": {
-        "enum": [
-          "emulated-hyperv",
-          "emulated-devices",
-          "nested-virt",
-          "driver-disk",
-          "unset-uuid",
-          "local-rtc",
-          "emulated-tpm",
-          "cloud-init",
-          "qemu-guest-agent",
-          "uefi-boot"
-        ],
         "type": "string",
         "description": "\n| Value | Description |\n| ----- | ----------- |\n| emulated-hyperv | Enable HyperV (a hypervisor produced by Microsoft) support. Enabled by default on Windows servers, generally of no value for non-Windows servers. |\n| emulated-devices | When emulated devices is enabled, the KVM specific \"VirtIO\" disk drive and network devices are removed, and replaced with emulated versions of physical hardware: an old IDE HDD and an Intel E1000 network card.  Emulated devices are much slower than the VirtIO devices, and so this option should not be enabled unless absolutely necessary. |\n| nested-virt | When this option is enabled the functionality necessary to run your own KVM servers within your server is enabled. Note that all the networking limits - one MAC address per VPS, restricted to specific IPs - still apply to public cloud so this is feature is generally only useful in combination with Virtual Private Cloud. |\n| driver-disk | When this option is enabled a copy of the KVM driver disc for Windows (\"virtio-win.iso\") will be attached to your server as a virtual CD. This option can also be used in combination with your own attached backup when installing Windows. |\n| unset-uuid | When this option is NOT enabled a 128-bit unique identifier is exposed to your server through the virtual BIOS. Each server receives a different UUID. Some propriety licensed software utilise this identifier to \"tie\" the license to a specific server. |\n| local-rtc | When a server is booted the virtual BIOS receives the current date and time from the host node. The BIOS does not have an explicit timezone, so the timezone used is implicit and must be understood by the operating system. Most operating systems other than Windows expect the time to be UTC since it allows the operating system to control the timezone used when displaying the time. Our Windows installations have also been customized to use UTC, but when using your own installation of Windows this should be set to the host node's local timezone. |\n| emulated-tpm | When enabled this provides an emulated TPM v1.2 device to your Cloud Server. Warning: the TPM state is not backed up. |\n| cloud-init | (Read-Only) When this option is enabled the Cloud Server will be provided a datasource for the cloud-init service. |\n| qemu-guest-agent | (Read-Only) When this option is enabled the server will allow QEMU Guest Agent to perform password reset without rebooting. |\n| uefi-boot | (Read-Only) When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS. |\n\n",
         "x-enum-descriptions": [
@@ -6454,7 +6442,7 @@
           "enabled_advanced_features": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/AdvancedFeature"
+              "type": "string"
             },
             "description": "A list of the currently enabled advanced features for this server.",
             "readOnly": true
@@ -6547,7 +6535,7 @@
           "advanced_features": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/AdvancedFeature"
+              "type": "string"
             },
             "description": "A list of the advanced features available for this server.",
             "readOnly": true
@@ -6846,7 +6834,7 @@
           "enabled_advanced_features": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/AdvancedFeature"
+              "type": "string"
             },
             "description": "Do not provide or set to null to keep existing advanced features. Provide an empty array to disable all advanced features, otherwise provide an array with selected advanced features. If provided, any currently enabled advanced features that aren't included will be disabled.",
             "nullable": true
@@ -12336,18 +12324,20 @@
           "pc_i440fx_4point2",
           "pc_i440fx_5point0",
           "pc_i440fx_5point1",
-          "pc_i440fx_7point2"
+          "pc_i440fx_7point2",
+          "pc_i440fx_8point2"
         ],
         "type": "string",
-        "description": "\n| Value | Description |\n| ----- | ----------- |\n| pc_i440fx_1point5 | PC I440 FX 1.5 |\n| pc_i440fx_2point11 | PC I440 FX 2.11 |\n| pc_i440fx_4point1 | PC I440 FX 4.1 |\n| pc_i440fx_4point2 | PC I440 FX 4.2 |\n| pc_i440fx_5point0 | PC I440 FX 5.0 |\n| pc_i440fx_5point1 | PC I440 FX 5.1 |\n| pc_i440fx_7point2 | PC I440 FX 7.2 |\n\n",
+        "description": "\n| Value | Description |\n| ----- | ----------- |\n| pc_i440fx_1point5 | PC i440FX 1.5 |\n| pc_i440fx_2point11 | PC i440FX 2.11 |\n| pc_i440fx_4point1 | PC i440FX 4.1 |\n| pc_i440fx_4point2 | PC i440FX 4.2 |\n| pc_i440fx_5point0 | PC i440FX 5.0 |\n| pc_i440fx_5point1 | PC i440FX 5.1 |\n| pc_i440fx_7point2 | PC i440FX 7.2 |\n| pc_i440fx_8point2 | PC i440FX 8.2 |\n\n",
         "x-enum-descriptions": [
-          "PC I440 FX 1.5",
-          "PC I440 FX 2.11",
-          "PC I440 FX 4.1",
-          "PC I440 FX 4.2",
-          "PC I440 FX 5.0",
-          "PC I440 FX 5.1",
-          "PC I440 FX 7.2"
+          "PC i440FX 1.5",
+          "PC i440FX 2.11",
+          "PC i440FX 4.1",
+          "PC i440FX 4.2",
+          "PC i440FX 5.0",
+          "PC i440FX 5.1",
+          "PC i440FX 7.2",
+          "PC i440FX 8.2"
         ]
       },
       "Vpc": {

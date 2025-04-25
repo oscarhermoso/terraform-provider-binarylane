@@ -36,20 +36,6 @@ const (
 	AddDiskTypeAddDisk AddDiskType = "add_disk"
 )
 
-// Defines values for AdvancedFeature.
-const (
-	CloudInit       AdvancedFeature = "cloud-init"
-	DriverDisk      AdvancedFeature = "driver-disk"
-	EmulatedDevices AdvancedFeature = "emulated-devices"
-	EmulatedHyperv  AdvancedFeature = "emulated-hyperv"
-	EmulatedTpm     AdvancedFeature = "emulated-tpm"
-	LocalRtc        AdvancedFeature = "local-rtc"
-	NestedVirt      AdvancedFeature = "nested-virt"
-	QemuGuestAgent  AdvancedFeature = "qemu-guest-agent"
-	UefiBoot        AdvancedFeature = "uefi-boot"
-	UnsetUuid       AdvancedFeature = "unset-uuid"
-)
-
 // Defines values for AdvancedFirewallRuleAction.
 const (
 	Accept AdvancedFirewallRuleAction = "accept"
@@ -421,6 +407,7 @@ const (
 	PcI440fx5point0  VmMachineType = "pc_i440fx_5point0"
 	PcI440fx5point1  VmMachineType = "pc_i440fx_5point1"
 	PcI440fx7point2  VmMachineType = "pc_i440fx_7point2"
+	PcI440fx8point2  VmMachineType = "pc_i440fx_8point2"
 )
 
 // Account defines model for Account.
@@ -568,21 +555,6 @@ type AddDisk struct {
 // AddDiskType defines model for AddDisk.Type.
 type AddDiskType string
 
-// AdvancedFeature
-// | Value | Description |
-// | ----- | ----------- |
-// | emulated-hyperv | Enable HyperV (a hypervisor produced by Microsoft) support. Enabled by default on Windows servers, generally of no value for non-Windows servers. |
-// | emulated-devices | When emulated devices is enabled, the KVM specific "VirtIO" disk drive and network devices are removed, and replaced with emulated versions of physical hardware: an old IDE HDD and an Intel E1000 network card.  Emulated devices are much slower than the VirtIO devices, and so this option should not be enabled unless absolutely necessary. |
-// | nested-virt | When this option is enabled the functionality necessary to run your own KVM servers within your server is enabled. Note that all the networking limits - one MAC address per VPS, restricted to specific IPs - still apply to public cloud so this is feature is generally only useful in combination with Virtual Private Cloud. |
-// | driver-disk | When this option is enabled a copy of the KVM driver disc for Windows ("virtio-win.iso") will be attached to your server as a virtual CD. This option can also be used in combination with your own attached backup when installing Windows. |
-// | unset-uuid | When this option is NOT enabled a 128-bit unique identifier is exposed to your server through the virtual BIOS. Each server receives a different UUID. Some propriety licensed software utilise this identifier to "tie" the license to a specific server. |
-// | local-rtc | When a server is booted the virtual BIOS receives the current date and time from the host node. The BIOS does not have an explicit timezone, so the timezone used is implicit and must be understood by the operating system. Most operating systems other than Windows expect the time to be UTC since it allows the operating system to control the timezone used when displaying the time. Our Windows installations have also been customized to use UTC, but when using your own installation of Windows this should be set to the host node's local timezone. |
-// | emulated-tpm | When enabled this provides an emulated TPM v1.2 device to your Cloud Server. Warning: the TPM state is not backed up. |
-// | cloud-init | (Read-Only) When this option is enabled the Cloud Server will be provided a datasource for the cloud-init service. |
-// | qemu-guest-agent | (Read-Only) When this option is enabled the server will allow QEMU Guest Agent to perform password reset without rebooting. |
-// | uefi-boot | (Read-Only) When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS. |
-type AdvancedFeature string
-
 // AdvancedFirewallRule defines model for AdvancedFirewallRule.
 type AdvancedFirewallRule struct {
 	// Action The action to take when there is a match on this rule.
@@ -629,7 +601,7 @@ type AdvancedFirewallRulesResponse struct {
 // AdvancedServerFeatures defines model for AdvancedServerFeatures.
 type AdvancedServerFeatures struct {
 	// EnabledAdvancedFeatures A list of the currently enabled advanced features for this server.
-	EnabledAdvancedFeatures *[]AdvancedFeature `json:"enabled_advanced_features,omitempty"`
+	EnabledAdvancedFeatures *[]string `json:"enabled_advanced_features,omitempty"`
 
 	// MachineType The machine_type (corresponding to a KVM version) used for this server.
 	// A null value indicates automatic selection of the best KVM machine type supported by the host node.
@@ -680,7 +652,7 @@ type AttachedBackup struct {
 // AvailableAdvancedServerFeatures defines model for AvailableAdvancedServerFeatures.
 type AvailableAdvancedServerFeatures struct {
 	// AdvancedFeatures A list of the advanced features available for this server.
-	AdvancedFeatures *[]AdvancedFeature `json:"advanced_features,omitempty"`
+	AdvancedFeatures *[]string `json:"advanced_features,omitempty"`
 
 	// MachineTypes A list of the machine types available for this server.
 	MachineTypes *[]VmMachineType `json:"machine_types,omitempty"`
@@ -809,7 +781,7 @@ type ChangeAdvancedFeatures struct {
 	AutomaticProcessorModel *bool `json:"automatic_processor_model"`
 
 	// EnabledAdvancedFeatures Do not provide or set to null to keep existing advanced features. Provide an empty array to disable all advanced features, otherwise provide an array with selected advanced features. If provided, any currently enabled advanced features that aren't included will be disabled.
-	EnabledAdvancedFeatures *[]AdvancedFeature `json:"enabled_advanced_features"`
+	EnabledAdvancedFeatures *[]string `json:"enabled_advanced_features"`
 
 	// MachineType Do not provide or set to null to keep existing machine type.
 	MachineType *VmMachineType `json:"machine_type"`
@@ -2990,13 +2962,14 @@ type VideoDevice string
 // VmMachineType
 // | Value | Description |
 // | ----- | ----------- |
-// | pc_i440fx_1point5 | PC I440 FX 1.5 |
-// | pc_i440fx_2point11 | PC I440 FX 2.11 |
-// | pc_i440fx_4point1 | PC I440 FX 4.1 |
-// | pc_i440fx_4point2 | PC I440 FX 4.2 |
-// | pc_i440fx_5point0 | PC I440 FX 5.0 |
-// | pc_i440fx_5point1 | PC I440 FX 5.1 |
-// | pc_i440fx_7point2 | PC I440 FX 7.2 |
+// | pc_i440fx_1point5 | PC i440FX 1.5 |
+// | pc_i440fx_2point11 | PC i440FX 2.11 |
+// | pc_i440fx_4point1 | PC i440FX 4.1 |
+// | pc_i440fx_4point2 | PC i440FX 4.2 |
+// | pc_i440fx_5point0 | PC i440FX 5.0 |
+// | pc_i440fx_5point1 | PC i440FX 5.1 |
+// | pc_i440fx_7point2 | PC i440FX 7.2 |
+// | pc_i440fx_8point2 | PC i440FX 8.2 |
 type VmMachineType string
 
 // Vpc defines model for Vpc.

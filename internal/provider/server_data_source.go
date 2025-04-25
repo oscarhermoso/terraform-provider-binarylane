@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 	"terraform-provider-binarylane/internal/resources"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -27,11 +29,12 @@ type serverDataSource struct {
 
 type serverDataModel struct {
 	resources.ServerModel
-	PublicIpv4Addresses  types.List   `tfsdk:"public_ipv4_addresses"`
-	PrivateIPv4Addresses types.List   `tfsdk:"private_ipv4_addresses"`
-	Permalink            types.String `tfsdk:"permalink"`
-	Memory               types.Int32  `tfsdk:"memory"`
-	Disk                 types.Int32  `tfsdk:"disk"`
+	PublicIpv4Addresses       types.List   `tfsdk:"public_ipv4_addresses"`
+	PrivateIPv4Addresses      types.List   `tfsdk:"private_ipv4_addresses"`
+	Permalink                 types.String `tfsdk:"permalink"`
+	Memory                    types.Int32  `tfsdk:"memory"`
+	Disk                      types.Int32  `tfsdk:"disk"`
+	SourceAndDestinationCheck types.Bool   `tfsdk:"source_and_destination_check"`
 }
 
 func (d *serverDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -58,10 +61,10 @@ func (d *serverDataSource) Metadata(ctx context.Context, req datasource.Metadata
 
 func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	ds, err := convertResourceSchemaToDataSourceSchema(
-		resources.ServerResourceSchema(ctx),
+		serverSchema(ctx),
 		AttributeConfig{
 			RequiredAttributes: &[]string{"id"},
-			ExcludedAttributes: &[]string{"password"},
+			ExcludedAttributes: &[]string{"password", "public_ipv4_count", "password_change_supported", "timeouts"},
 		})
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to convert resource schema to data source schema", err.Error())
@@ -69,110 +72,10 @@ func (d *serverDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 	}
 	resp.Schema = *ds
 	resp.Schema.Description = "Retrieve details about a BinaryLane Server."
-
-	// Overrides
-	id := resp.Schema.Attributes["id"]
-	resp.Schema.Attributes["id"] = schema.Int64Attribute{
-		Description:         id.GetDescription(),
-		MarkdownDescription: id.GetMarkdownDescription(),
-		Required:            true, // ID is required to find the server
-	}
-
-	nameDescription := "The hostname of your server, such as vps01.yourcompany.com."
-	resp.Schema.Attributes["name"] = &schema.StringAttribute{
-		Description:         nameDescription,
-		MarkdownDescription: nameDescription,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	backupsDescription := "If `true`, the server will be backed up twice per day. By default, backups are disabled."
-	resp.Schema.Attributes["backups"] = &schema.BoolAttribute{
-		Description:         backupsDescription,
-		MarkdownDescription: backupsDescription,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	sshKeysDescription := "This is a list of SSH key ids that were added to the server during creation."
-	resp.Schema.Attributes["ssh_keys"] = &schema.ListAttribute{
-		ElementType:         types.Int64Type,
-		Description:         sshKeysDescription,
-		MarkdownDescription: sshKeysDescription,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	userDataDescription := "A script or cloud-config YAML file to configure the server."
-	resp.Schema.Attributes["user_data"] = &schema.StringAttribute{
-		Description:         userDataDescription,
-		MarkdownDescription: userDataDescription,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	vpcIdDescription := "ID of the Virtual Private Cloud (VPC) the server is connected to."
-	resp.Schema.Attributes["vpc_id"] = &schema.Int64Attribute{
-		Description:         vpcIdDescription,
-		MarkdownDescription: vpcIdDescription,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	// Additional attributes
-	resp.Schema.Attributes["permalink"] = &schema.StringAttribute{
-		Description:         "A randomly generated two-word identifier assigned to servers in regions that support this feature",
-		MarkdownDescription: "A randomly generated two-word identifier assigned to servers in regions that support this feature",
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	publicIpv4AddressesDescription := "The public IPv4 addresses assigned to the server."
-	resp.Schema.Attributes["public_ipv4_addresses"] = &schema.ListAttribute{
-		Description:         publicIpv4AddressesDescription,
-		MarkdownDescription: publicIpv4AddressesDescription,
-		ElementType:         types.StringType,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	privateIpv4AddressesDescription := "The private IPv4 addresses assigned to the server."
-	resp.Schema.Attributes["private_ipv4_addresses"] = &schema.ListAttribute{
-		Description:         privateIpv4AddressesDescription,
-		MarkdownDescription: privateIpv4AddressesDescription,
-		ElementType:         types.StringType,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	memoryDescription := "The amount of memory in MB assigned to the server."
-	resp.Schema.Attributes["memory"] = &schema.Int32Attribute{
-		Description:         memoryDescription,
-		MarkdownDescription: memoryDescription,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
-
-	diskDescription := "The amount of storage in GB assigned to the server."
-	resp.Schema.Attributes["disk"] = &schema.Int32Attribute{
-		Description:         diskDescription,
-		MarkdownDescription: diskDescription,
-		Optional:            false,
-		Required:            false,
-		Computed:            true,
-	}
 }
 
 func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var diag diag.Diagnostics
 	var data serverDataModel
 
 	// Read Terraform configuration data into the model
@@ -211,6 +114,27 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
 	data.Memory = types.Int32Value(*serverResp.JSON200.Server.Memory)
 	data.Disk = types.Int32Value(*serverResp.JSON200.Server.Disk)
+	data.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
+
+	advFeat := *serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
+	data.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
+		resources.AdvancedFeaturesValue{}.AttributeTypes(ctx),
+		map[string]attr.Value{
+			"emulated_hyperv":  types.BoolValue(slices.Contains(advFeat, "emulated-hyperv")),
+			"emulated_devices": types.BoolValue(slices.Contains(advFeat, "emulated-devices")),
+			"nested_virt":      types.BoolValue(slices.Contains(advFeat, "nested-virt")),
+			"driver_disk":      types.BoolValue(slices.Contains(advFeat, "driver-disk")),
+			"unset_uuid":       types.BoolValue(slices.Contains(advFeat, "unset-uuid")),
+			"local_rtc":        types.BoolValue(slices.Contains(advFeat, "local-rtc")),
+			"emulated_tpm":     types.BoolValue(slices.Contains(advFeat, "emulated-tpm")),
+			"cloud_init":       types.BoolValue(slices.Contains(advFeat, "cloud-init")),
+			"qemu_guest_agent": types.BoolValue(slices.Contains(advFeat, "qemu-guest-agent")),
+			"uefi_boot":        types.BoolValue(slices.Contains(advFeat, "uefi-boot")),
+		})
+	if diags.HasError() {
+		data.AdvancedFeatures = resources.NewAdvancedFeaturesValueUnknown()
+	}
+
 	publicIpv4Addresses := []string{}
 	privateIpv4Addresses := []string{}
 
