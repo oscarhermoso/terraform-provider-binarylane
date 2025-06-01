@@ -16,16 +16,11 @@ import (
 
 func TestServerResource(t *testing.T) {
 	// Must assign a password to the server or Binary Lane will send emails
-	pwBytes := make([]byte, 12)
-	rand.Read(pwBytes)
-	password := base64.URLEncoding.EncodeToString(pwBytes)
+	password1 := GenerateTestPassword(t)
+	password2 := GenerateTestPassword(t)
 
-	pwBytes2 := make([]byte, 12)
-	rand.Read(pwBytes2)
-	password2 := base64.URLEncoding.EncodeToString(pwBytes2)
-
-	sshPublicKeyInitial := GeneratePublicKey(t)
-	sshPublicKeyUpdated := GeneratePublicKey(t)
+	sshPublicKeyInitial := GenerateTestPublicKey(t)
+	sshPublicKeyUpdated := GenerateTestPublicKey(t)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -57,7 +52,7 @@ resource "binarylane_server" "test" {
   image             = "debian-11"
   size              = "std-min"
 	memory            = 1152
-  password          = "` + password + `"
+  password          = "` + password1 + `"
   vpc_id            = binarylane_vpc.test.id
   public_ipv4_count = 1
   ssh_keys          = [binarylane_ssh_key.initial.id]
@@ -87,7 +82,7 @@ data "binarylane_server" "test" {
 					resource.TestCheckResourceAttr("binarylane_server.test", "disk", "20"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "vpc_id"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_count", "1"),
-					resource.TestCheckResourceAttr("binarylane_server.test", "password", password),
+					resource.TestCheckResourceAttr("binarylane_server.test", "password", password1),
 					resource.TestCheckResourceAttr("binarylane_server.test", "user_data", `#cloud-config
 echo "Hello World" > /var/tmp/output.txt
 `),
@@ -178,7 +173,7 @@ resource "binarylane_server" "test" {
   image             = "debian-12"
   size              = "std-1vcpu"
   disk              = "45"
-  password          = "` + password + `"
+  password          = "` + password1 + `"
   vpc_id            = null
   public_ipv4_count = 0
   ssh_keys          = [binarylane_ssh_key.updated.id]
@@ -271,6 +266,61 @@ EOT
 			},
 		},
 	})
+}
+
+func TestServerResourceRename(t *testing.T) {
+	// Must assign a password to the server or Binary Lane will send emails
+	password := GenerateTestPassword(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Setup
+			{
+				Config: providerConfig + `
+
+resource "binarylane_server" "test" {
+	name              = "tf-test-server-rename-1"
+	region            = "per"
+	image             = "debian-11"
+	size              = "std-min"
+	public_ipv4_count = 0
+	password          = "` + password + `"
+}
+`,
+			},
+			// Rename
+			{
+				Config: providerConfig + `
+resource "binarylane_server" "test" {
+	name              = "tf-test-server-rename-2"
+	region            = "per"
+	image             = "debian-11"
+	size              = "std-min"
+	public_ipv4_count = 0
+	password          = "` + password + `"
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("binarylane_server.test", "name", "tf-test-server-rename-2"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "region", "per"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "image", "debian-11"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "size", "std-min"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "password", password),
+				),
+			},
+		},
+	})
+}
+
+func GenerateTestPassword(t *testing.T) string {
+	t.Helper()
+	pwBytes := make([]byte, 12)
+	_, err := rand.Read(pwBytes)
+	if err != nil {
+		t.Errorf("Failed to generate password: %s", err)
+	}
+	return base64.URLEncoding.EncodeToString(pwBytes)
 }
 
 func init() {

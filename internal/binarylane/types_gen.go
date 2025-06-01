@@ -412,6 +412,9 @@ const (
 
 // Account defines model for Account.
 type Account struct {
+	// AdditionalIpv4Limit The maximum additional IPv4 addresses this account may assign across all servers. You may contact support to request this limit be increased.
+	AdditionalIpv4Limit *int32 `json:"additional_ipv4_limit,omitempty"`
+
 	// ConfiguredPaymentMethods The payment methods that are configured (available) for this account.
 	ConfiguredPaymentMethods *[]PaymentMethod `json:"configured_payment_methods,omitempty"`
 
@@ -477,6 +480,16 @@ type Action struct {
 	ResourceId *int64 `json:"resource_id"`
 
 	// ResourceType The resource type (if any) associated with this action.
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | server | Server |
+	// | load-balancer | Load Balancer |
+	// | ssh-key | SSH Key |
+	// | vpc | Virtual Private Network |
+	// | image | Backup or Operating System Image |
+	// | registered-domain-name | Registered Domain Name |
+	//
 	ResourceType *ResourceType `json:"resource_type"`
 
 	// ResultData Returned information from a completed action. For example: a successful completed 'uptime' action will have the uptime value in this field.
@@ -558,6 +571,12 @@ type AddDiskType string
 // AdvancedFirewallRule defines model for AdvancedFirewallRule.
 type AdvancedFirewallRule struct {
 	// Action The action to take when there is a match on this rule.
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | drop | Traffic matching this rule will be dropped. |
+	// | accept | Traffic matching this rule will be accepted. |
+	//
 	Action AdvancedFirewallRuleAction `json:"action" tfsdk:"action"`
 
 	// Description A description to assist in identifying this rule. Commonly used to record the reason for the rule or the intent behind it, e.g. "Block access to RDP" or "Allow access from HQ".
@@ -570,6 +589,14 @@ type AdvancedFirewallRule struct {
 	DestinationPorts *[]string `json:"destination_ports" tfsdk:"destination_ports"`
 
 	// Protocol The protocol to match for this rule.
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | all | This rule will match any protocol. |
+	// | icmp | This rule will match ICMP traffic only. |
+	// | tcp | This rule will match TCP traffic only. |
+	// | udp | This rule will match UDP traffic only. |
+	//
 	Protocol AdvancedFirewallRuleProtocol `json:"protocol" tfsdk:"protocol"`
 
 	// SourceAddresses The source addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.
@@ -592,6 +619,41 @@ type AdvancedFirewallRuleAction string
 // | udp | This rule will match UDP traffic only. |
 type AdvancedFirewallRuleProtocol string
 
+// AdvancedFirewallRuleRequest defines model for AdvancedFirewallRuleRequest.
+type AdvancedFirewallRuleRequest struct {
+	// Action The action to take when there is a match on this rule.
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | drop | Traffic matching this rule will be dropped. |
+	// | accept | Traffic matching this rule will be accepted. |
+	//
+	Action AdvancedFirewallRuleAction `json:"action" tfsdk:"action"`
+
+	// Description A description to assist in identifying this rule. Commonly used to record the reason for the rule or the intent behind it, e.g. "Block access to RDP" or "Allow access from HQ".
+	Description *string `json:"description" tfsdk:"description"`
+
+	// DestinationAddresses The destination addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.
+	DestinationAddresses []string `json:"destination_addresses" tfsdk:"destination_addresses"`
+
+	// DestinationPorts The destination ports to match for this rule. Leave null or empty to match on all ports.
+	DestinationPorts *[]string `json:"destination_ports" tfsdk:"destination_ports"`
+
+	// Protocol The protocol to match for this rule.
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | all | This rule will match any protocol. |
+	// | icmp | This rule will match ICMP traffic only. |
+	// | tcp | This rule will match TCP traffic only. |
+	// | udp | This rule will match UDP traffic only. |
+	//
+	Protocol AdvancedFirewallRuleProtocol `json:"protocol" tfsdk:"protocol"`
+
+	// SourceAddresses The source addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.
+	SourceAddresses []string `json:"source_addresses" tfsdk:"source_addresses"`
+}
+
 // AdvancedFirewallRulesResponse defines model for AdvancedFirewallRulesResponse.
 type AdvancedFirewallRulesResponse struct {
 	// FirewallRules The advanced firewall rules for the selected server. Please note that the order of the rules is critical as the first matching rule is applied, and if no rules match the traffic is permitted.
@@ -605,6 +667,18 @@ type AdvancedServerFeatures struct {
 
 	// MachineType The machine_type (corresponding to a KVM version) used for this server.
 	// A null value indicates automatic selection of the best KVM machine type supported by the host node.
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | pc_i440fx_1point5 | PC i440FX 1.5 |
+	// | pc_i440fx_2point11 | PC i440FX 2.11 |
+	// | pc_i440fx_4point1 | PC i440FX 4.1 |
+	// | pc_i440fx_4point2 | PC i440FX 4.2 |
+	// | pc_i440fx_5point0 | PC i440FX 5.0 |
+	// | pc_i440fx_5point1 | PC i440FX 5.1 |
+	// | pc_i440fx_7point2 | PC i440FX 7.2 |
+	// | pc_i440fx_8point2 | PC i440FX 8.2 |
+	//
 	MachineType *VmMachineType `json:"machine_type"`
 
 	// ProcessorModel The ID of the processor model (and therefore CPU flags) available for this server.
@@ -784,6 +858,18 @@ type ChangeAdvancedFeatures struct {
 	EnabledAdvancedFeatures *[]string `json:"enabled_advanced_features"`
 
 	// MachineType Do not provide or set to null to keep existing machine type.
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | pc_i440fx_1point5 | PC i440FX 1.5 |
+	// | pc_i440fx_2point11 | PC i440FX 2.11 |
+	// | pc_i440fx_4point1 | PC i440FX 4.1 |
+	// | pc_i440fx_4point2 | PC i440FX 4.2 |
+	// | pc_i440fx_5point0 | PC i440FX 5.0 |
+	// | pc_i440fx_5point1 | PC i440FX 5.1 |
+	// | pc_i440fx_7point2 | PC i440FX 7.2 |
+	// | pc_i440fx_8point2 | PC i440FX 8.2 |
+	//
 	MachineType *VmMachineType `json:"machine_type"`
 
 	// ProcessorModel Do not provide or set to null to keep existing processor model.
@@ -791,6 +877,14 @@ type ChangeAdvancedFeatures struct {
 	Type           ChangeAdvancedFeaturesType `json:"type"`
 
 	// VideoDevice Do not provide or set to null to keep existing video device.
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | cirrus-logic | Cirrus Logic GD5446 |
+	// | standard | Standard VGA with VESA 2.0 extensions |
+	// | virtio | Virtio VGA (800x600) |
+	// | virtio-wide | Virtio VGA (1600x900) |
+	//
 	VideoDevice *VideoDevice `json:"video_device"`
 }
 
@@ -800,7 +894,7 @@ type ChangeAdvancedFeaturesType string
 // ChangeAdvancedFirewallRules Change the Advanced Firewall Rules for a Server
 type ChangeAdvancedFirewallRules struct {
 	// FirewallRules A list of rules for the server. NB: that any existing rules that are not included will be removed. Submit an empty list to clear all rules.
-	FirewallRules []AdvancedFirewallRule          `json:"firewall_rules"`
+	FirewallRules []AdvancedFirewallRuleRequest   `json:"firewall_rules"`
 	Type          ChangeAdvancedFirewallRulesType `json:"type"`
 }
 
@@ -1387,16 +1481,16 @@ type DomainRecord struct {
 	Weight *int32 `json:"weight"`
 }
 
-// DomainRecordRequest If this is used to update an existing DomainRecord any values not provided will be retained. Provide empty strings to clear existing string values, nulls to retain the existing values.
+// DomainRecordRequest defines model for DomainRecordRequest.
 type DomainRecordRequest struct {
 	// Data A general data field that has different functions depending on the record type.
-	Data *string `json:"data"`
+	Data string `json:"data"`
 
 	// Flags An unsigned integer between 0-255 that is only relevant for CAA records.
 	Flags *int32 `json:"flags"`
 
 	// Name The subdomain for this record. Use @ for records on the domain itself, and * to create a wildcard record.
-	Name *string `json:"name"`
+	Name string `json:"name"`
 
 	// Port A port value that is only relevant for SRV records.
 	Port *int32 `json:"port"`
@@ -1411,7 +1505,20 @@ type DomainRecordRequest struct {
 	Ttl *int32 `json:"ttl"`
 
 	// Type The type of the DNS record.
-	Type *DomainRecordType `json:"type"`
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | A | Map an IPv4 address to a hostname. |
+	// | AAAA | Map an IPv6 address to a hostname. |
+	// | CAA | Restrict which certificate authorities are permitted to issue certificates for a domain. |
+	// | CNAME | Define an alias for your canonical hostname. |
+	// | MX | Define the mail exchanges that handle mail for the domain. |
+	// | NS | Define the nameservers that manage the domain. |
+	// | SOA | The Start of Authority record for the zone. |
+	// | SRV | Specify a server by hostname and port to handle a service or services. |
+	// | TXT | Define a string of text that is associated with a hostname. |
+	//
+	Type DomainRecordType `json:"type"`
 
 	// Weight The weight value that is only relevant for SRV records.
 	Weight *int32 `json:"weight"`
@@ -1443,6 +1550,12 @@ type DomainRecordsResponse struct {
 
 	// Meta Contains metadata about the response, currently this includes the total number of items.
 	Meta Meta `json:"meta"`
+}
+
+// DomainRefreshRequest defines model for DomainRefreshRequest.
+type DomainRefreshRequest struct {
+	// DomainNames The domain names to refresh.
+	DomainNames []string `json:"domain_names"`
 }
 
 // DomainRequest defines model for DomainRequest.
@@ -1502,6 +1615,13 @@ type HealthCheck struct {
 	Path *string `json:"path"`
 
 	// Protocol Leave null to accept the default HTTP protocol.
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | http | The health check will be performed via HTTP. |
+	// | https | The health check will be performed via HTTPS. |
+	// | both | The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol. |
+	//
 	Protocol *HealthCheckProtocol `json:"protocol"`
 }
 
@@ -2767,12 +2887,28 @@ type TakeBackup struct {
 	BackupIdToReplace *int64 `json:"backup_id_to_replace"`
 
 	// BackupType If replacement_strategy is anything other than 'specified', this must be provided.
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | daily | A backup which is scheduled to be taken each day. |
+	// | weekly | A backup which is scheduled to be taken each week. |
+	// | monthly | A backup which is scheduled to be taken each month. |
+	// | temporary | A backup which is created on demand and only retained for a maximum of seven days. |
+	//
 	BackupType *BackupSlot `json:"backup_type"`
 
 	// Label An optional label to identify the backup.
 	Label *string `json:"label"`
 
 	// ReplacementStrategy The strategy for selecting which backup to replace (if any).
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | none | Do not replace any existing backup: use a free slot of the provided backup type. If there are no free slots an error will occur. |
+	// | specified | Replace the specific backup id provided. |
+	// | oldest | Use any free slots of the provided backup type, and if there are no free slots replace the oldest unlocked and un-attached backup of the provided backup type. |
+	// | newest | Use any free slots of the provided backup type, and if there are no free slots replace the newest unlocked and un-attached backup of the provided backup type. |
+	//
 	ReplacementStrategy BackupReplacementStrategy `json:"replacement_strategy"`
 	Type                TakeBackupType            `json:"type"`
 }
@@ -2866,6 +3002,49 @@ type UnpaidFailedInvoicesResponse struct {
 	Invoices *[]Invoice `json:"invoices,omitempty"`
 }
 
+// UpdateDomainRecordRequest Any values not provided will be retained. Provide empty strings to clear existing string values, nulls to retain the existing values.
+type UpdateDomainRecordRequest struct {
+	// Data A general data field that has different functions depending on the record type.
+	Data *string `json:"data"`
+
+	// Flags An unsigned integer between 0-255 that is only relevant for CAA records.
+	Flags *int32 `json:"flags"`
+
+	// Name The subdomain for this record. Use @ for records on the domain itself, and * to create a wildcard record.
+	Name *string `json:"name"`
+
+	// Port A port value that is only relevant for SRV records.
+	Port *int32 `json:"port"`
+
+	// Priority A priority value that is only relevant for SRV and MX records.
+	Priority *int32 `json:"priority"`
+
+	// Tag A parameter tag that is only relevant for CAA records.
+	Tag *string `json:"tag"`
+
+	// Ttl This value is the time to live for the record, in seconds.
+	Ttl *int32 `json:"ttl"`
+
+	// Type The type of the DNS record.
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | A | Map an IPv4 address to a hostname. |
+	// | AAAA | Map an IPv6 address to a hostname. |
+	// | CAA | Restrict which certificate authorities are permitted to issue certificates for a domain. |
+	// | CNAME | Define an alias for your canonical hostname. |
+	// | MX | Define the mail exchanges that handle mail for the domain. |
+	// | NS | Define the nameservers that manage the domain. |
+	// | SOA | The Start of Authority record for the zone. |
+	// | SRV | Specify a server by hostname and port to handle a service or services. |
+	// | TXT | Define a string of text that is associated with a hostname. |
+	//
+	Type *DomainRecordType `json:"type"`
+
+	// Weight The weight value that is only relevant for SRV records.
+	Weight *int32 `json:"weight"`
+}
+
 // UpdateLoadBalancerRequest defines model for UpdateLoadBalancerRequest.
 type UpdateLoadBalancerRequest struct {
 	// ForwardingRules The rules that control which traffic the load balancer will forward to servers in the pool. Leave null to accept a default "HTTP" only forwarding rule.
@@ -2912,12 +3091,28 @@ type UploadImageRequest struct {
 	BackupIdToReplace *int64 `json:"backup_id_to_replace"`
 
 	// BackupType If replacement_strategy is anything other than 'specified', this must be provided.
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | daily | A backup which is scheduled to be taken each day. |
+	// | weekly | A backup which is scheduled to be taken each week. |
+	// | monthly | A backup which is scheduled to be taken each month. |
+	// | temporary | A backup which is created on demand and only retained for a maximum of seven days. |
+	//
 	BackupType *BackupSlot `json:"backup_type"`
 
 	// Label An optional label to identify the backup.
 	Label *string `json:"label"`
 
 	// ReplacementStrategy The strategy for selecting which backup to replace (if any).
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | none | Do not replace any existing backup: use a free slot of the provided backup type. If there are no free slots an error will occur. |
+	// | specified | Replace the specific backup id provided. |
+	// | oldest | Use any free slots of the provided backup type, and if there are no free slots replace the oldest unlocked and un-attached backup of the provided backup type. |
+	// | newest | Use any free slots of the provided backup type, and if there are no free slots replace the newest unlocked and un-attached backup of the provided backup type. |
+	//
 	ReplacementStrategy BackupReplacementStrategy `json:"replacement_strategy"`
 
 	// Url The source URL for the image to upload. Only HTTP and HTTPS sources are currently supported.
@@ -3080,6 +3275,9 @@ type GetDomainsParams struct {
 // PostDomainsJSONBody defines parameters for PostDomains.
 type PostDomainsJSONBody = DomainRequest
 
+// PostDomainsRefreshNameserverCacheJSONBody defines parameters for PostDomainsRefreshNameserverCache.
+type PostDomainsRefreshNameserverCacheJSONBody = DomainRefreshRequest
+
 // DeleteDomainsDomainNameParamsDomainName0 defines parameters for DeleteDomainsDomainName.
 type DeleteDomainsDomainNameParamsDomainName0 = int
 
@@ -3147,7 +3345,7 @@ type GetDomainsDomainNameRecordsRecordIdParamsDomainName0 = int
 type GetDomainsDomainNameRecordsRecordIdParamsDomainName1 = string
 
 // PutDomainsDomainNameRecordsRecordIdJSONBody defines parameters for PutDomainsDomainNameRecordsRecordId.
-type PutDomainsDomainNameRecordsRecordIdJSONBody = DomainRecordRequest
+type PutDomainsDomainNameRecordsRecordIdJSONBody = UpdateDomainRecordRequest
 
 // PutDomainsDomainNameRecordsRecordIdParamsDomainName0 defines parameters for PutDomainsDomainNameRecordsRecordId.
 type PutDomainsDomainNameRecordsRecordIdParamsDomainName0 = int
@@ -3427,6 +3625,9 @@ type PostActionsActionIdProceedJSONRequestBody = PostActionsActionIdProceedJSONB
 
 // PostDomainsJSONRequestBody defines body for PostDomains for application/json ContentType.
 type PostDomainsJSONRequestBody = PostDomainsJSONBody
+
+// PostDomainsRefreshNameserverCacheJSONRequestBody defines body for PostDomainsRefreshNameserverCache for application/json ContentType.
+type PostDomainsRefreshNameserverCacheJSONRequestBody = PostDomainsRefreshNameserverCacheJSONBody
 
 // PostDomainsDomainNameRecordsJSONRequestBody defines body for PostDomainsDomainNameRecords for application/json ContentType.
 type PostDomainsDomainNameRecordsJSONRequestBody = PostDomainsDomainNameRecordsJSONBody

@@ -1,8 +1,6 @@
 package provider
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -11,9 +9,7 @@ import (
 
 func TestServerFirewallRulesResource(t *testing.T) {
 	// Must assign a password to the server or Binary Lane will send emails
-	pw_bytes := make([]byte, 12)
-	rand.Read(pw_bytes)
-	password := base64.URLEncoding.EncodeToString(pw_bytes)
+	password := GenerateTestPassword(t)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
