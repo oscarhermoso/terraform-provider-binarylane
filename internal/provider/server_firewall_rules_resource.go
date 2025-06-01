@@ -83,7 +83,7 @@ func (r *serverFirewallRulesResource) Create(ctx context.Context, req resource.C
 	}
 
 	// Create API call logic
-	firewallRules := []binarylane.AdvancedFirewallRule{}
+	firewallRules := []binarylane.AdvancedFirewallRuleRequest{}
 	diags := data.FirewallRules.ElementsAs(ctx, &firewallRules, true)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -174,7 +174,7 @@ func (r *serverFirewallRulesResource) Update(ctx context.Context, req resource.U
 	}
 
 	// Update API call logic
-	firewallRules := []binarylane.AdvancedFirewallRule{}
+	firewallRules := []binarylane.AdvancedFirewallRuleRequest{}
 	diags := data.FirewallRules.ElementsAs(ctx, &firewallRules, true)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -228,7 +228,7 @@ func (r *serverFirewallRulesResource) Delete(ctx context.Context, req resource.D
 		data.ServerId.ValueInt64(),
 		binarylane.PostServersServerIdActionsChangeAdvancedFirewallRulesJSONRequestBody{
 			Type:          "change_advanced_firewall_rules",
-			FirewallRules: []binarylane.AdvancedFirewallRule{},
+			FirewallRules: []binarylane.AdvancedFirewallRuleRequest{},
 		})
 	if err != nil {
 		resp.Diagnostics.AddError(

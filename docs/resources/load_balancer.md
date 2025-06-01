@@ -63,6 +63,12 @@ Optional:
 - `path` (String) Leave null to accept the default '/' path.
 - `protocol` (String) Leave null to accept the default HTTP protocol.
 
+| Value | Description |
+| ----- | ----------- |
+| http | The health check will be performed via HTTP. |
+| https | The health check will be performed via HTTPS. |
+| both | The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol. |
+
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`

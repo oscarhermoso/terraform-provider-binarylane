@@ -151,8 +151,10 @@ type ClientInterface interface {
 	// GetDomainsNameservers request
 	GetDomainsNameservers(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostDomainsRefreshNameserverCache request
-	PostDomainsRefreshNameserverCache(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostDomainsRefreshNameserverCacheWithBody request with any body
+	PostDomainsRefreshNameserverCacheWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostDomainsRefreshNameserverCache(ctx context.Context, body PostDomainsRefreshNameserverCacheJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteDomainsDomainName request
 	DeleteDomainsDomainName(ctx context.Context, domainName struct {
@@ -843,8 +845,20 @@ func (c *Client) GetDomainsNameservers(ctx context.Context, reqEditors ...Reques
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostDomainsRefreshNameserverCache(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostDomainsRefreshNameserverCacheRequest(c.Server)
+func (c *Client) PostDomainsRefreshNameserverCacheWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostDomainsRefreshNameserverCacheRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostDomainsRefreshNameserverCache(ctx context.Context, body PostDomainsRefreshNameserverCacheJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostDomainsRefreshNameserverCacheRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3490,8 +3504,19 @@ func NewGetDomainsNameserversRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewPostDomainsRefreshNameserverCacheRequest generates requests for PostDomainsRefreshNameserverCache
-func NewPostDomainsRefreshNameserverCacheRequest(server string) (*http.Request, error) {
+// NewPostDomainsRefreshNameserverCacheRequest calls the generic PostDomainsRefreshNameserverCache builder with application/json body
+func NewPostDomainsRefreshNameserverCacheRequest(server string, body PostDomainsRefreshNameserverCacheJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostDomainsRefreshNameserverCacheRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostDomainsRefreshNameserverCacheRequestWithBody generates requests for PostDomainsRefreshNameserverCache with any type of body
+func NewPostDomainsRefreshNameserverCacheRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -3509,10 +3534,12 @@ func NewPostDomainsRefreshNameserverCacheRequest(server string) (*http.Request, 
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	req, err := http.NewRequest("POST", queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -8445,8 +8472,10 @@ type ClientWithResponsesInterface interface {
 	// GetDomainsNameserversWithResponse request
 	GetDomainsNameserversWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetDomainsNameserversResponse, error)
 
-	// PostDomainsRefreshNameserverCacheWithResponse request
-	PostDomainsRefreshNameserverCacheWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*PostDomainsRefreshNameserverCacheResponse, error)
+	// PostDomainsRefreshNameserverCacheWithBodyWithResponse request with any body
+	PostDomainsRefreshNameserverCacheWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostDomainsRefreshNameserverCacheResponse, error)
+
+	PostDomainsRefreshNameserverCacheWithResponse(ctx context.Context, body PostDomainsRefreshNameserverCacheJSONRequestBody, reqEditors ...RequestEditorFn) (*PostDomainsRefreshNameserverCacheResponse, error)
 
 	// DeleteDomainsDomainNameWithResponse request
 	DeleteDomainsDomainNameWithResponse(ctx context.Context, domainName struct {
@@ -11585,9 +11614,17 @@ func (c *ClientWithResponses) GetDomainsNameserversWithResponse(ctx context.Cont
 	return ParseGetDomainsNameserversResponse(rsp)
 }
 
-// PostDomainsRefreshNameserverCacheWithResponse request returning *PostDomainsRefreshNameserverCacheResponse
-func (c *ClientWithResponses) PostDomainsRefreshNameserverCacheWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*PostDomainsRefreshNameserverCacheResponse, error) {
-	rsp, err := c.PostDomainsRefreshNameserverCache(ctx, reqEditors...)
+// PostDomainsRefreshNameserverCacheWithBodyWithResponse request with arbitrary body returning *PostDomainsRefreshNameserverCacheResponse
+func (c *ClientWithResponses) PostDomainsRefreshNameserverCacheWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostDomainsRefreshNameserverCacheResponse, error) {
+	rsp, err := c.PostDomainsRefreshNameserverCacheWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostDomainsRefreshNameserverCacheResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostDomainsRefreshNameserverCacheWithResponse(ctx context.Context, body PostDomainsRefreshNameserverCacheJSONRequestBody, reqEditors ...RequestEditorFn) (*PostDomainsRefreshNameserverCacheResponse, error) {
+	rsp, err := c.PostDomainsRefreshNameserverCache(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}

@@ -49,6 +49,12 @@ cat <<<$(jq '.components.schemas.AdvancedFirewallRule.properties.action += {"x-o
 cat <<<$(jq '.components.schemas.AdvancedFirewallRule.properties.destination_addresses += {"x-oapi-codegen-extra-tags": {"tfsdk": "destination_addresses"}}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.components.schemas.AdvancedFirewallRule.properties.destination_ports += {"x-oapi-codegen-extra-tags": {"tfsdk": "destination_ports"}}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.components.schemas.AdvancedFirewallRule.properties.source_addresses += {"x-oapi-codegen-extra-tags": {"tfsdk": "source_addresses"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.AdvancedFirewallRuleRequest.properties.description += {"x-oapi-codegen-extra-tags": {"tfsdk": "description"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.AdvancedFirewallRuleRequest.properties.protocol += {"x-oapi-codegen-extra-tags": {"tfsdk": "protocol"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.AdvancedFirewallRuleRequest.properties.action += {"x-oapi-codegen-extra-tags": {"tfsdk": "action"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.AdvancedFirewallRuleRequest.properties.destination_addresses += {"x-oapi-codegen-extra-tags": {"tfsdk": "destination_addresses"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.AdvancedFirewallRuleRequest.properties.destination_ports += {"x-oapi-codegen-extra-tags": {"tfsdk": "destination_ports"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.AdvancedFirewallRuleRequest.properties.source_addresses += {"x-oapi-codegen-extra-tags": {"tfsdk": "source_addresses"}}' $OPENAPI_FILE) >$OPENAPI_FILE
 
 ## Load Balancer
 cat <<<$(jq '.components.schemas.CreateLoadBalancerRequest.properties.forwarding_rules += {"x-oapi-codegen-extra-tags": {"tfsdk": "forwarding_rules"}}' $OPENAPI_FILE) >$OPENAPI_FILE

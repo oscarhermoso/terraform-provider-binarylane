@@ -35,8 +35,20 @@ data "binarylane_server_firewall_rules" "example" {
 Read-Only:
 
 - `action` (String) The action to take when there is a match on this rule.
+
+| Value | Description |
+| ----- | ----------- |
+| drop | Traffic matching this rule will be dropped. |
+| accept | Traffic matching this rule will be accepted. |
 - `description` (String) A description to assist in identifying this rule. Commonly used to record the reason for the rule or the intent behind it, e.g. "Block access to RDP" or "Allow access from HQ".
 - `destination_addresses` (List of String) The destination addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.
 - `destination_ports` (List of String) The destination ports to match for this rule. Leave null or empty to match on all ports.
 - `protocol` (String) The protocol to match for this rule.
+
+| Value | Description |
+| ----- | ----------- |
+| all | This rule will match any protocol. |
+| icmp | This rule will match ICMP traffic only. |
+| tcp | This rule will match TCP traffic only. |
+| udp | This rule will match UDP traffic only. |
 - `source_addresses` (List of String) The source addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.

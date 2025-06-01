@@ -61,8 +61,8 @@ func LoadBalancerResourceSchema(ctx context.Context) schema.Schema {
 					"protocol": schema.StringAttribute{
 						Optional:            true,
 						Computed:            true,
-						Description:         "Leave null to accept the default HTTP protocol.",
-						MarkdownDescription: "Leave null to accept the default HTTP protocol.",
+						Description:         "Leave null to accept the default HTTP protocol.\n\n| Value | Description |\n| ----- | ----------- |\n| http | The health check will be performed via HTTP. |\n| https | The health check will be performed via HTTPS. |\n| both | The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol. |\n\n",
+						MarkdownDescription: "Leave null to accept the default HTTP protocol.\n\n| Value | Description |\n| ----- | ----------- |\n| http | The health check will be performed via HTTP. |\n| https | The health check will be performed via HTTPS. |\n| both | The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol. |\n\n",
 					},
 				},
 				CustomType: HealthCheckType{

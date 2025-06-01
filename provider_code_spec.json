@@ -763,7 +763,7 @@
 									"name": "protocol",
 									"string": {
 										"computed_optional_required": "computed_optional",
-										"description": "Leave null to accept the default HTTP protocol."
+										"description": "Leave null to accept the default HTTP protocol.\n\n| Value | Description |\n| ----- | ----------- |\n| http | The health check will be performed via HTTP. |\n| https | The health check will be performed via HTTPS. |\n| both | The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol. |\n\n"
 									}
 								}
 							],
@@ -1024,7 +1024,7 @@
 										"name": "action",
 										"string": {
 											"computed_optional_required": "required",
-											"description": "The action to take when there is a match on this rule.",
+											"description": "The action to take when there is a match on this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| drop | Traffic matching this rule will be dropped. |\n| accept | Traffic matching this rule will be accepted. |\n\n",
 											"validators": [
 												{
 													"custom": {
@@ -1094,7 +1094,7 @@
 										"name": "protocol",
 										"string": {
 											"computed_optional_required": "required",
-											"description": "The protocol to match for this rule.",
+											"description": "The protocol to match for this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| all | This rule will match any protocol. |\n| icmp | This rule will match ICMP traffic only. |\n| tcp | This rule will match TCP traffic only. |\n| udp | This rule will match UDP traffic only. |\n\n",
 											"validators": [
 												{
 													"custom": {

@@ -1,5 +1,5 @@
 {
-  "openapi": "3.0.1",
+  "openapi": "3.0.4",
   "info": {
     "title": "BinaryLane API",
     "description": "\n\n# Introduction\n\nThis API is used by BinaryLane's 'mPanel' website, so you'll find everything you need here to automate your use of BinaryLane or develop tools for others. You could even build your own version of 'mPanel' if you wanted!\n\n\n## Getting Started Guide\n\nWe are working on a complete 'Getting Started' guide as well as this introductory section.\n\n\n# Developer Preview Notes\n\n**Warning: this specification is currently in active development.** Until this warning is removed breaking changes are possible without the version changing.\nHowever, this API is relatively mature and we are actively developing a new website and other tools against this API so breaking changes should be rare at this point.\n\nWe currently have a CLI (command line interface) tool in development and are in the early stage of planning other tools.\n\nWe welcome all feedback from API users at the support email address above.\n\n\n## Active Development Status\n\nThis is the list of BinaryLane features that are not yet available through the API but are currently under active development.\nIf you need an ETA on when these will be available please contact support.\n\n- Domains\n\n\n## Future Development Status\n\nThis is the list of BinaryLane features that are not yet available through the API and are not currently in active development. This list is in a rough order of priority.\nIf you need an ETA or want to ask for increased priority on any of these please contact support, we are happy to hear any feedback on this.\n\n- Account Updates\n- Payments\n\n\n\n# API Tools\n\nThis section will include links to tools to assist with consuming this API. We have a CLI tool and a GO library in active development, and are planning libraries for other languages.\n\n\n# Version Information\n\nThis section will contain a link to our changelog once the developer preview period is complete.\n\n",
@@ -8,7 +8,7 @@
       "url": "https://support.binarylane.com.au",
       "email": "support@binarylane.com.au"
     },
-    "version": "0.29.0",
+    "version": "0.32.0",
     "x-logo": {
       "url": "https://www.binarylane.com.au/res/images/binarylane/logo.png",
       "backgroundColor": "#000000",
@@ -466,6 +466,19 @@
         ],
         "summary": "Refresh Cached Nameserver Domain Records",
         "description": "The nameservers for domains are cached. If you have recently altered the nameservers for a managed domain you may need to refresh the cached domain records.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/DomainRefreshRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "204": {
             "description": "No Content"
@@ -779,8 +792,7 @@
                   {
                     "$ref": "#/components/schemas/DomainRecordRequest"
                   }
-                ],
-                "description": "If this is used to update an existing DomainRecord any values not provided will be retained. Provide empty strings to clear existing string values, nulls to retain the existing values."
+                ]
               }
             }
           }
@@ -901,10 +913,10 @@
               "schema": {
                 "allOf": [
                   {
-                    "$ref": "#/components/schemas/DomainRecordRequest"
+                    "$ref": "#/components/schemas/UpdateDomainRecordRequest"
                   }
                 ],
-                "description": "If this is used to update an existing DomainRecord any values not provided will be retained. Provide empty strings to clear existing string values, nulls to retain the existing values."
+                "description": "Any values not provided will be retained. Provide empty strings to clear existing string values, nulls to retain the existing values."
               }
             }
           }
@@ -5897,6 +5909,7 @@
     "schemas": {
       "Account": {
         "required": [
+          "additional_ipv4_limit",
           "configured_payment_methods",
           "email",
           "email_verified",
@@ -5946,6 +5959,12 @@
               "$ref": "#/components/schemas/PaymentMethod"
             },
             "description": "The payment methods that are configured (available) for this account.",
+            "readOnly": true
+          },
+          "additional_ipv4_limit": {
+            "type": "integer",
+            "description": "The maximum additional IPv4 addresses this account may assign across all servers. You may contact support to request this limit be increased.",
+            "format": "int32",
             "readOnly": true
           }
         }
@@ -6036,7 +6055,7 @@
                 "$ref": "#/components/schemas/ResourceType"
               }
             ],
-            "description": "The resource type (if any) associated with this action.",
+            "description": "The resource type (if any) associated with this action.\n\n| Value | Description |\n| ----- | ----------- |\n| server | Server |\n| load-balancer | Load Balancer |\n| ssh-key | SSH Key |\n| vpc | Virtual Private Network |\n| image | Backup or Operating System Image |\n| registered-domain-name | Registered Domain Name |\n\n",
             "nullable": true,
             "readOnly": true
           },
@@ -6291,7 +6310,6 @@
         "type": "object",
         "properties": {
           "source_addresses": {
-            "minItems": 1,
             "type": "array",
             "items": {
               "type": "string"
@@ -6303,7 +6321,6 @@
             }
           },
           "destination_addresses": {
-            "minItems": 1,
             "type": "array",
             "items": {
               "type": "string"
@@ -6332,7 +6349,7 @@
                 "$ref": "#/components/schemas/AdvancedFirewallRuleProtocol"
               }
             ],
-            "description": "The protocol to match for this rule.",
+            "description": "The protocol to match for this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| all | This rule will match any protocol. |\n| icmp | This rule will match ICMP traffic only. |\n| tcp | This rule will match TCP traffic only. |\n| udp | This rule will match UDP traffic only. |\n\n",
             "x-cli-format": 3,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "protocol"
@@ -6344,15 +6361,13 @@
                 "$ref": "#/components/schemas/AdvancedFirewallRuleAction"
               }
             ],
-            "description": "The action to take when there is a match on this rule.",
+            "description": "The action to take when there is a match on this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| drop | Traffic matching this rule will be dropped. |\n| accept | Traffic matching this rule will be accepted. |\n\n",
             "x-cli-format": 5,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "action"
             }
           },
           "description": {
-            "maxLength": 250,
-            "minLength": 0,
             "type": "string",
             "description": "A description to assist in identifying this rule. Commonly used to record the reason for the rule or the intent behind it, e.g. \"Block access to RDP\" or \"Allow access from HQ\".",
             "nullable": true,
@@ -6391,6 +6406,82 @@
           "This rule will match UDP traffic only."
         ]
       },
+      "AdvancedFirewallRuleRequest": {
+        "required": [
+          "action",
+          "destination_addresses",
+          "protocol",
+          "source_addresses"
+        ],
+        "type": "object",
+        "properties": {
+          "source_addresses": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The source addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.",
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "source_addresses"
+            }
+          },
+          "destination_addresses": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The destination addresses to match for this rule. Each address may be an individual IPv4 address or a range in IPv4 CIDR notation.",
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "destination_addresses"
+            }
+          },
+          "destination_ports": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The destination ports to match for this rule. Leave null or empty to match on all ports.",
+            "nullable": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "destination_ports"
+            }
+          },
+          "protocol": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdvancedFirewallRuleProtocol"
+              }
+            ],
+            "description": "The protocol to match for this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| all | This rule will match any protocol. |\n| icmp | This rule will match ICMP traffic only. |\n| tcp | This rule will match TCP traffic only. |\n| udp | This rule will match UDP traffic only. |\n\n",
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "protocol"
+            }
+          },
+          "action": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdvancedFirewallRuleAction"
+              }
+            ],
+            "description": "The action to take when there is a match on this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| drop | Traffic matching this rule will be dropped. |\n| accept | Traffic matching this rule will be accepted. |\n\n",
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "action"
+            }
+          },
+          "description": {
+            "maxLength": 250,
+            "minLength": 0,
+            "type": "string",
+            "description": "A description to assist in identifying this rule. Commonly used to record the reason for the rule or the intent behind it, e.g. \"Block access to RDP\" or \"Allow access from HQ\".",
+            "nullable": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "description"
+            }
+          }
+        }
+      },
       "AdvancedFirewallRulesResponse": {
         "required": [
           "firewall_rules"
@@ -6426,7 +6517,7 @@
                 "$ref": "#/components/schemas/VmMachineType"
               }
             ],
-            "description": "The machine_type (corresponding to a KVM version) used for this server.\nA null value indicates automatic selection of the best KVM machine type supported by the host node.",
+            "description": "The machine_type (corresponding to a KVM version) used for this server.\nA null value indicates automatic selection of the best KVM machine type supported by the host node.\n\n| Value | Description |\n| ----- | ----------- |\n| pc_i440fx_1point5 | PC i440FX 1.5 |\n| pc_i440fx_2point11 | PC i440FX 2.11 |\n| pc_i440fx_4point1 | PC i440FX 4.1 |\n| pc_i440fx_4point2 | PC i440FX 4.2 |\n| pc_i440fx_5point0 | PC i440FX 5.0 |\n| pc_i440fx_5point1 | PC i440FX 5.1 |\n| pc_i440fx_7point2 | PC i440FX 7.2 |\n| pc_i440fx_8point2 | PC i440FX 8.2 |\n\n",
             "nullable": true,
             "readOnly": true
           },
@@ -6856,7 +6947,7 @@
                 "$ref": "#/components/schemas/VmMachineType"
               }
             ],
-            "description": "Do not provide or set to null to keep existing machine type.",
+            "description": "Do not provide or set to null to keep existing machine type.\n\n| Value | Description |\n| ----- | ----------- |\n| pc_i440fx_1point5 | PC i440FX 1.5 |\n| pc_i440fx_2point11 | PC i440FX 2.11 |\n| pc_i440fx_4point1 | PC i440FX 4.1 |\n| pc_i440fx_4point2 | PC i440FX 4.2 |\n| pc_i440fx_5point0 | PC i440FX 5.0 |\n| pc_i440fx_5point1 | PC i440FX 5.1 |\n| pc_i440fx_7point2 | PC i440FX 7.2 |\n| pc_i440fx_8point2 | PC i440FX 8.2 |\n\n",
             "nullable": true
           },
           "automatic_machine_type": {
@@ -6870,7 +6961,7 @@
                 "$ref": "#/components/schemas/VideoDevice"
               }
             ],
-            "description": "Do not provide or set to null to keep existing video device.",
+            "description": "Do not provide or set to null to keep existing video device.\n\n| Value | Description |\n| ----- | ----------- |\n| cirrus-logic | Cirrus Logic GD5446 |\n| standard | Standard VGA with VESA 2.0 extensions |\n| virtio | Virtio VGA (800x600) |\n| virtio-wide | Virtio VGA (1600x900) |\n\n",
             "nullable": true
           }
         },
@@ -6893,7 +6984,7 @@
           "firewall_rules": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/AdvancedFirewallRule"
+              "$ref": "#/components/schemas/AdvancedFirewallRuleRequest"
             },
             "description": "A list of rules for the server. NB: that any existing rules that are not included will be removed. Submit an empty list to clear all rules."
           }
@@ -8172,6 +8263,11 @@
         }
       },
       "DomainRecordRequest": {
+        "required": [
+          "data",
+          "name",
+          "type"
+        ],
         "type": "object",
         "properties": {
           "type": {
@@ -8180,18 +8276,17 @@
                 "$ref": "#/components/schemas/DomainRecordType"
               }
             ],
-            "description": "The type of the DNS record.",
-            "nullable": true
+            "description": "The type of the DNS record.\n\n| Value | Description |\n| ----- | ----------- |\n| A | Map an IPv4 address to a hostname. |\n| AAAA | Map an IPv6 address to a hostname. |\n| CAA | Restrict which certificate authorities are permitted to issue certificates for a domain. |\n| CNAME | Define an alias for your canonical hostname. |\n| MX | Define the mail exchanges that handle mail for the domain. |\n| NS | Define the nameservers that manage the domain. |\n| SOA | The Start of Authority record for the zone. |\n| SRV | Specify a server by hostname and port to handle a service or services. |\n| TXT | Define a string of text that is associated with a hostname. |\n\n"
           },
           "name": {
+            "minLength": 1,
             "type": "string",
-            "description": "The subdomain for this record. Use @ for records on the domain itself, and * to create a wildcard record.",
-            "nullable": true
+            "description": "The subdomain for this record. Use @ for records on the domain itself, and * to create a wildcard record."
           },
           "data": {
+            "minLength": 1,
             "type": "string",
-            "description": "A general data field that has different functions depending on the record type.",
-            "nullable": true
+            "description": "A general data field that has different functions depending on the record type."
           },
           "priority": {
             "maximum": 65535,
@@ -8239,8 +8334,7 @@
             "description": "A parameter tag that is only relevant for CAA records.",
             "nullable": true
           }
-        },
-        "description": "If this is used to update an existing DomainRecord any values not provided will be retained. Provide empty strings to clear existing string values, nulls to retain the existing values."
+        }
       },
       "DomainRecordResponse": {
         "required": [
@@ -8313,6 +8407,21 @@
               "$ref": "#/components/schemas/DomainRecord"
             },
             "readOnly": true
+          }
+        }
+      },
+      "DomainRefreshRequest": {
+        "required": [
+          "domain_names"
+        ],
+        "type": "object",
+        "properties": {
+          "domain_names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The domain names to refresh."
           }
         }
       },
@@ -8457,7 +8566,7 @@
                 "$ref": "#/components/schemas/HealthCheckProtocol"
               }
             ],
-            "description": "Leave null to accept the default HTTP protocol.",
+            "description": "Leave null to accept the default HTTP protocol.\n\n| Value | Description |\n| ----- | ----------- |\n| http | The health check will be performed via HTTP. |\n| https | The health check will be performed via HTTPS. |\n| both | The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol. |\n\n",
             "nullable": true
           },
           "path": {
@@ -8828,7 +8937,7 @@
           },
           "locked": {
             "type": "boolean",
-            "description": "Optional: you may choose to lock an individual backup in which case we will not update that backup until you unlock it. Do not provide to leave the locked status unchanged.",
+            "description": "Optional: you may choose to lock an individual backup in which case we will not update that backup until you unlock it. Do not provide to leave the locked status unchanged. You may not lock or unlock a temporary backup or a backup that is attached to a server.",
             "nullable": true
           }
         }
@@ -11884,7 +11993,7 @@
                 "$ref": "#/components/schemas/BackupSlot"
               }
             ],
-            "description": "If replacement_strategy is anything other than 'specified', this must be provided.",
+            "description": "If replacement_strategy is anything other than 'specified', this must be provided.\n\n| Value | Description |\n| ----- | ----------- |\n| daily | A backup which is scheduled to be taken each day. |\n| weekly | A backup which is scheduled to be taken each week. |\n| monthly | A backup which is scheduled to be taken each month. |\n| temporary | A backup which is created on demand and only retained for a maximum of seven days. |\n\n",
             "nullable": true
           },
           "replacement_strategy": {
@@ -11893,7 +12002,7 @@
                 "$ref": "#/components/schemas/BackupReplacementStrategy"
               }
             ],
-            "description": "The strategy for selecting which backup to replace (if any)."
+            "description": "The strategy for selecting which backup to replace (if any).\n\n| Value | Description |\n| ----- | ----------- |\n| none | Do not replace any existing backup: use a free slot of the provided backup type. If there are no free slots an error will occur. |\n| specified | Replace the specific backup id provided. |\n| oldest | Use any free slots of the provided backup type, and if there are no free slots replace the oldest unlocked and un-attached backup of the provided backup type. |\n| newest | Use any free slots of the provided backup type, and if there are no free slots replace the newest unlocked and un-attached backup of the provided backup type. |\n\n"
           },
           "backup_id_to_replace": {
             "type": "integer",
@@ -12096,6 +12205,77 @@
           }
         }
       },
+      "UpdateDomainRecordRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DomainRecordType"
+              }
+            ],
+            "description": "The type of the DNS record.\n\n| Value | Description |\n| ----- | ----------- |\n| A | Map an IPv4 address to a hostname. |\n| AAAA | Map an IPv6 address to a hostname. |\n| CAA | Restrict which certificate authorities are permitted to issue certificates for a domain. |\n| CNAME | Define an alias for your canonical hostname. |\n| MX | Define the mail exchanges that handle mail for the domain. |\n| NS | Define the nameservers that manage the domain. |\n| SOA | The Start of Authority record for the zone. |\n| SRV | Specify a server by hostname and port to handle a service or services. |\n| TXT | Define a string of text that is associated with a hostname. |\n\n",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The subdomain for this record. Use @ for records on the domain itself, and * to create a wildcard record.",
+            "nullable": true
+          },
+          "data": {
+            "type": "string",
+            "description": "A general data field that has different functions depending on the record type.",
+            "nullable": true
+          },
+          "priority": {
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer",
+            "description": "A priority value that is only relevant for SRV and MX records.",
+            "format": "int32",
+            "nullable": true
+          },
+          "port": {
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer",
+            "description": "A port value that is only relevant for SRV records.",
+            "format": "int32",
+            "nullable": true
+          },
+          "ttl": {
+            "type": "integer",
+            "description": "This value is the time to live for the record, in seconds.",
+            "format": "int32",
+            "nullable": true
+          },
+          "weight": {
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer",
+            "description": "The weight value that is only relevant for SRV records.",
+            "format": "int32",
+            "nullable": true
+          },
+          "flags": {
+            "maximum": 255,
+            "minimum": 0,
+            "type": "integer",
+            "description": "An unsigned integer between 0-255 that is only relevant for CAA records.",
+            "format": "int32",
+            "nullable": true
+          },
+          "tag": {
+            "maxLength": 15,
+            "minLength": 1,
+            "pattern": "[a-z0-9]+",
+            "type": "string",
+            "description": "A parameter tag that is only relevant for CAA records.",
+            "nullable": true
+          }
+        },
+        "description": "Any values not provided will be retained. Provide empty strings to clear existing string values, nulls to retain the existing values."
+      },
       "UpdateLoadBalancerRequest": {
         "required": [
           "name"
@@ -12214,7 +12394,7 @@
                 "$ref": "#/components/schemas/BackupSlot"
               }
             ],
-            "description": "If replacement_strategy is anything other than 'specified', this must be provided.",
+            "description": "If replacement_strategy is anything other than 'specified', this must be provided.\n\n| Value | Description |\n| ----- | ----------- |\n| daily | A backup which is scheduled to be taken each day. |\n| weekly | A backup which is scheduled to be taken each week. |\n| monthly | A backup which is scheduled to be taken each month. |\n| temporary | A backup which is created on demand and only retained for a maximum of seven days. |\n\n",
             "nullable": true
           },
           "replacement_strategy": {
@@ -12223,7 +12403,7 @@
                 "$ref": "#/components/schemas/BackupReplacementStrategy"
               }
             ],
-            "description": "The strategy for selecting which backup to replace (if any)."
+            "description": "The strategy for selecting which backup to replace (if any).\n\n| Value | Description |\n| ----- | ----------- |\n| none | Do not replace any existing backup: use a free slot of the provided backup type. If there are no free slots an error will occur. |\n| specified | Replace the specific backup id provided. |\n| oldest | Use any free slots of the provided backup type, and if there are no free slots replace the oldest unlocked and un-attached backup of the provided backup type. |\n| newest | Use any free slots of the provided backup type, and if there are no free slots replace the newest unlocked and un-attached backup of the provided backup type. |\n\n"
           },
           "backup_id_to_replace": {
             "type": "integer",

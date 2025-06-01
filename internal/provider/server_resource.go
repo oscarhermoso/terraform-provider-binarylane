@@ -750,21 +750,14 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 				err.Error(),
 			)
 			return
-		}
-		if renameResp.StatusCode() != http.StatusOK {
+		} else if renameResp.StatusCode() != http.StatusOK && renameResp.StatusCode() != http.StatusAccepted {
 			resp.Diagnostics.AddError(
 				"Unexpected HTTP status code renaming server",
 				fmt.Sprintf("Received %s renaming server: server_id=%s. Details: %s", renameResp.Status(), state.Id.String(), renameResp.Body))
 			return
 		}
-		if *renameResp.JSON200.Action.Status == "errored" {
-			resp.Diagnostics.AddError(
-				"Unexpected response with \"errored\" status when renaming server",
-				fmt.Sprintf("Received %s renaming server: server_id=%s. Details: %s", renameResp.Status(), state.Id.String(), renameResp.Body))
-			return
-		}
 
-		// TODO - Currently, the API does not support polling for the rename to complete, because the action ID returns a 404 response (see #13)
+		// TODO - Currently, the API does not support polling for the rename to complete, because there is no action ID in 202 accepted response (see #13)
 
 		state.Name = types.StringValue(plan.Name.ValueString())
 	}
