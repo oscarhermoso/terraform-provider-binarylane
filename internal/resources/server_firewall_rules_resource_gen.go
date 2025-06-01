@@ -26,8 +26,8 @@ func ServerFirewallRulesResourceSchema(ctx context.Context) schema.Schema {
 					Attributes: map[string]schema.Attribute{
 						"action": schema.StringAttribute{
 							Required:            true,
-							Description:         "The action to take when there is a match on this rule.",
-							MarkdownDescription: "The action to take when there is a match on this rule.",
+							Description:         "The action to take when there is a match on this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| drop | Traffic matching this rule will be dropped. |\n| accept | Traffic matching this rule will be accepted. |\n\n",
+							MarkdownDescription: "The action to take when there is a match on this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| drop | Traffic matching this rule will be dropped. |\n| accept | Traffic matching this rule will be accepted. |\n\n",
 							Validators: []validator.String{
 								stringvalidator.OneOf(
 									"drop",
@@ -62,8 +62,8 @@ func ServerFirewallRulesResourceSchema(ctx context.Context) schema.Schema {
 						},
 						"protocol": schema.StringAttribute{
 							Required:            true,
-							Description:         "The protocol to match for this rule.",
-							MarkdownDescription: "The protocol to match for this rule.",
+							Description:         "The protocol to match for this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| all | This rule will match any protocol. |\n| icmp | This rule will match ICMP traffic only. |\n| tcp | This rule will match TCP traffic only. |\n| udp | This rule will match UDP traffic only. |\n\n",
+							MarkdownDescription: "The protocol to match for this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| all | This rule will match any protocol. |\n| icmp | This rule will match ICMP traffic only. |\n| tcp | This rule will match TCP traffic only. |\n| udp | This rule will match UDP traffic only. |\n\n",
 							Validators: []validator.String{
 								stringvalidator.OneOf(
 									"all",

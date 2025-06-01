@@ -751,7 +751,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 			)
 			return
 		}
-		if renameResp.StatusCode() != http.StatusOK {
+		if !(renameResp.StatusCode() == http.StatusOK || renameResp.StatusCode() == http.StatusAccepted) {
 			resp.Diagnostics.AddError(
 				"Unexpected HTTP status code renaming server",
 				fmt.Sprintf("Received %s renaming server: server_id=%s. Details: %s", renameResp.Status(), state.Id.String(), renameResp.Body))

@@ -16,7 +16,7 @@ import (
 )
 
 func TestSshKeyResource(t *testing.T) {
-	publicKey := GeneratePublicKey(t)
+	publicKey := GenerateTestPublicKey(t)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -84,7 +84,7 @@ data "binarylane_ssh_key" "test" {
 	})
 }
 
-func GeneratePublicKey(t *testing.T) string {
+func GenerateTestPublicKey(t *testing.T) string {
 	t.Helper()
 
 	pub, _, err := ed25519.GenerateKey(nil)

@@ -2,8 +2,6 @@ package provider
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,13 +14,7 @@ import (
 
 func TestLoadBalancerResource(t *testing.T) {
 	// Must assign a password to the server or Binary Lane will send emails
-	pw_bytes := make([]byte, 12)
-	_, err := rand.Read(pw_bytes)
-	if err != nil {
-		t.Errorf("Failed to generate password: %s", err)
-		return
-	}
-	password := base64.URLEncoding.EncodeToString(pw_bytes)
+	password := GenerateTestPassword(t)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
