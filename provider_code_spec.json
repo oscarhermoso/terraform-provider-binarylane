@@ -1177,25 +1177,6 @@
 						}
 					},
 					{
-						"name": "public_key",
-						"string": {
-							"computed_optional_required": "required",
-							"description": "The public key in OpenSSH \"authorized_keys\" format.",
-							"validators": [
-								{
-									"custom": {
-										"imports": [
-											{
-												"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-											}
-										],
-										"schema_definition": "stringvalidator.LengthAtLeast(1)"
-									}
-								}
-							]
-						}
-					},
-					{
 						"name": "id",
 						"int64": {
 							"computed_optional_required": "computed_optional",
