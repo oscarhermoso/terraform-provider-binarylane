@@ -36,9 +36,9 @@ Planned features:
 - [x] Examples
   - [x] Basic
   - [x] Cloud Init
+  - [x] K3s
   - [ ] NixOS
   - [ ] Virtual Private Cloud
-  - [ ] Kubernetes
 
 ## Server parameters
 
