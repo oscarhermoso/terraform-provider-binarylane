@@ -8306,7 +8306,7 @@
           },
           "ttl": {
             "type": "integer",
-            "description": "This value is the time to live for the record, in seconds.",
+            "description": "This value is the time to live for the record, in seconds. The default and only supported value is 3600. Leave null to accept this default.",
             "format": "int32",
             "nullable": true
           },

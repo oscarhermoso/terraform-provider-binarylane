@@ -7,8 +7,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // TrimmedStringType
@@ -110,4 +112,54 @@ func (v TrimmedStringValue) StringSemanticEquals(ctx context.Context, newValuabl
 
 	// If the strings are equivalent, keep the prior value
 	return priorString == newString, diags
+}
+
+// PlanModifier
+var _ planmodifier.String = RequiresReplaceForTrimmedStringModifier{}
+
+type RequiresReplaceForTrimmedStringModifier struct{}
+
+func (m RequiresReplaceForTrimmedStringModifier) Description(_ context.Context) string {
+	return "If the value of this attribute changes, Terraform will destroy and recreate the resource."
+}
+
+func (m RequiresReplaceForTrimmedStringModifier) MarkdownDescription(_ context.Context) string {
+	return "If the value of this attribute changes, Terraform will destroy and recreate the resource."
+}
+
+func (m RequiresReplaceForTrimmedStringModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	// Do not replace on resource creation.
+	if req.State.Raw.IsNull() {
+		return
+	}
+	// Do not replace on resource destroy.
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	// Do not replace if the plan and state values are equal.
+	if req.PlanValue.Equal(req.StateValue) {
+		return
+	}
+
+	// Create Normalized values for the state and plan.
+	stateNormalized := TrimmedStringValue{
+		StringValue: req.StateValue,
+	}
+	planNormalized := TrimmedStringValue{
+		StringValue: req.PlanValue,
+	}
+
+	// Perform semantic equality check.
+	semanticallyEqual, diags := stateNormalized.StringSemanticEquals(ctx, planNormalized)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
+		return
+	}
+
+	if semanticallyEqual {
+		tflog.Info(ctx, "Plan and state values are semantically equal. Suppressing differences.")
+		resp.PlanValue = req.StateValue
+	} else {
+		resp.RequiresReplace = true
+	}
 }

@@ -1,3 +1,6 @@
 {
   "go.testEnvFile": "${workspaceFolder}/.env",
+  "go.testEnvVars": {
+    "TF_LOG": "TRACE"
+  }
 }

@@ -1501,7 +1501,7 @@ type DomainRecordRequest struct {
 	// Tag A parameter tag that is only relevant for CAA records.
 	Tag *string `json:"tag"`
 
-	// Ttl This value is the time to live for the record, in seconds.
+	// Ttl This value is the time to live for the record, in seconds. The default and only supported value is 3600. Leave null to accept this default.
 	Ttl *int32 `json:"ttl"`
 
 	// Type The type of the DNS record.

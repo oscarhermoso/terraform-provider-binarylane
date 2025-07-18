@@ -41,12 +41,14 @@ data "binarylane_ssh_key" "test" {
 					// Verify resource values
 					resource.TestCheckResourceAttr("binarylane_ssh_key.test", "name", "tf-test-key-resource-test"),
 					resource.TestCheckResourceAttr("binarylane_ssh_key.test", "public_key", publicKey),
+					resource.TestCheckResourceAttrSet("binarylane_ssh_key.test", "fingerprint"),
 					resource.TestCheckResourceAttr("binarylane_ssh_key.test", "default", "false"),
 					resource.TestCheckResourceAttrSet("binarylane_ssh_key.test", "id"),
 
 					// Verify data source values
 					resource.TestCheckResourceAttr("data.binarylane_ssh_key.test", "name", "tf-test-key-resource-test"),
-					resource.TestCheckResourceAttrSet("data.binarylane_ssh_key.test", "public_key"), // Ideally would check this is identical, but whitespace is not preserved
+					resource.TestCheckResourceAttr("data.binarylane_ssh_key.test", "public_key", publicKey),
+					resource.TestCheckResourceAttrSet("data.binarylane_ssh_key.test", "fingerprint"),
 					resource.TestCheckResourceAttr("data.binarylane_ssh_key.test", "default", "false"),
 					resource.TestCheckResourceAttrSet("data.binarylane_ssh_key.test", "id"),
 				),
