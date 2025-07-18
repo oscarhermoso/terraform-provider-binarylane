@@ -1,100 +1,60 @@
 locals {
-  cluster_id    = "tf-example-k8s"
-  custom_domain = "tf-example-k8s.internal"
+  cluster_id    = "tf-example-k3s"
+  custom_domain = "tf-example-k3s.internal"
 }
 
 resource "random_password" "binarylane" {
   length = 18
 }
 
-resource "random_password" "cluster_token" {
-  length  = 64
-  special = false
-}
-
 # SSH Key
 # -------
+resource "tls_private_key" "ed25519_provisioning" {
+  algorithm = "ED25519"
+}
+
+resource "local_sensitive_file" "ssh_private_key" {
+  content         = tls_private_key.ed25519_provisioning.private_key_openssh
+  filename        = ".id_ed25519"
+  file_permission = "0600"
+}
+
+resource "local_file" "ssh_public_key" {
+  content         = tls_private_key.ed25519_provisioning.public_key_openssh
+  filename        = ".id_ed25519.pub"
+  file_permission = "0644"
+}
+
 resource "binarylane_ssh_key" "example" {
-  name       = "tf-example-k8s"
-  public_key = file("~/.ssh/id_ed25519.pub")
+  name       = "tf-example-k3s"
+  public_key = "${trimspace(tls_private_key.ed25519_provisioning.public_key_openssh)} " # whitespace hack until #76 is fixed
 }
 
 # Virtual Private Cloud
 # ---------------------
 resource "binarylane_vpc" "example" {
   name     = local.cluster_id
-  ip_range = "10.240.0.0/16"
+  ip_range = "10.0.0.0/8"
 }
 
 # k3s Servers
 # -----------
-data "cloudinit_config" "server" {
-  gzip          = false
-  base64_encode = false
-
-  part {
-    content_type = "text/x-shellscript"
-    content = templatefile("${path.module}/k3s-server-install.sh", {
-      cluster_id    = local.cluster_id,
-      cluster_token = random_password.cluster_token.result,
-    })
-  }
-}
-
-resource "binarylane_server" "server" {
+resource "binarylane_server" "servers" {
   count = 1
 
   name              = "${local.cluster_id}-server-${count.index + 1}"
   region            = "per"
   image             = "ubuntu-24.04"
-  size              = "std-min"
+  size              = "std-1vcpu" # 2GB memory, 1 vCPU
   password          = random_password.binarylane.result
   ssh_keys          = [binarylane_ssh_key.example.id]
   vpc_id            = binarylane_vpc.example.id
   public_ipv4_count = 1
-  user_data         = sensitive(data.cloudinit_config.server.rendered)
-}
-
-data "external" "kubeconfig" {
-  program = [
-    "/usr/bin/ssh",
-    "-o UserKnownHostsFile=/dev/null",
-    "-o StrictHostKeyChecking=no",
-    "root@${binarylane_server.server.0.permalink}",
-    "echo '{\"kubeconfig\":\"'$(cat /etc/rancher/k3s/k3s.yaml | base64)'\"}'",
-  ]
-}
-
-resource "local_sensitive_file" "kubeconfig" {
-  depends_on = [binarylane_server.server]
-
-  content = replace(
-    base64decode(
-      replace(data.external.kubeconfig.result.kubeconfig, " ", "")
-    ),
-    "server: https://127.0.0.1:6443",
-    "server: https://${binarylane_server.server.0.permalink}:6443",
-  )
-  filename        = "${path.module}/.kube/config"
-  file_permission = "0600"
 }
 
 # k3s Agents
 # ----------
-data "cloudinit_config" "agent" {
-  gzip          = false
-  base64_encode = false
-
-  part {
-    content_type = "text/x-shellscript"
-    content = templatefile("${path.module}/k3s-agent-join.sh", {
-      cluster_token  = random_password.cluster_token.result,
-      cluster_server = binarylane_server.server.0.private_ipv4_addresses.0
-    })
-  }
-}
-
-resource "binarylane_server" "agent" {
+resource "binarylane_server" "agents" {
   count = 2
 
   name              = "${local.cluster_id}-agent-${count.index + 1}"
@@ -105,12 +65,11 @@ resource "binarylane_server" "agent" {
   ssh_keys          = [binarylane_ssh_key.example.id]
   vpc_id            = binarylane_vpc.example.id
   public_ipv4_count = 1
-  user_data         = sensitive(data.cloudinit_config.agent.rendered)
 }
 
 # Virtual Private Cloud Routing
 # -----------------------------
-resource "binarylane_vpc_route_entries" "example" {
+resource "binarylane_vpc_route_entries" "example" { # TODO
   vpc_id = binarylane_vpc.example.id
   route_entries = [
     # {
@@ -122,12 +81,12 @@ resource "binarylane_vpc_route_entries" "example" {
 }
 
 locals {
-  agent_ips  = flatten([for _, a in binarylane_server.agent : a.private_ipv4_addresses])
-  server_ips = flatten([for _, s in binarylane_server.server : s.private_ipv4_addresses])
+  agent_ips  = flatten([for _, a in binarylane_server.agents : a.private_ipv4_addresses])
+  server_ips = flatten([for _, s in binarylane_server.servers : s.private_ipv4_addresses])
 }
 
 resource "binarylane_server_firewall_rules" "example" {
-  for_each = { for server in concat(binarylane_server.server, binarylane_server.agent) : server.name => server }
+  for_each = { for server in concat(binarylane_server.servers, binarylane_server.agents) : server.name => server }
 
   server_id = each.value.id
 

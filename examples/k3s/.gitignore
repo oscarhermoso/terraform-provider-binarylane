@@ -38,3 +38,4 @@ terraform.rc
 
 # .kube/config contains credentials
 .kube
+.id_ed25519*
