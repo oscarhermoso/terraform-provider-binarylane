@@ -99,6 +99,7 @@ resources:
           key_id: id
       ignores:
         - ssh_key
+        - public_key
   vpc:
     create:
       path: /vpcs

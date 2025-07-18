@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -40,12 +41,14 @@ data "binarylane_ssh_key" "test" {
 					// Verify resource values
 					resource.TestCheckResourceAttr("binarylane_ssh_key.test", "name", "tf-test-key-resource-test"),
 					resource.TestCheckResourceAttr("binarylane_ssh_key.test", "public_key", publicKey),
+					resource.TestCheckResourceAttrSet("binarylane_ssh_key.test", "fingerprint"),
 					resource.TestCheckResourceAttr("binarylane_ssh_key.test", "default", "false"),
 					resource.TestCheckResourceAttrSet("binarylane_ssh_key.test", "id"),
 
 					// Verify data source values
 					resource.TestCheckResourceAttr("data.binarylane_ssh_key.test", "name", "tf-test-key-resource-test"),
-					resource.TestCheckResourceAttrSet("data.binarylane_ssh_key.test", "public_key"), // Ideally would check this is identical, but whitespace is not preserved
+					resource.TestCheckResourceAttr("data.binarylane_ssh_key.test", "public_key", publicKey),
+					resource.TestCheckResourceAttrSet("data.binarylane_ssh_key.test", "fingerprint"),
 					resource.TestCheckResourceAttr("data.binarylane_ssh_key.test", "default", "false"),
 					resource.TestCheckResourceAttrSet("data.binarylane_ssh_key.test", "id"),
 				),
@@ -64,22 +67,22 @@ data "binarylane_ssh_key" "test" {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{}, // nothing to ignore
 			},
-			// TODO: Update and Read testing
-			// 			{
-			// 				Config: providerConfig + `
-			// resource "binarylane_ssh_key" "test" {
-			// 	name       = "tf-test-key-resource-test"
-			// 	public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJCsuosklP0T4fJcQDgkeVh7dQu+eV+vev1CfwdUkj7h test@company.internal"
-			// 	default    = true
-			// }
-			// 			`,
-			// 				Check: resource.ComposeAggregateTestCheckFunc(
-			// 					// Verify resource values
-			// 					resource.TestCheckResourceAttr("binarylane_ssh_key.test", "name", "tf-test-key-resource-test"),
-			// 					resource.TestCheckResourceAttr("data.binarylane_ssh_key.test", "default", "true"),
-			// 				),
-			// 			},
-			// Delete testing automatically occurs in TestCase
+			// Whitespace changes should not recreate the resource
+			{
+				Config: `
+resource "binarylane_ssh_key" "test" {
+  name  = "tf-test-key-resource-test"
+	# Test public key with a newline to ensure it does not get recreated
+  public_key = <<EOT
+` + publicKey + `
+EOT
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
 		},
 	})
 }

@@ -34,21 +34,12 @@ func SshKeyResourceSchema(ctx context.Context) schema.Schema {
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
-			"public_key": schema.StringAttribute{
-				Required:            true,
-				Description:         "The public key in OpenSSH \"authorized_keys\" format.",
-				MarkdownDescription: "The public key in OpenSSH \"authorized_keys\" format.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
 		},
 	}
 }
 
 type SshKeyModel struct {
-	Default   types.Bool   `tfsdk:"default"`
-	Id        types.Int64  `tfsdk:"id"`
-	Name      types.String `tfsdk:"name"`
-	PublicKey types.String `tfsdk:"public_key"`
+	Default types.Bool   `tfsdk:"default"`
+	Id      types.Int64  `tfsdk:"id"`
+	Name    types.String `tfsdk:"name"`
 }

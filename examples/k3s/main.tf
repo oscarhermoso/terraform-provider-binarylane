@@ -27,7 +27,7 @@ resource "local_file" "ssh_public_key" {
 
 resource "binarylane_ssh_key" "example" {
   name       = "tf-example-k3s"
-  public_key = "${trimspace(tls_private_key.ed25519_provisioning.public_key_openssh)} " # whitespace hack until #76 is fixed
+  public_key = tls_private_key.ed25519_provisioning.public_key_openssh
 }
 
 # Virtual Private Cloud
