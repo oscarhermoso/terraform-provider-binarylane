@@ -12,6 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -67,6 +70,19 @@ func (r *vpcResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 		Optional: false,
 		Required: false,
 		Computed: true,
+	}
+
+	ipRange := resp.Schema.Attributes["ip_range"]
+	resp.Schema.Attributes["ip_range"] = &schema.StringAttribute{
+		Description:         ipRange.GetDescription(),
+		MarkdownDescription: ipRange.GetMarkdownDescription(),
+		Required:            false,
+		Computed:            true,
+		Optional:            true,
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.RequiresReplace(),
+		},
+		Default: stringdefault.StaticString("10.240.0.0/16"),
 	}
 }
 
