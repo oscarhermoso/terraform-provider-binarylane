@@ -57,7 +57,6 @@ func (d *loadBalancerDataSource) Schema(ctx context.Context, req datasource.Sche
 		loadBalancerSchema(ctx),
 		AttributeConfig{
 			RequiredAttributes: &[]string{"id"},
-			ExcludedAttributes: &[]string{"timeouts"},
 		},
 	)
 	if err != nil {

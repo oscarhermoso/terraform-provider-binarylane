@@ -122,11 +122,6 @@ func loadBalancerSchema(ctx context.Context) schema.Schema {
 		},
 	}
 
-	s.Attributes["timeouts"] =
-		timeouts.Attributes(ctx, timeouts.Opts{
-			Create: true,
-		})
-
 	// Additional attributes
 	s.Attributes["ip"] = schema.StringAttribute{
 		Description:         "The IPv4 address of the load balancer.",

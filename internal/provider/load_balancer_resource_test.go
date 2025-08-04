@@ -56,6 +56,7 @@ data "binarylane_load_balancer" "test" {
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "forwarding_rules.0.entry_protocol", "http"),
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "health_check.path", "/"),
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "health_check.protocol", "http"),
+					resource.TestCheckResourceAttrSet("binarylane_load_balancer.test", "ip"),
 
 					// Verify data source values
 					resource.TestCheckResourceAttrPair("data.binarylane_load_balancer.test", "id", "binarylane_load_balancer.test", "id"),
@@ -68,6 +69,7 @@ data "binarylane_load_balancer" "test" {
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "forwarding_rules.0.entry_protocol", "http"),
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "health_check.path", "/"),
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "health_check.protocol", "http"),
+					resource.TestCheckResourceAttrSet("data.binarylane_load_balancer.test", "ip"),
 				),
 			},
 			// Test import by ID
@@ -124,6 +126,7 @@ data "binarylane_load_balancer" "test" {
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "forwarding_rules.0.entry_protocol", "https"),
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "health_check.path", "/test-health"),
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "health_check.protocol", "https"),
+					resource.TestCheckResourceAttrSet("binarylane_load_balancer.test", "ip"),
 
 					// Verify data source values
 					resource.TestCheckResourceAttrPair("data.binarylane_load_balancer.test", "id", "binarylane_load_balancer.test", "id"),
@@ -136,6 +139,7 @@ data "binarylane_load_balancer" "test" {
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "forwarding_rules.0.entry_protocol", "https"),
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "health_check.path", "/test-health"),
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "health_check.protocol", "https"),
+					resource.TestCheckResourceAttrSet("data.binarylane_load_balancer.test", "ip"),
 				),
 			},
 		},
