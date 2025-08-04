@@ -82,7 +82,7 @@ func (d *sshKeyDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 	}
 
 	fingerprintDescription := "The fingerprint of the SSH key."
-	resp.Schema.Attributes["fingerprint"] = &schema.StringAttribute{
+	resp.Schema.Attributes["fingerprint"] = schema.StringAttribute{
 		Description:         fingerprintDescription,
 		MarkdownDescription: fingerprintDescription,
 		Optional:            false,

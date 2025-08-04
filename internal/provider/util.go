@@ -136,13 +136,13 @@ func convertResourceAttrToDataSourceAttr(name string, attribute r_schema.Attribu
 				}
 				nestedObjectAttrs[name] = nestedAttribute
 			}
-
 			return d_schema.ListNestedAttribute{
 				NestedObject: d_schema.NestedAttributeObject{
 					Attributes: nestedObjectAttrs,
 					CustomType: t.NestedObject.CustomType,
 					Validators: t.NestedObject.Validators,
 				},
+				CustomType:          t.CustomType,
 				Description:         attribute.GetDescription(),
 				Required:            required,
 				Optional:            optional,
@@ -183,7 +183,6 @@ func convertResourceAttrToDataSourceAttr(name string, attribute r_schema.Attribu
 				AttributeTypes:      attributeTypes,
 			}, nil
 		}
-
 		if t, isObject := attribute.GetType().(types.ObjectType); isObject {
 			return d_schema.ObjectAttribute{
 				AttributeTypes:      t.AttrTypes,

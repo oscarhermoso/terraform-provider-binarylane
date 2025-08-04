@@ -63,7 +63,7 @@ func (r *vpcResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 
 	// Overrides
 	id := resp.Schema.Attributes["id"]
-	resp.Schema.Attributes["id"] = &schema.Int64Attribute{
+	resp.Schema.Attributes["id"] = schema.Int64Attribute{
 		Description:         id.GetDescription(),
 		MarkdownDescription: id.GetMarkdownDescription(),
 		// read only
@@ -73,7 +73,7 @@ func (r *vpcResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 	}
 
 	ipRange := resp.Schema.Attributes["ip_range"]
-	resp.Schema.Attributes["ip_range"] = &schema.StringAttribute{
+	resp.Schema.Attributes["ip_range"] = schema.StringAttribute{
 		Description:         ipRange.GetDescription(),
 		MarkdownDescription: ipRange.GetMarkdownDescription(),
 		Required:            false,

@@ -3,10 +3,10 @@ bootcmd:
   # If you have additional installation steps that need to be awaited, define
   # these in the `bootcmd` section and they will also be awaited.
   #
-  - [cloud-init-per, once, 'example-installing', sh, -c, 'sleep 60'] # pretend this is a slow installation step
+  - [cloud-init-per, instance, 'example-installing', sh, -c, 'sleep 60'] # pretend this is a slow installation step
   - [
       cloud-init-per,
-      once,
+      instance,
       'example-done',
       sh,
       -c,

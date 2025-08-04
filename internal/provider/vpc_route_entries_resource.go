@@ -48,7 +48,7 @@ func (r *vpcRouteEntriesResource) Schema(ctx context.Context, req resource.Schem
 
 	// Overrides
 	vpcId := resp.Schema.Attributes["vpc_id"]
-	resp.Schema.Attributes["vpc_id"] = &schema.Int64Attribute{
+	resp.Schema.Attributes["vpc_id"] = schema.Int64Attribute{
 		Description:         vpcId.GetDescription(),
 		MarkdownDescription: vpcId.GetMarkdownDescription(),
 		Required:            true, // vpc_id is required to define the route entries
@@ -246,7 +246,7 @@ func GetRouteEntriesState(ctx context.Context, routeEntries *[]binarylane.RouteE
 	routeEntriesValue := resources.RouteEntriesValue{}
 	var routeEntriesValues []resources.RouteEntriesValue
 
-	if *routeEntries == nil || len(*routeEntries) == 0 {
+	if len(*routeEntries) == 0 {
 		routeEntriesValues = []resources.RouteEntriesValue{}
 	} else {
 		for _, route := range *routeEntries {

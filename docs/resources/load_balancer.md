@@ -46,6 +46,7 @@ resource "binarylane_load_balancer" "example" {
 ### Read-Only
 
 - `id` (Number) The ID of the load balancer to fetch.
+- `ip` (String) The IPv4 address of the load balancer.
 
 <a id="nestedatt--forwarding_rules"></a>
 ### Nested Schema for `forwarding_rules`

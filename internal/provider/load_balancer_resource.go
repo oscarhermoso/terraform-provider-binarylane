@@ -10,14 +10,17 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -37,7 +40,7 @@ type loadBalancerResource struct {
 }
 
 type loadBalancerResourceModel struct {
-	resources.LoadBalancerModel
+	loadBalancerDataModel
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
 
@@ -60,15 +63,15 @@ func (d *loadBalancerResource) Configure(_ context.Context, req resource.Configu
 	d.bc = &bc
 }
 
-func (r *loadBalancerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = resources.LoadBalancerResourceSchema(ctx)
-	resp.Schema.Description = "Provides a BinaryLane Load Balancer resource. This can be used to create, update, and delete load balancers."
-	resp.Schema.MarkdownDescription = resp.Schema.Description +
+func loadBalancerSchema(ctx context.Context) schema.Schema {
+	s := resources.LoadBalancerResourceSchema(ctx)
+	s.Description = "Provides a BinaryLane Load Balancer resource. This can be used to create, update, and delete load balancers."
+	s.MarkdownDescription = s.Description +
 		" See [the docs](https://support.binarylane.com.au/support/solutions/articles/1000025661-load-balancer) for more information."
 
 	// Overrides
-	id := resp.Schema.Attributes["id"]
-	resp.Schema.Attributes["id"] = &schema.Int64Attribute{
+	id := s.Attributes["id"]
+	s.Attributes["id"] = schema.Int64Attribute{
 		Description:         id.GetDescription(),
 		MarkdownDescription: id.GetMarkdownDescription(),
 		// read only
@@ -80,8 +83,8 @@ func (r *loadBalancerResource) Schema(ctx context.Context, req resource.SchemaRe
 		},
 	}
 
-	region := resp.Schema.Attributes["region"]
-	resp.Schema.Attributes["region"] = &schema.StringAttribute{
+	region := s.Attributes["region"]
+	s.Attributes["region"] = schema.StringAttribute{
 		Description:         region.GetDescription(),
 		MarkdownDescription: region.GetMarkdownDescription(),
 		Optional:            true,
@@ -90,6 +93,49 @@ func (r *loadBalancerResource) Schema(ctx context.Context, req resource.SchemaRe
 			stringplanmodifier.RequiresReplace(),
 		},
 	}
+
+	forwardingRules := s.Attributes["forwarding_rules"].(schema.ListNestedAttribute)
+	s.Attributes["forwarding_rules"] = schema.ListNestedAttribute{
+		NestedObject:        forwardingRules.NestedObject,
+		Description:         forwardingRules.GetDescription(),
+		MarkdownDescription: forwardingRules.GetMarkdownDescription(),
+		Required:            false,
+		Optional:            true,
+		Computed:            true,
+		Default: listdefault.StaticValue(types.ListValueMust(
+			types.ObjectType{
+				AttrTypes: resources.ForwardingRulesValue{}.AttributeTypes(ctx),
+			},
+			[]attr.Value{
+				types.ObjectValueMust(
+					map[string]attr.Type{
+						"entry_protocol": types.StringType,
+					},
+					map[string]attr.Value{
+						"entry_protocol": types.StringValue("http"),
+					},
+				),
+			},
+		)),
+		Validators: []validator.List{
+			listvalidator.SizeAtLeast(1),
+		},
+	}
+
+	// Additional attributes
+	s.Attributes["ip"] = schema.StringAttribute{
+		Description:         "The IPv4 address of the load balancer.",
+		MarkdownDescription: "The IPv4 address of the load balancer.",
+		Required:            false,
+		Optional:            false,
+		Computed:            true,
+	}
+
+	return s
+}
+
+func (r *loadBalancerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = loadBalancerSchema(ctx)
 
 	resp.Schema.Attributes["timeouts"] =
 		timeouts.Attributes(ctx, timeouts.Opts{
@@ -154,7 +200,7 @@ func (r *loadBalancerResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	diags = setLoadBalancerModelState(ctx, &data.LoadBalancerModel, lbResp.JSON200.LoadBalancer)
+	diags = setLoadBalancerModelState(ctx, &data.loadBalancerDataModel, lbResp.JSON200.LoadBalancer)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -253,7 +299,7 @@ func (r *loadBalancerResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	diags := setLoadBalancerModelState(ctx, &data.LoadBalancerModel, lbResp.JSON200.LoadBalancer)
+	diags := setLoadBalancerModelState(ctx, &data.loadBalancerDataModel, lbResp.JSON200.LoadBalancer)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -317,7 +363,7 @@ func (r *loadBalancerResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	diags = setLoadBalancerModelState(ctx, &data.LoadBalancerModel, lbResp.JSON200.LoadBalancer)
+	diags = setLoadBalancerModelState(ctx, &data.loadBalancerDataModel, lbResp.JSON200.LoadBalancer)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -422,11 +468,12 @@ func (r *loadBalancerResource) ImportState(
 	resp.Diagnostics.Append(diags...)
 }
 
-func setLoadBalancerModelState(ctx context.Context, data *resources.LoadBalancerModel, lb *binarylane.LoadBalancer) diag.Diagnostics {
+func setLoadBalancerModelState(ctx context.Context, data *loadBalancerDataModel, lb *binarylane.LoadBalancer) diag.Diagnostics {
 	var diags, diag diag.Diagnostics
 
 	data.Id = types.Int64Value(*lb.Id)
 	data.Name = types.StringValue(*lb.Name)
+	data.Ip = types.StringValue(*lb.Ip)
 
 	if lb.Region == nil {
 		data.Region = types.StringNull()

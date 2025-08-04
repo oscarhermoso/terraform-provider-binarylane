@@ -29,6 +29,7 @@ data "binarylane_load_balancer" "example" {
 
 - `forwarding_rules` (Attributes List) The rules that control which traffic the load balancer will forward to servers in the pool. Leave null to accept a default "HTTP" only forwarding rule. (see [below for nested schema](#nestedatt--forwarding_rules))
 - `health_check` (Object) The rules that determine which servers are considered 'healthy' and in the server pool for the load balancer. Leave this null to accept appropriate defaults based on the forwarding_rules. (see [below for nested schema](#nestedatt--health_check))
+- `ip` (String) The IPv4 address of the load balancer.
 - `name` (String) The hostname of the load balancer.
 - `region` (String) Leave null to create an anycast load balancer.
 - `server_ids` (List of Number) A list of server IDs to assign to this load balancer.
