@@ -47,7 +47,7 @@ func (d *vpcRouteEntriesDataSource) Schema(ctx context.Context, req datasource.S
 
 	// Overrides
 	vpcId := resp.Schema.Attributes["vpc_id"]
-	resp.Schema.Attributes["vpc_id"] = &schema.Int64Attribute{
+	resp.Schema.Attributes["vpc_id"] = schema.Int64Attribute{
 		Description:         vpcId.GetDescription(),
 		MarkdownDescription: vpcId.GetMarkdownDescription(),
 		Required:            true, // vpc_id is required to define the route entries
@@ -55,7 +55,7 @@ func (d *vpcRouteEntriesDataSource) Schema(ctx context.Context, req datasource.S
 
 	vpcRouteEntries := resp.Schema.Attributes["route_entries"].(schema.ListNestedAttribute)
 	vpcRouteEntriesDescription := "The route entries that control how network traffic is directed through the VPC environment."
-	resp.Schema.Attributes["route_entries"] = &schema.ListNestedAttribute{
+	resp.Schema.Attributes["route_entries"] = schema.ListNestedAttribute{
 		Description: vpcRouteEntriesDescription,
 		NestedObject: schema.NestedAttributeObject{
 			CustomType: vpcRouteEntries.NestedObject.CustomType,

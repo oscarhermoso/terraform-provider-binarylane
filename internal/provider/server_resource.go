@@ -87,7 +87,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 
 	// Overrides
 	id := s.Attributes["id"]
-	s.Attributes["id"] = &schema.Int64Attribute{
+	s.Attributes["id"] = schema.Int64Attribute{
 		Description:         id.GetDescription(),
 		MarkdownDescription: id.GetMarkdownDescription(),
 		// read only
@@ -101,7 +101,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 
 	imageDescription := "The slug of the selected operating system, such as `debian-12`. You can fetch a full list of images from the BinaryLane API."
 	image := s.Attributes["image"]
-	s.Attributes["image"] = &schema.StringAttribute{
+	s.Attributes["image"] = schema.StringAttribute{
 		Description:         imageDescription,
 		MarkdownDescription: imageDescription,
 		Required:            image.IsRequired(),
@@ -113,7 +113,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 	}
 
 	backupsDescription := "If `true` this will enable two daily backups for the server. By default, backups are disabled."
-	s.Attributes["backups"] = &schema.BoolAttribute{
+	s.Attributes["backups"] = schema.BoolAttribute{
 		Description:         backupsDescription,
 		MarkdownDescription: backupsDescription,
 		Optional:            true,
@@ -122,7 +122,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 	}
 
 	user_data := s.Attributes["user_data"]
-	s.Attributes["user_data"] = &schema.StringAttribute{
+	s.Attributes["user_data"] = schema.StringAttribute{
 		Description:         user_data.GetDescription(),
 		MarkdownDescription: user_data.GetMarkdownDescription(),
 		Optional:            true,  // Optional as not all servers have an initialization script
@@ -130,7 +130,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 	}
 
 	vpcId := s.Attributes["vpc_id"]
-	s.Attributes["vpc_id"] = &schema.Int64Attribute{
+	s.Attributes["vpc_id"] = schema.Int64Attribute{
 		Description:         vpcId.GetDescription(),
 		MarkdownDescription: vpcId.GetMarkdownDescription(),
 		Optional:            vpcId.IsOptional(),
@@ -138,7 +138,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 	}
 
 	portBlocking := s.Attributes["port_blocking"]
-	s.Attributes["port_blocking"] = &schema.BoolAttribute{
+	s.Attributes["port_blocking"] = schema.BoolAttribute{
 		Description:         portBlocking.GetDescription(),
 		MarkdownDescription: portBlocking.GetMarkdownDescription(),
 		Optional:            portBlocking.IsOptional(),
@@ -147,7 +147,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 	}
 
 	region := s.Attributes["region"].(schema.StringAttribute)
-	s.Attributes["region"] = &schema.StringAttribute{
+	s.Attributes["region"] = schema.StringAttribute{
 		Description:         region.GetDescription(),
 		MarkdownDescription: region.GetMarkdownDescription(),
 		Optional:            region.IsOptional(),
@@ -160,7 +160,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 	}
 
 	sshKeys := s.Attributes["ssh_keys"]
-	s.Attributes["ssh_keys"] = &schema.ListAttribute{
+	s.Attributes["ssh_keys"] = schema.ListAttribute{
 		ElementType:         types.Int64Type,
 		Description:         sshKeys.GetMarkdownDescription(),
 		MarkdownDescription: sshKeys.GetDescription(),
@@ -174,7 +174,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 	userDataDescription := "A script or cloud-config YAML file to configure the server. Can only be specified if the OS image supports UserData (i.e. not Windows)." +
 		" See more: https://cloudinit.readthedocs.io/en/latest/explanation/format.html#user-data-script"
 	userData := s.Attributes["user_data"]
-	s.Attributes["user_data"] = &schema.StringAttribute{
+	s.Attributes["user_data"] = schema.StringAttribute{
 		Description:         userDataDescription,
 		MarkdownDescription: userDataDescription,
 		Required:            userData.IsRequired(),
@@ -190,7 +190,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 		"If this is provided the specified or default remote user's account password will be set to this value. " +
 			"Only valid if the server supports password change actions. If omitted and the server supports password " +
 			"change actions a random password will be generated and emailed to the account email address."
-	s.Attributes["password"] = &schema.StringAttribute{
+	s.Attributes["password"] = schema.StringAttribute{
 		Description:         pwDescription,
 		MarkdownDescription: pwDescription,
 		Optional:            true,  // Password optional, if not set will be emailed to user
@@ -199,7 +199,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 	}
 
 	publicIpv4CountDescription := "The number of public IPv4 addresses to assign to the server."
-	s.Attributes["public_ipv4_count"] = &schema.Int32Attribute{
+	s.Attributes["public_ipv4_count"] = schema.Int32Attribute{
 		Description:         publicIpv4CountDescription,
 		MarkdownDescription: publicIpv4CountDescription,
 		Required:            true,
@@ -212,7 +212,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 	}
 
 	publicIpv4AddressesDescription := "The public IPv4 addresses assigned to the server."
-	s.Attributes["public_ipv4_addresses"] = &schema.ListAttribute{
+	s.Attributes["public_ipv4_addresses"] = schema.ListAttribute{
 		Description:         publicIpv4AddressesDescription,
 		MarkdownDescription: publicIpv4AddressesDescription,
 		ElementType:         types.StringType,
@@ -229,7 +229,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 		"to incorrect network configuration. When `source_and_destination_check` is `false`, your Cloud Server will be able " +
 		"to send and receive packets addressed to any server. This is typically used when you want to use " +
 		"your Cloud Server as a VPN endpoint, a NAT server to provide internet access, or IP forwarding."
-	s.Attributes["source_and_destination_check"] = &schema.BoolAttribute{
+	s.Attributes["source_and_destination_check"] = schema.BoolAttribute{
 		Description:         sourceDestCheckDescription,
 		MarkdownDescription: sourceDestCheckDescription,
 		Optional:            true,
@@ -243,7 +243,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 	}
 
 	privateIpv4AddressesDescription := "The private IPv4 addresses assigned to the server."
-	s.Attributes["private_ipv4_addresses"] = &schema.ListAttribute{
+	s.Attributes["private_ipv4_addresses"] = schema.ListAttribute{
 		Description:         privateIpv4AddressesDescription,
 		MarkdownDescription: privateIpv4AddressesDescription,
 		ElementType:         types.StringType,
@@ -256,7 +256,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 		},
 	}
 
-	s.Attributes["permalink"] = &schema.StringAttribute{
+	s.Attributes["permalink"] = schema.StringAttribute{
 		Description:         "A randomly generated two-word identifier assigned to servers in regions that support this feature",
 		MarkdownDescription: "A randomly generated two-word identifier assigned to servers in regions that support this feature",
 		// read only
@@ -271,7 +271,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 	pwChangeDescription := "If this is true then the `password` attribute can be changed with Terraform. " +
 		"If this is false then the `password` attribute can only be replaced with a null/empty value, which will clear " +
 		"the root/administrator password allowing the password to be changed via the web console."
-	s.Attributes["password_change_supported"] = &schema.BoolAttribute{
+	s.Attributes["password_change_supported"] = schema.BoolAttribute{
 		Description:         pwChangeDescription,
 		MarkdownDescription: pwChangeDescription,
 		// read only
@@ -293,7 +293,7 @@ func serverSchema(ctx context.Context) schema.Schema {
   - \> 16384 MB must be a multiple of 2048
   - \> 24576 MB must be a multiple of 4096`
 
-	s.Attributes["memory"] = &schema.Int32Attribute{
+	s.Attributes["memory"] = schema.Int32Attribute{
 		Description:         memoryDescription + memoryValidValues,
 		MarkdownDescription: memoryDescription + memoryValidValuesMarkdown,
 		Optional:            true,
@@ -316,7 +316,7 @@ func serverSchema(ctx context.Context) schema.Schema {
   - \> 60 GB must be a multiple of 10
   - \> 200 GB must be a multiple of 100`
 
-	s.Attributes["disk"] = &schema.Int32Attribute{
+	s.Attributes["disk"] = schema.Int32Attribute{
 		Description:         diskDescription + diskValidValues,
 		MarkdownDescription: diskDescription + diskValidValuesMarkdown,
 		Optional:            true,

@@ -7,6 +7,7 @@ import (
 	"terraform-provider-binarylane/internal/resources"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var (
@@ -22,8 +23,9 @@ type loadBalancerDataSource struct {
 	bc *BinarylaneClient
 }
 
-type loadBalancerDataSourceModel struct {
+type loadBalancerDataModel struct {
 	resources.LoadBalancerModel
+	Ip types.String `tfsdk:"ip"`
 }
 
 func (d *loadBalancerDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -52,9 +54,10 @@ func (d *loadBalancerDataSource) Configure(
 
 func (d *loadBalancerDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	ds, err := convertResourceSchemaToDataSourceSchema(
-		resources.LoadBalancerResourceSchema(ctx),
+		loadBalancerSchema(ctx),
 		AttributeConfig{
 			RequiredAttributes: &[]string{"id"},
+			ExcludedAttributes: &[]string{"timeouts"},
 		},
 	)
 	if err != nil {
@@ -63,10 +66,11 @@ func (d *loadBalancerDataSource) Schema(ctx context.Context, req datasource.Sche
 	}
 	resp.Schema = *ds
 	resp.Schema.Description = "Retrieve details about a BinaryLane Load Balancer."
+	resp.Schema.MarkdownDescription = resp.Schema.Description
 }
 
 func (d *loadBalancerDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data loadBalancerDataSourceModel
+	var data loadBalancerDataModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -93,7 +97,7 @@ func (d *loadBalancerDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	diags := setLoadBalancerModelState(ctx, &data.LoadBalancerModel, lbResp.JSON200.LoadBalancer)
+	diags := setLoadBalancerModelState(ctx, &data, lbResp.JSON200.LoadBalancer)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

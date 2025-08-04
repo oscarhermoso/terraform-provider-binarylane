@@ -63,7 +63,7 @@ func (r *serverFirewallRulesResource) Schema(ctx context.Context, req resource.S
 
 	// Overrides
 	serverId := resp.Schema.Attributes["server_id"]
-	resp.Schema.Attributes["server_id"] = &schema.Int64Attribute{
+	resp.Schema.Attributes["server_id"] = schema.Int64Attribute{
 		Description:         serverId.GetDescription(),
 		MarkdownDescription: serverId.GetMarkdownDescription(),
 		Required:            true, // Server ID is required to define the firewall rules
@@ -251,7 +251,7 @@ func GetFirewallRulesState(ctx context.Context, firewallRules *[]binarylane.Adva
 	firewallRulesValue := resources.FirewallRulesValue{}
 	var firewallRulesValues []resources.FirewallRulesValue
 
-	if *firewallRules == nil || len(*firewallRules) == 0 {
+	if len(*firewallRules) == 0 {
 		firewallRulesValues = []resources.FirewallRulesValue{}
 	} else {
 		for _, rule := range *firewallRules {

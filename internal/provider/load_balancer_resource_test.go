@@ -35,7 +35,7 @@ resource "binarylane_server" "test" {
 resource "binarylane_load_balancer" "test" {
   name             = "tf-test-lb"
   server_ids       = [binarylane_server.test.0.id, binarylane_server.test.1.id]
-  forwarding_rules = [{ entry_protocol = "http" }]
+	# initially, skip defining forwarding_rules, health_check, to test default values
 }
 
 data "binarylane_load_balancer" "test" {
@@ -54,6 +54,8 @@ data "binarylane_load_balancer" "test" {
 					resource.TestCheckResourceAttrPair("binarylane_load_balancer.test", "server_ids.1", "binarylane_server.test.1", "id"),
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "forwarding_rules.#", "1"),
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "forwarding_rules.0.entry_protocol", "http"),
+					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "health_check.path", "/"),
+					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "health_check.protocol", "http"),
 
 					// Verify data source values
 					resource.TestCheckResourceAttrPair("data.binarylane_load_balancer.test", "id", "binarylane_load_balancer.test", "id"),
@@ -64,6 +66,8 @@ data "binarylane_load_balancer" "test" {
 					resource.TestCheckResourceAttrPair("data.binarylane_load_balancer.test", "server_ids.1", "binarylane_server.test.1", "id"),
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "forwarding_rules.#", "1"),
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "forwarding_rules.0.entry_protocol", "http"),
+					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "health_check.path", "/"),
+					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "health_check.protocol", "http"),
 				),
 			},
 			// Test import by ID
@@ -78,6 +82,61 @@ data "binarylane_load_balancer" "test" {
 				ImportState:       true,
 				ImportStateId:     "tf-test-lb",
 				ImportStateVerify: true,
+			},
+			{
+				Config: providerConfig + `
+resource "binarylane_server" "test" {
+  count             = 2
+  name              = "tf-test-lb-server-${count.index}"
+  region            = "per"
+  image             = "debian-12"
+  size              = "std-min"
+  password          = "` + password + `"
+  public_ipv4_count = 1
+}
+
+resource "binarylane_load_balancer" "test" {
+  name             = "tf-test-lb"
+  server_ids       = [binarylane_server.test.0.id, binarylane_server.test.1.id]
+	# updated
+  forwarding_rules = [{ entry_protocol = "https" }]
+	health_check     = {
+		path 		 = "/test-health"
+		protocol = "https"
+	}
+}
+
+data "binarylane_load_balancer" "test" {
+  depends_on = [binarylane_load_balancer.test]
+
+  id = binarylane_load_balancer.test.id
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// Verify resource values
+					resource.TestCheckResourceAttrSet("binarylane_load_balancer.test", "id"),
+					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "name", "tf-test-lb"),
+					resource.TestCheckNoResourceAttr("binarylane_load_balancer.test", "region"),
+					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "server_ids.#", "2"),
+					resource.TestCheckResourceAttrPair("binarylane_load_balancer.test", "server_ids.0", "binarylane_server.test.0", "id"),
+					resource.TestCheckResourceAttrPair("binarylane_load_balancer.test", "server_ids.1", "binarylane_server.test.1", "id"),
+					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "forwarding_rules.#", "1"),
+					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "forwarding_rules.0.entry_protocol", "https"),
+					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "health_check.path", "/test-health"),
+					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "health_check.protocol", "https"),
+
+					// Verify data source values
+					resource.TestCheckResourceAttrPair("data.binarylane_load_balancer.test", "id", "binarylane_load_balancer.test", "id"),
+					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "name", "tf-test-lb"),
+					resource.TestCheckNoResourceAttr("data.binarylane_load_balancer.test", "region"),
+					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "server_ids.#", "2"),
+					resource.TestCheckResourceAttrPair("data.binarylane_load_balancer.test", "server_ids.0", "binarylane_server.test.0", "id"),
+					resource.TestCheckResourceAttrPair("data.binarylane_load_balancer.test", "server_ids.1", "binarylane_server.test.1", "id"),
+					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "forwarding_rules.#", "1"),
+					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "forwarding_rules.0.entry_protocol", "https"),
+					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "health_check.path", "/test-health"),
+					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "health_check.protocol", "https"),
+				),
 			},
 		},
 	})
