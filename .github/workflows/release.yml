@@ -45,3 +45,8 @@ jobs:
           # GitHub sets the GITHUB_TOKEN secret automatically.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+      - name: Publish Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: gh release edit "${{ github.ref }}" --draft false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

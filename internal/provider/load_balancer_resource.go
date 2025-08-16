@@ -154,7 +154,7 @@ func (r *loadBalancerResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	// Create API call logic
-	forwardingRules := []binarylane.ForwardingRule{}
+	forwardingRules := []binarylane.ForwardingRuleRequest{}
 	diags := data.LoadBalancerModel.ForwardingRules.ElementsAs(ctx, &forwardingRules, false)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -175,7 +175,7 @@ func (r *loadBalancerResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	if data.HealthCheck.Path.ValueStringPointer() != nil || data.HealthCheck.Protocol.ValueStringPointer() != nil {
-		body.HealthCheck = &binarylane.HealthCheck{
+		body.HealthCheck = &binarylane.HealthCheckRequest{
 			Path:     data.HealthCheck.Path.ValueStringPointer(),
 			Protocol: data.HealthCheck.Protocol.ValueStringPointer(),
 		}
@@ -320,7 +320,7 @@ func (r *loadBalancerResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	// Update API call logic
-	forwardingRules := &[]binarylane.ForwardingRule{}
+	forwardingRules := &[]binarylane.ForwardingRuleRequest{}
 	diags := data.LoadBalancerModel.ForwardingRules.ElementsAs(ctx, forwardingRules, true)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -339,7 +339,7 @@ func (r *loadBalancerResource) Update(ctx context.Context, req resource.UpdateRe
 	body := binarylane.UpdateLoadBalancerRequest{
 		Name:            data.Name.ValueString(),
 		ForwardingRules: forwardingRules,
-		HealthCheck: &binarylane.HealthCheck{
+		HealthCheck: &binarylane.HealthCheckRequest{
 			Path:     data.HealthCheck.Path.ValueStringPointer(),
 			Protocol: data.HealthCheck.Protocol.ValueStringPointer(),
 		},
@@ -442,7 +442,7 @@ func (r *loadBalancerResource) ImportState(
 
 		loadBalancers := *lbResp.JSON200.LoadBalancers
 		for _, lb := range loadBalancers {
-			if *lb.Name == req.ID {
+			if lb.Name == req.ID {
 				loadBalancer = lb
 				nextPage = false
 				break
@@ -456,24 +456,16 @@ func (r *loadBalancerResource) ImportState(
 		page++
 	}
 
-	if loadBalancer.Id == nil {
-		resp.Diagnostics.AddError(
-			"Could not find load balancer by name",
-			fmt.Sprintf("Error finding load balancer: name=%s", req.ID),
-		)
-		return
-	}
-
-	diags := resp.State.SetAttribute(ctx, path.Root("id"), *loadBalancer.Id)
+	diags := resp.State.SetAttribute(ctx, path.Root("id"), loadBalancer.Id)
 	resp.Diagnostics.Append(diags...)
 }
 
 func setLoadBalancerModelState(ctx context.Context, data *loadBalancerDataModel, lb *binarylane.LoadBalancer) diag.Diagnostics {
 	var diags, diag diag.Diagnostics
 
-	data.Id = types.Int64Value(*lb.Id)
-	data.Name = types.StringValue(*lb.Name)
-	data.Ip = types.StringValue(*lb.Ip)
+	data.Id = types.Int64Value(lb.Id)
+	data.Name = types.StringValue(lb.Name)
+	data.Ip = types.StringValue(lb.Ip)
 
 	if lb.Region == nil {
 		data.Region = types.StringNull()
@@ -483,18 +475,14 @@ func setLoadBalancerModelState(ctx context.Context, data *loadBalancerDataModel,
 
 	data.ServerIds, diags = types.ListValueFrom(ctx, types.Int64Type, lb.ServerIds)
 
-	if lb.HealthCheck == nil {
-		data.HealthCheck = resources.NewHealthCheckValueNull()
-	} else {
-		data.HealthCheck, diag = resources.NewHealthCheckValue(
-			resources.HealthCheckValue{}.AttributeTypes(ctx),
-			map[string]attr.Value{
-				"path":     types.StringValue(*lb.HealthCheck.Path),
-				"protocol": types.StringValue(*lb.HealthCheck.Protocol),
-			},
-		)
-		diags.Append(diag...)
-	}
+	data.HealthCheck, diag = resources.NewHealthCheckValue(
+		resources.HealthCheckValue{}.AttributeTypes(ctx),
+		map[string]attr.Value{
+			"path":     types.StringValue(lb.HealthCheck.Path),
+			"protocol": types.StringValue(lb.HealthCheck.Protocol),
+		},
+	)
+	diags.Append(diag...)
 
 	data.ForwardingRules, diag = types.ListValueFrom(ctx,
 		types.ObjectType{AttrTypes: resources.ForwardingRulesValue{}.AttributeTypes(ctx)},

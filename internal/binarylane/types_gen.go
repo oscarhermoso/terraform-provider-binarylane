@@ -1189,10 +1189,10 @@ type ConsoleResponse struct {
 // CreateLoadBalancerRequest defines model for CreateLoadBalancerRequest.
 type CreateLoadBalancerRequest struct {
 	// ForwardingRules The rules that control which traffic the load balancer will forward to servers in the pool. Leave null to accept a default "HTTP" only forwarding rule.
-	ForwardingRules *[]ForwardingRule `json:"forwarding_rules" tfsdk:"forwarding_rules"`
+	ForwardingRules *[]ForwardingRuleRequest `json:"forwarding_rules" tfsdk:"forwarding_rules"`
 
 	// HealthCheck The rules that determine which servers are considered 'healthy' and in the server pool for the load balancer. Leave this null to accept appropriate defaults based on the forwarding_rules.
-	HealthCheck *HealthCheck `json:"health_check"`
+	HealthCheck *HealthCheckRequest `json:"health_check"`
 
 	// Name The hostname of the load balancer.
 	Name string `json:"name"`
@@ -1603,14 +1603,50 @@ type ForwardingRule struct {
 	EntryProtocol LoadBalancerRuleProtocol `json:"entry_protocol" tfsdk:"entry_protocol"`
 }
 
+// ForwardingRuleRequest defines model for ForwardingRuleRequest.
+type ForwardingRuleRequest struct {
+	// EntryProtocol The protocol that traffic must match for this load balancer to forward traffic according to this rule.
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | http | The load balancer will forward HTTP traffic that matches this rule. |
+	// | https | The load balancer will forward HTTPS traffic that matches this rule. |
+	//
+	EntryProtocol LoadBalancerRuleProtocol `json:"entry_protocol" tfsdk:"entry_protocol"`
+}
+
 // ForwardingRulesRequest defines model for ForwardingRulesRequest.
 type ForwardingRulesRequest struct {
 	// ForwardingRules The rules that control which traffic the load balancer will forward to servers in the pool.
-	ForwardingRules []ForwardingRule `json:"forwarding_rules"`
+	ForwardingRules []ForwardingRuleRequest `json:"forwarding_rules"`
 }
 
 // HealthCheck defines model for HealthCheck.
 type HealthCheck struct {
+	// Path The path to the health check endpoint.
+	Path string `json:"path"`
+
+	// Protocol The protocol used for the health check.
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | http | The health check will be performed via HTTP. |
+	// | https | The health check will be performed via HTTPS. |
+	// | both | The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol. |
+	//
+	Protocol HealthCheckProtocol `json:"protocol"`
+}
+
+// HealthCheckProtocol
+// | Value | Description |
+// | ----- | ----------- |
+// | http | The health check will be performed via HTTP. |
+// | https | The health check will be performed via HTTPS. |
+// | both | The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol. |
+type HealthCheckProtocol = string
+
+// HealthCheckRequest defines model for HealthCheckRequest.
+type HealthCheckRequest struct {
 	// Path Leave null to accept the default '/' path.
 	Path *string `json:"path"`
 
@@ -1624,14 +1660,6 @@ type HealthCheck struct {
 	//
 	Protocol *HealthCheckProtocol `json:"protocol"`
 }
-
-// HealthCheckProtocol
-// | Value | Description |
-// | ----- | ----------- |
-// | http | The health check will be performed via HTTP. |
-// | https | The health check will be performed via HTTPS. |
-// | both | The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol. |
-type HealthCheckProtocol = string
 
 // Host defines model for Host.
 type Host struct {
@@ -1912,29 +1940,38 @@ type Links struct {
 // LoadBalancer defines model for LoadBalancer.
 type LoadBalancer struct {
 	// CreatedAt The date and time in ISO8601 format of the creation of the load balancer.
-	CreatedAt *time.Time `json:"created_at,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
 
 	// ForwardingRules The rules that control which traffic the load balancer will forward to servers in the pool.
-	ForwardingRules *[]ForwardingRule `json:"forwarding_rules,omitempty"`
+	ForwardingRules []ForwardingRule `json:"forwarding_rules"`
 
 	// HealthCheck The rules that determine which servers are considered 'healthy' and in the server pool for the load balancer.
-	HealthCheck *HealthCheck `json:"health_check,omitempty" tfsdk:"health_check"`
+	HealthCheck HealthCheck `json:"health_check" tfsdk:"health_check"`
 
 	// Id The ID of the load balancer.
-	Id *int64 `json:"id,omitempty"`
+	Id int64 `json:"id"`
 
 	// Ip The IPv4 address of the load balancer.
-	Ip *string `json:"ip,omitempty"`
+	Ip string `json:"ip"`
 
 	// Name The hostname of the load balancer.
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// Region The region the load balancer is located in. If this value is null the load balancer is an 'AnyCast' load balancer.
 	Region *Region `json:"region"`
 
 	// ServerIds The server IDs of the servers that are currently in the load balancer pool (regardless of their current 'health').
-	ServerIds *[]int64            `json:"server_ids,omitempty"`
-	Status    *LoadBalancerStatus `json:"status,omitempty"`
+	ServerIds []int64 `json:"server_ids"`
+
+	// Status The current status of the load balancer.
+	//
+	// | Value | Description |
+	// | ----- | ----------- |
+	// | new | The load balancer is currently being built and is not ready to accept connections. |
+	// | active | The load balancer is available. |
+	// | errored | The load balancer is in an errored state. |
+	//
+	Status LoadBalancerStatus `json:"status"`
 }
 
 // LoadBalancerAvailabilityOption defines model for LoadBalancerAvailabilityOption.
@@ -1946,7 +1983,7 @@ type LoadBalancerAvailabilityOption struct {
 	PriceHourly *float64 `json:"price_hourly,omitempty"`
 
 	// PriceMonthly Monthly Price in AU$.
-	PriceMonthly *float64 `json:"price_monthly,omitempty"`
+	PriceMonthly float64 `json:"price_monthly"`
 
 	// Regions The slugs of regions where this load balancer option is available. If this is an Anycast load balancer option this will be null.
 	Regions *[]string `json:"regions"`
@@ -3048,10 +3085,10 @@ type UpdateDomainRecordRequest struct {
 // UpdateLoadBalancerRequest defines model for UpdateLoadBalancerRequest.
 type UpdateLoadBalancerRequest struct {
 	// ForwardingRules The rules that control which traffic the load balancer will forward to servers in the pool. Leave null to accept a default "HTTP" only forwarding rule.
-	ForwardingRules *[]ForwardingRule `json:"forwarding_rules"`
+	ForwardingRules *[]ForwardingRuleRequest `json:"forwarding_rules"`
 
 	// HealthCheck The rules that determine which servers are considered 'healthy' and in the server pool for the load balancer. Leave this null to accept appropriate defaults based on the forwarding_rules.
-	HealthCheck *HealthCheck `json:"health_check"`
+	HealthCheck *HealthCheckRequest `json:"health_check"`
 
 	// Name The hostname of the load balancer.
 	Name string `json:"name"`
