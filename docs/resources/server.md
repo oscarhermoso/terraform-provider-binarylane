@@ -44,6 +44,7 @@ resource "binarylane_server" "example" {
   - must be a multiple of 5
   - \> 60 GB must be a multiple of 10
   - \> 200 GB must be a multiple of 100
+- `disks` (Attributes List) A list of the disks that are currently attached to the server. (see [below for nested schema](#nestedatt--disks))
 - `memory` (Number) The total memory in MB for this server. Leave null to accept the default size. Valid values:
   - must be a multiple of 128
   - \> 2048 MB must be a multiple of 1024
@@ -84,6 +85,23 @@ Read-Only:
 - `cloud_init` (Boolean) When this option is enabled the Cloud Server will be provided a datasource for the cloud-init service.
 - `qemu_guest_agent` (Boolean) When this option is enabled the server will allow QEMU Guest Agent to perform password reset without rebooting.
 - `uefi_boot` (Boolean) When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS.
+
+
+<a id="nestedatt--disks"></a>
+### Nested Schema for `disks`
+
+Required:
+
+- `size_gigabytes` (Number) The size of the disk in GB.
+
+Optional:
+
+- `description` (String) A description of this disk.
+
+Read-Only:
+
+- `id` (Number) The ID of this disk.
+- `primary` (Boolean) A primary disk is treated differently from other disks.
 
 
 <a id="nestedatt--timeouts"></a>

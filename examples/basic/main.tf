@@ -17,4 +17,11 @@ resource "binarylane_server" "example" {
   size              = "std-min" # 1 VPCU, 1 GB Memory,  20 GB NVME Storage, 1000 GB Data Transfer
   public_ipv4_count = 1
   # Password will be generated automatically and mailed to the account holder
+  disks = [{
+    description    = "Primary Disk"
+    size_gigabytes = 10
+    }, {
+    description    = "Secondary Disk"
+    size_gigabytes = 10
+  }]
 }

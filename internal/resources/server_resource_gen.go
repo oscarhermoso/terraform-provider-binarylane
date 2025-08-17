@@ -94,6 +94,42 @@ func ServerResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "If true this will enable two daily backups for the server. `options.daily_backups` will override this value if provided. Setting this to false has no effect.\n",
 				MarkdownDescription: "If true this will enable two daily backups for the server. `options.daily_backups` will override this value if provided. Setting this to false has no effect.\n",
 			},
+			"disks": schema.ListNestedAttribute{
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"description": schema.StringAttribute{
+							Optional:            true,
+							Computed:            true,
+							Description:         "A description of this disk.",
+							MarkdownDescription: "A description of this disk.",
+						},
+						"id": schema.Int64Attribute{
+							Computed:            true,
+							Description:         "The ID of this disk.",
+							MarkdownDescription: "The ID of this disk.",
+						},
+						"primary": schema.BoolAttribute{
+							Computed:            true,
+							Description:         "A primary disk is treated differently from other disks.",
+							MarkdownDescription: "A primary disk is treated differently from other disks.",
+						},
+						"size_gigabytes": schema.Float64Attribute{
+							Required:            true,
+							Description:         "The size of the disk in GB.",
+							MarkdownDescription: "The size of the disk in GB.",
+						},
+					},
+					CustomType: DisksType{
+						ObjectType: types.ObjectType{
+							AttrTypes: DisksValue{}.AttributeTypes(ctx),
+						},
+					},
+				},
+				Optional:            true,
+				Computed:            true,
+				Description:         "A list of the disks that are currently attached to the server.",
+				MarkdownDescription: "A list of the disks that are currently attached to the server.",
+			},
 			"id": schema.Int64Attribute{
 				Optional:            true,
 				Computed:            true,
@@ -162,6 +198,7 @@ func ServerResourceSchema(ctx context.Context) schema.Schema {
 type ServerModel struct {
 	AdvancedFeatures AdvancedFeaturesValue `tfsdk:"advanced_features"`
 	Backups          types.Bool            `tfsdk:"backups"`
+	Disks            types.List            `tfsdk:"disks"`
 	Id               types.Int64           `tfsdk:"id"`
 	Image            types.String          `tfsdk:"image"`
 	Name             types.String          `tfsdk:"name"`
@@ -989,5 +1026,494 @@ func (v AdvancedFeaturesValue) AttributeTypes(ctx context.Context) map[string]at
 		"qemu_guest_agent": basetypes.BoolType{},
 		"uefi_boot":        basetypes.BoolType{},
 		"unset_uuid":       basetypes.BoolType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = DisksType{}
+
+type DisksType struct {
+	basetypes.ObjectType
+}
+
+func (t DisksType) Equal(o attr.Type) bool {
+	other, ok := o.(DisksType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t DisksType) String() string {
+	return "DisksType"
+}
+
+func (t DisksType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	descriptionAttribute, ok := attributes["description"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`description is missing from object`)
+
+		return nil, diags
+	}
+
+	descriptionVal, ok := descriptionAttribute.(basetypes.StringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`description expected to be basetypes.StringValue, was: %T`, descriptionAttribute))
+	}
+
+	idAttribute, ok := attributes["id"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`id is missing from object`)
+
+		return nil, diags
+	}
+
+	idVal, ok := idAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`id expected to be basetypes.Int64Value, was: %T`, idAttribute))
+	}
+
+	primaryAttribute, ok := attributes["primary"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`primary is missing from object`)
+
+		return nil, diags
+	}
+
+	primaryVal, ok := primaryAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`primary expected to be basetypes.BoolValue, was: %T`, primaryAttribute))
+	}
+
+	sizeGigabytesAttribute, ok := attributes["size_gigabytes"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`size_gigabytes is missing from object`)
+
+		return nil, diags
+	}
+
+	sizeGigabytesVal, ok := sizeGigabytesAttribute.(basetypes.Float64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`size_gigabytes expected to be basetypes.Float64Value, was: %T`, sizeGigabytesAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return DisksValue{
+		Description:   descriptionVal,
+		Id:            idVal,
+		Primary:       primaryVal,
+		SizeGigabytes: sizeGigabytesVal,
+		state:         attr.ValueStateKnown,
+	}, diags
+}
+
+func NewDisksValueNull() DisksValue {
+	return DisksValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewDisksValueUnknown() DisksValue {
+	return DisksValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewDisksValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (DisksValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing DisksValue Attribute Value",
+				"While creating a DisksValue value, a missing attribute value was detected. "+
+					"A DisksValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("DisksValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid DisksValue Attribute Type",
+				"While creating a DisksValue value, an invalid attribute value was detected. "+
+					"A DisksValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("DisksValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("DisksValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra DisksValue Attribute Value",
+				"While creating a DisksValue value, an extra attribute value was detected. "+
+					"A DisksValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra DisksValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewDisksValueUnknown(), diags
+	}
+
+	descriptionAttribute, ok := attributes["description"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`description is missing from object`)
+
+		return NewDisksValueUnknown(), diags
+	}
+
+	descriptionVal, ok := descriptionAttribute.(basetypes.StringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`description expected to be basetypes.StringValue, was: %T`, descriptionAttribute))
+	}
+
+	idAttribute, ok := attributes["id"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`id is missing from object`)
+
+		return NewDisksValueUnknown(), diags
+	}
+
+	idVal, ok := idAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`id expected to be basetypes.Int64Value, was: %T`, idAttribute))
+	}
+
+	primaryAttribute, ok := attributes["primary"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`primary is missing from object`)
+
+		return NewDisksValueUnknown(), diags
+	}
+
+	primaryVal, ok := primaryAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`primary expected to be basetypes.BoolValue, was: %T`, primaryAttribute))
+	}
+
+	sizeGigabytesAttribute, ok := attributes["size_gigabytes"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`size_gigabytes is missing from object`)
+
+		return NewDisksValueUnknown(), diags
+	}
+
+	sizeGigabytesVal, ok := sizeGigabytesAttribute.(basetypes.Float64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`size_gigabytes expected to be basetypes.Float64Value, was: %T`, sizeGigabytesAttribute))
+	}
+
+	if diags.HasError() {
+		return NewDisksValueUnknown(), diags
+	}
+
+	return DisksValue{
+		Description:   descriptionVal,
+		Id:            idVal,
+		Primary:       primaryVal,
+		SizeGigabytes: sizeGigabytesVal,
+		state:         attr.ValueStateKnown,
+	}, diags
+}
+
+func NewDisksValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) DisksValue {
+	object, diags := NewDisksValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewDisksValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t DisksType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewDisksValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewDisksValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewDisksValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewDisksValueMust(DisksValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t DisksType) ValueType(ctx context.Context) attr.Value {
+	return DisksValue{}
+}
+
+var _ basetypes.ObjectValuable = DisksValue{}
+
+type DisksValue struct {
+	Description   basetypes.StringValue  `tfsdk:"description"`
+	Id            basetypes.Int64Value   `tfsdk:"id"`
+	Primary       basetypes.BoolValue    `tfsdk:"primary"`
+	SizeGigabytes basetypes.Float64Value `tfsdk:"size_gigabytes"`
+	state         attr.ValueState
+}
+
+func (v DisksValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 4)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["description"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["id"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["primary"] = basetypes.BoolType{}.TerraformType(ctx)
+	attrTypes["size_gigabytes"] = basetypes.Float64Type{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 4)
+
+		val, err = v.Description.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["description"] = val
+
+		val, err = v.Id.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["id"] = val
+
+		val, err = v.Primary.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["primary"] = val
+
+		val, err = v.SizeGigabytes.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["size_gigabytes"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v DisksValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v DisksValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v DisksValue) String() string {
+	return "DisksValue"
+}
+
+func (v DisksValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributeTypes := map[string]attr.Type{
+		"description":    basetypes.StringType{},
+		"id":             basetypes.Int64Type{},
+		"primary":        basetypes.BoolType{},
+		"size_gigabytes": basetypes.Float64Type{},
+	}
+
+	if v.IsNull() {
+		return types.ObjectNull(attributeTypes), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(attributeTypes), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		attributeTypes,
+		map[string]attr.Value{
+			"description":    v.Description,
+			"id":             v.Id,
+			"primary":        v.Primary,
+			"size_gigabytes": v.SizeGigabytes,
+		})
+
+	return objVal, diags
+}
+
+func (v DisksValue) Equal(o attr.Value) bool {
+	other, ok := o.(DisksValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Description.Equal(other.Description) {
+		return false
+	}
+
+	if !v.Id.Equal(other.Id) {
+		return false
+	}
+
+	if !v.Primary.Equal(other.Primary) {
+		return false
+	}
+
+	if !v.SizeGigabytes.Equal(other.SizeGigabytes) {
+		return false
+	}
+
+	return true
+}
+
+func (v DisksValue) Type(ctx context.Context) attr.Type {
+	return DisksType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v DisksValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"description":    basetypes.StringType{},
+		"id":             basetypes.Int64Type{},
+		"primary":        basetypes.BoolType{},
+		"size_gigabytes": basetypes.Float64Type{},
 	}
 }

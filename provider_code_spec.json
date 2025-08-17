@@ -1006,6 +1006,45 @@
 								}
 							]
 						}
+					},
+					{
+						"name": "disks",
+						"list_nested": {
+							"computed_optional_required": "computed_optional",
+							"nested_object": {
+								"attributes": [
+									{
+										"name": "description",
+										"string": {
+											"computed_optional_required": "computed_optional",
+											"description": "A description of this disk."
+										}
+									},
+									{
+										"name": "id",
+										"int64": {
+											"computed_optional_required": "computed",
+											"description": "The ID of this disk."
+										}
+									},
+									{
+										"name": "primary",
+										"bool": {
+											"computed_optional_required": "computed",
+											"description": "A primary disk is treated differently from other disks."
+										}
+									},
+									{
+										"name": "size_gigabytes",
+										"float64": {
+											"computed_optional_required": "required",
+											"description": "The size of the disk in GB."
+										}
+									}
+								]
+							},
+							"description": "A list of the disks that are currently attached to the server."
+						}
 					}
 				]
 			}

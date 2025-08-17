@@ -142,5 +142,11 @@ cat <<<$(jq '.components.schemas.SizeType.properties.slug += {"x-oapi-codegen-ex
 cat <<<$(jq '.components.schemas.SizeType.properties.name += {"x-oapi-codegen-extra-tags": {"tfsdk": "name"}}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.components.schemas.SizeType.properties.description += {"x-oapi-codegen-extra-tags": {"tfsdk": "description"}}' $OPENAPI_FILE) >$OPENAPI_FILE
 
+## Disks
+cat <<<$(jq '.components.schemas.Disk.properties.id += {"x-oapi-codegen-extra-tags": {"tfsdk": "id"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Disk.properties.description += {"x-oapi-codegen-extra-tags": {"tfsdk": "description"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Disk.properties.primary += {"x-oapi-codegen-extra-tags": {"tfsdk": "primary"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Disk.properties.size_gigabytes += {"x-oapi-codegen-extra-tags": {"tfsdk": "size_gigabytes"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+
 # Edit description here because it's hard to override nested schema properties
 cat <<<$(jq '.components.schemas.ForwardingRule.properties.entry_protocol.description = "The protocol that traffic must match for the load balancer to forward it. Valid values are \"http\" and \"https\"."' $OPENAPI_FILE) >$OPENAPI_FILE

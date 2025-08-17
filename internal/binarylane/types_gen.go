@@ -1356,16 +1356,16 @@ type DisableSelinuxType string
 // Disk defines model for Disk.
 type Disk struct {
 	// Description A description of this disk.
-	Description *string `json:"description"`
+	Description *string `json:"description" tfsdk:"description"`
 
 	// Id The ID of this disk.
-	Id *int64 `json:"id,omitempty"`
+	Id *int64 `json:"id,omitempty" tfsdk:"id"`
 
 	// Primary A primary disk is treated differently from other disks.
-	Primary *bool `json:"primary,omitempty"`
+	Primary *bool `json:"primary,omitempty" tfsdk:"primary"`
 
 	// SizeGigabytes The size of the disk in GB.
-	SizeGigabytes *float64 `json:"size_gigabytes,omitempty"`
+	SizeGigabytes *float64 `json:"size_gigabytes,omitempty" tfsdk:"size_gigabytes"`
 }
 
 // DistributionFeature

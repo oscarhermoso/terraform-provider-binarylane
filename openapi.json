@@ -7995,24 +7995,36 @@
             "type": "integer",
             "description": "The ID of this disk.",
             "format": "int64",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "id"
+            }
           },
           "size_gigabytes": {
             "type": "number",
             "description": "The size of the disk in GB.",
             "format": "double",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "size_gigabytes"
+            }
           },
           "description": {
             "type": "string",
             "description": "A description of this disk.",
             "nullable": true,
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "description"
+            }
           },
           "primary": {
             "type": "boolean",
             "description": "A primary disk is treated differently from other disks.",
-            "readOnly": true
+            "readOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "primary"
+            }
           }
         }
       },

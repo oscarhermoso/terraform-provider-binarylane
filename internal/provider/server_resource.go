@@ -421,8 +421,13 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 	if (plan.Disk.IsNull() || plan.Disk.IsUnknown()) && plan.Size.Equal(state.Size) {
 		plan.Disk = state.Disk
 	}
+	if (plan.Disks.IsNull() || plan.Disks.IsUnknown()) && plan.Size.Equal(state.Size) {
+		plan.Disks = state.Disks
+	}
 
-	if isAdvFeatChanged(&config.AdvancedFeatures, &state.AdvancedFeatures) {
+	if !isAdvFeatChanged(&config.AdvancedFeatures, &state.AdvancedFeatures) {
+		plan.AdvancedFeatures = state.AdvancedFeatures
+	} else {
 		advFeatResp, err := r.bc.client.GetServersServerIdAvailableAdvancedFeaturesWithResponse(ctx, state.Id.ValueInt64())
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -628,6 +633,14 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	data.PrivateIPv4Addresses, diags = types.ListValueFrom(ctx, types.StringType, privateIpv4Addresses)
 	resp.Diagnostics.Append(diags...)
 
+	disks, diags := types.ListValueFrom(ctx, data.Disks.ElementType(ctx), serverResp.JSON200.Server.Disks)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
+		data.Disks = types.ListUnknown(data.Disks.ElementType(ctx))
+	} else {
+		data.Disks = disks
+	}
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -658,8 +671,14 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// One extra read to check the final state of enabled_advanced_features, needed because
 	// some flags (like "cloud-init") are not set until the server is fully created. See #13
-	diag := r.fetchServerResourceState(ctx, &data)
-	resp.Diagnostics.Append(diag...)
+	diags = r.fetchServerResourceState(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+
+	// Update disks
+	if !config.Disks.IsNull() && !config.Disks.Equal(data.Disks) {
+		diags = r.updateDisks(ctx, &data, config.Disks)
+		resp.Diagnostics.Append(diags...)
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -999,6 +1018,18 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 	}
 
+	// Update disks
+	if !config.Disks.IsNull() && !config.Disks.Equal(plan.Disks) {
+		diags := r.updateDisks(ctx, &state, config.Disks)
+		resp.Diagnostics.Append(diags...)
+
+		// Save updated data into Terraform state
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	// Enable or disable backups
 	if !plan.Backups.Equal(state.Backups) {
 		if plan.Backups.ValueBool() {
@@ -1223,6 +1254,181 @@ func (r *serverResource) updateSourceDestCheck(
 	return nil
 }
 
+func (r *serverResource) updateDisks(ctx context.Context, state *serverResourceModel, disks types.List) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if state.Disk.IsUnknown() || state.Disk.IsNull() {
+		diags.AddError("Error updating disks", "Unable to update disks because the `disk` attribute is unknown or null.")
+		return diags
+	}
+	if state.Disks.IsUnknown() || state.Disks.IsNull() {
+		diags.AddError("Error updating disks", "Unable to update disks because the `disks` attribute is unknown or null.")
+		return diags
+	}
+	if state.Disks.Equal(disks) {
+		tflog.Debug(ctx, "No changes to disks, skipping update")
+		return diags
+	}
+
+	var current []resources.DisksValue
+	diags.Append(state.Disks.ElementsAs(ctx, &current, false)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	var desired []resources.DisksValue
+	diags.Append(disks.ElementsAs(ctx, &desired, false)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// 1. Check that desired disks fit within max VM disk size
+	var totalDesired float64
+	for _, d := range desired {
+		totalDesired += d.SizeGigabytes.ValueFloat64()
+	}
+	if int32(totalDesired) > state.Disk.ValueInt32() {
+		diags.AddError("Error updating disks",
+			fmt.Sprintf("Total desired disk size %d GB exceeds maximum allowed %d GB",
+				int32(totalDesired), state.Disk.ValueInt32()))
+		return diags
+	}
+
+	// Build maps for diffing
+	currentMap := make(map[int64]resources.DisksValue)
+	for _, d := range current {
+		currentMap[d.Id.ValueInt64()] = d
+	}
+
+	desiredMap := make(map[int64]resources.DisksValue)
+	for _, d := range desired {
+		// Only disks with IDs are "existing". New ones will have Id.IsNull()
+		if !d.Id.IsNull() && !d.Id.IsUnknown() {
+			desiredMap[d.Id.ValueInt64()] = d
+		}
+	}
+
+	// Remove unused disks
+	for id := range currentMap {
+		if _, ok := desiredMap[id]; !ok {
+			tflog.Debug(ctx, "Deleting disk", map[string]any{"disk_id": id})
+			resp, err := r.bc.client.PostServersServerIdActionsDeleteDiskWithResponse(ctx, state.Id.ValueInt64(), binarylane.DeleteDisk{
+				DiskId: id,
+				Type:   "delete_disk",
+			})
+			if err != nil {
+				diags.AddError("Error deleting disk", err.Error())
+				return diags
+			}
+			// WIP
+
+			// binarylane_server.example: Modifying... [name=tf-example-basic]
+			// ╷
+			// │ Error: Unexpected HTTP status code deleting disk
+			// │
+			// │   with binarylane_server.example,
+			// │   on main.tf line 13, in resource "binarylane_server" "example":
+			// │   13: resource "binarylane_server" "example" {
+			// │
+			// │ Received 400 Bad Request deleting disk: server_id=523165, disk_id=1. Details:
+			// │ {"type":"https://tools.ietf.org/html/rfc7231#section-6.5.1","title":"One or more validation errors
+			// │ occurred","status":400,"errors":{"disk_id":["May not delete primary disk."]},"message":"May not delete
+			// │ primary disk."}
+			if resp.StatusCode() != http.StatusOK {
+				diags.AddError("Unexpected HTTP status code deleting disk",
+					fmt.Sprintf("Received %s deleting disk: server_id=%s, disk_id=%d. Details: %s",
+						resp.Status(), state.Id.String(), id, resp.Body))
+				return diags
+			}
+			err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *resp.JSON200.Action.Id)
+			if err != nil {
+				diags.AddError("Error waiting for disks to be deleted", err.Error())
+				return diags
+			}
+		}
+	}
+
+	// Downsize disks
+	for id, desiredDisk := range desiredMap {
+		if currentDisk, ok := currentMap[id]; ok {
+			curSize := int32(currentDisk.SizeGigabytes.ValueFloat64())
+			newSize := int32(desiredDisk.SizeGigabytes.ValueFloat64())
+			if newSize < curSize {
+				tflog.Debug(ctx, "Downsizing disk", map[string]any{"disk_id": id, "from": curSize, "to": newSize})
+				resp, err := r.bc.client.PostServersServerIdActionsResizeDiskWithResponse(ctx, state.Id.ValueInt64(), binarylane.ResizeDisk{
+					DiskId:        id,
+					SizeGigabytes: newSize,
+					Type:          "resize_disk",
+				})
+				if err != nil {
+					diags.AddError("Error downsizing disk", err.Error())
+					return diags
+				}
+				if resp.StatusCode() != http.StatusOK {
+					diags.AddError("Unexpected HTTP status code downsizing disks",
+						fmt.Sprintf("Received %s downsizing disks: server_id=%s, disk_id=%d. Details: %s",
+							resp.Status(), state.Id.String(), id, resp.Body))
+					return diags
+				}
+				err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *resp.JSON200.Action.Id)
+				if err != nil {
+					diags.AddError("Error waiting for disks to downsize", err.Error())
+					return diags
+				}
+			}
+		}
+	}
+
+	// Upsize disks
+	for id, desiredDisk := range desiredMap {
+		if currentDisk, ok := currentMap[id]; ok {
+			curSize := int32(currentDisk.SizeGigabytes.ValueFloat64())
+			newSize := int32(desiredDisk.SizeGigabytes.ValueFloat64())
+			if newSize > curSize {
+				tflog.Debug(ctx, "Upsizing disk", map[string]any{"disk_id": id, "from": curSize, "to": newSize})
+				resp, err := r.bc.client.PostServersServerIdActionsResizeDiskWithResponse(ctx, state.Id.ValueInt64(), binarylane.ResizeDisk{
+					DiskId:        id,
+					SizeGigabytes: newSize,
+					Type:          "resize_disk",
+				})
+				if err != nil {
+					diags.AddError("Error upsizing disk", err.Error())
+					return diags
+				}
+				err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *resp.JSON200.Action.Id)
+				if err != nil {
+					diags.AddError("Error waiting for new disks to upsize", err.Error())
+					return diags
+				}
+			}
+		}
+	}
+
+	// 5. Add new disks (those with no ID in desired)
+	for _, desiredDisk := range desired {
+		if desiredDisk.Id.IsNull() || desiredDisk.Id.IsUnknown() {
+			desc := desiredDisk.Description.ValueStringPointer()
+			tflog.Debug(ctx, "Creating new disk", map[string]any{"size": desiredDisk.SizeGigabytes.ValueFloat64()})
+			resp, err := r.bc.client.PostServersServerIdActionsAddDiskWithResponse(ctx, state.Id.ValueInt64(), binarylane.AddDisk{
+				Description:   desc,
+				SizeGigabytes: int32(desiredDisk.SizeGigabytes.ValueFloat64()),
+				Type:          "add_disk",
+			})
+			if err != nil {
+				diags.AddError("Error creating disk", err.Error())
+				return diags
+			}
+			err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *resp.JSON200.Action.Id)
+			if err != nil {
+				diags.AddError("Error waiting for new disk to be added", err.Error())
+				return diags
+			}
+		}
+	}
+
+	return diags
+}
+
 func (r *serverResource) fetchServerResourceState(ctx context.Context, state *serverResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -1282,10 +1488,16 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 	privateIpv4Addresses := []string{}
 
 	for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
-		if v4address.Type == "public" {
+		switch v4address.Type {
+		case "public":
 			publicIpv4Addresses = append(publicIpv4Addresses, v4address.IpAddress)
-		} else if v4address.Type == "private" {
+		case "private":
 			privateIpv4Addresses = append(privateIpv4Addresses, v4address.IpAddress)
+		default:
+			diags.AddError(
+				"Unexpected IP address type",
+				fmt.Sprintf("Received unexpected IP address type '%s' for server: id=%d, name=%s", v4address.Type, *serverResp.JSON200.Server.Id, *serverResp.JSON200.Server.Name),
+			)
 		}
 	}
 
@@ -1305,6 +1517,14 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 		state.PrivateIPv4Addresses = types.ListUnknown(state.PrivateIPv4Addresses.ElementType(ctx))
 	} else {
 		state.PrivateIPv4Addresses = tfPrivateIpv4Addresses
+	}
+
+	disks, diag := types.ListValueFrom(ctx, state.Disks.ElementType(ctx), serverResp.JSON200.Server.Disks)
+	diags.Append(diag...)
+	if diag.HasError() {
+		state.Disks = types.ListUnknown(state.Disks.ElementType(ctx))
+	} else {
+		state.Disks = disks
 	}
 
 	return diags

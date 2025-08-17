@@ -24,7 +24,8 @@ provider_installation {
 4. Build and test the provider
 
 ```sh
-go build -o bin/terraform-provider-binarylane
+# Build with line numbers
+go build -ldflags="-s -w"  -o bin/terraform-provider-binarylane
 go install
 cd examples/basic
 terraform plan

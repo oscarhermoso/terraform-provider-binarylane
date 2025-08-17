@@ -104,6 +104,11 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("binarylane_server.test", "advanced_features.cloud_init", "true"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "advanced_features.qemu_guest_agent", "false"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "advanced_features.uefi_boot", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.#", "1"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.0.id"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.0.description"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.primary", "true"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.size_gigabytes", "20"),
 
 					// Verify data source values
 					resource.TestCheckResourceAttrPair("data.binarylane_server.test", "id", "binarylane_server.test", "id"),
@@ -130,6 +135,11 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "advanced_features.cloud_init", "true"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "advanced_features.qemu_guest_agent", "false"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "advanced_features.uefi_boot", "false"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.#", "1"),
+					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "disks.0.id"),
+					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "disks.0.description"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.0.primary", "true"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.0.size_gigabytes", "20"),
 				),
 			},
 			// Test import by ID
@@ -308,6 +318,85 @@ resource "binarylane_server" "test" {
 					resource.TestCheckResourceAttr("binarylane_server.test", "size", "std-min"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "password", password),
 				),
+			},
+		},
+	})
+}
+
+func TestServerResourceDisks(t *testing.T) {
+	// Must assign a password to the server or Binary Lane will send emails
+	password := GenerateTestPassword(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				Config: providerConfig + `
+resource "binarylane_server" "test" {
+  name     = "tf-test-server-resource"
+  region   = "per"
+  image    = "debian-12"
+  size     = "std-min"
+  password = "` + password + `"
+	public_ipv4_count = 0
+	disks    = [
+		{
+			description = "Primary Disk"
+			size_gigabytes = 9
+		},
+		{
+			description = "Secondary Disk"
+			size_gigabytes = 2
+		},
+		{
+			description = "Tertiary Disk"
+			size_gigabytes = 4
+		}
+	]
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.#", "2"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.0.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.description", "Renamed Primary Disk"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.primary", "true"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.size_gigabytes", "10"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.1.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.description", "Secondary Disk"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.primary", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.size_gigabytes", "5"),
+				),
+			},
+			// Test import by ID
+			{
+				ResourceName:            "binarylane_server.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password", "ssh_keys", "timeouts"},
+			},
+			// Test import by ID
+			{
+				Config: providerConfig + `
+resource "binarylane_server" "test" {
+  name     = "tf-test-server-resource"
+  region   = "per"
+  image    = "debian-12"
+  size     = "std-min"
+  password = "` + password + `"
+	public_ipv4_count = 0
+	disks    = [
+		{
+			description = "Renamed Primary Disk"
+			size_gigabytes = 10
+		},
+		{
+			description = "Secondary Disk"
+			size_gigabytes = 10
+		}
+	]
+}
+`,
 			},
 		},
 	})

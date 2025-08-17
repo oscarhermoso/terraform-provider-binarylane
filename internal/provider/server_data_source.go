@@ -162,6 +162,14 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		data.PrivateIPv4Addresses = tfPrivateIpv4Addresses
 	}
 
+	disks, diag := types.ListValueFrom(ctx, data.Disks.ElementType(ctx), serverResp.JSON200.Server.Disks)
+	diags.Append(diag...)
+	if diag.HasError() {
+		data.Disks = types.ListUnknown(data.Disks.ElementType(ctx))
+	} else {
+		data.Disks = disks
+	}
+
 	// Get user data script
 	userDataResp, err := d.bc.client.GetServersServerIdUserDataWithResponse(ctx, data.Id.ValueInt64())
 	if err != nil {

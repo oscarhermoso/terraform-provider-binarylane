@@ -33,6 +33,7 @@ data "binarylane_server" "example" {
   - must be a multiple of 5
   - \> 60 GB must be a multiple of 10
   - \> 200 GB must be a multiple of 100
+- `disks` (Attributes List) A list of the disks that are currently attached to the server. (see [below for nested schema](#nestedatt--disks))
 - `image` (String) The slug of the selected operating system, such as `debian-12`. You can fetch a full list of images from the BinaryLane API.
 - `memory` (Number) The total memory in MB for this server. Leave null to accept the default size. Valid values:
   - must be a multiple of 128
@@ -66,3 +67,14 @@ Read-Only:
 - `qemu_guest_agent` (Boolean)
 - `uefi_boot` (Boolean)
 - `unset_uuid` (Boolean)
+
+
+<a id="nestedatt--disks"></a>
+### Nested Schema for `disks`
+
+Read-Only:
+
+- `description` (String) A description of this disk.
+- `id` (Number) The ID of this disk.
+- `primary` (Boolean) A primary disk is treated differently from other disks.
+- `size_gigabytes` (Number) The size of the disk in GB.
