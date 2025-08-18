@@ -180,15 +180,15 @@ func init() {
 
 				loadBalancers := *listResp.JSON200.LoadBalancers
 				for _, lb := range loadBalancers {
-					if strings.HasPrefix(*lb.Name, "tf-test-") {
-						deleteResp, err := client.DeleteLoadBalancersLoadBalancerIdWithResponse(ctx, *lb.Id)
+					if strings.HasPrefix(lb.Name, "tf-test-") {
+						deleteResp, err := client.DeleteLoadBalancersLoadBalancerIdWithResponse(ctx, lb.Id)
 						if err != nil {
-							return fmt.Errorf("Error deleting load balancer %d for test sweep: %w", *lb.Id, err)
+							return fmt.Errorf("Error deleting load balancer %d for test sweep: %w", lb.Id, err)
 						}
 						if deleteResp.StatusCode() != http.StatusNoContent {
-							return fmt.Errorf("Unexpected status %d deleting load balancer %d in test sweep: %s", deleteResp.StatusCode(), *lb.Id, deleteResp.Body)
+							return fmt.Errorf("Unexpected status %d deleting load balancer %d in test sweep: %s", deleteResp.StatusCode(), lb.Id, deleteResp.Body)
 						}
-						log.Println("Deleted load balancer during test sweep:", *lb.Id)
+						log.Println("Deleted load balancer during test sweep:", lb.Id)
 					}
 				}
 				if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages == nil || listResp.JSON200.Links.Pages.Next == nil {

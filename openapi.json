@@ -8,7 +8,7 @@
       "url": "https://support.binarylane.com.au",
       "email": "support@binarylane.com.au"
     },
-    "version": "0.32.0",
+    "version": "0.32.1",
     "x-logo": {
       "url": "https://www.binarylane.com.au/res/images/binarylane/logo.png",
       "backgroundColor": "#000000",
@@ -7590,7 +7590,7 @@
           "forwarding_rules": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ForwardingRule"
+              "$ref": "#/components/schemas/ForwardingRuleRequest"
             },
             "description": "The rules that control which traffic the load balancer will forward to servers in the pool. Leave null to accept a default \"HTTP\" only forwarding rule.",
             "nullable": true,
@@ -7601,7 +7601,7 @@
           "health_check": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/HealthCheck"
+                "$ref": "#/components/schemas/HealthCheckRequest"
               }
             ],
             "description": "The rules that determine which servers are considered 'healthy' and in the server pool for the load balancer. Leave this null to accept appropriate defaults based on the forwarding_rules.",
@@ -8542,6 +8542,25 @@
           }
         }
       },
+      "ForwardingRuleRequest": {
+        "required": [
+          "entry_protocol"
+        ],
+        "type": "object",
+        "properties": {
+          "entry_protocol": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LoadBalancerRuleProtocol"
+              }
+            ],
+            "description": "The protocol that traffic must match for this load balancer to forward traffic according to this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| http | The load balancer will forward HTTP traffic that matches this rule. |\n| https | The load balancer will forward HTTPS traffic that matches this rule. |\n\n",
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "entry_protocol"
+            }
+          }
+        }
+      },
       "ForwardingRulesRequest": {
         "required": [
           "forwarding_rules"
@@ -8551,13 +8570,44 @@
           "forwarding_rules": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ForwardingRule"
+              "$ref": "#/components/schemas/ForwardingRuleRequest"
             },
             "description": "The rules that control which traffic the load balancer will forward to servers in the pool."
           }
         }
       },
       "HealthCheck": {
+        "required": [
+          "path",
+          "protocol"
+        ],
+        "type": "object",
+        "properties": {
+          "protocol": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HealthCheckProtocol"
+              }
+            ],
+            "description": "The protocol used for the health check.\n\n| Value | Description |\n| ----- | ----------- |\n| http | The health check will be performed via HTTP. |\n| https | The health check will be performed via HTTPS. |\n| both | The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol. |\n\n"
+          },
+          "path": {
+            "minLength": 1,
+            "type": "string",
+            "description": "The path to the health check endpoint."
+          }
+        }
+      },
+      "HealthCheckProtocol": {
+        "type": "string",
+        "description": "\n| Value | Description |\n| ----- | ----------- |\n| http | The health check will be performed via HTTP. |\n| https | The health check will be performed via HTTPS. |\n| both | The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol. |\n\n",
+        "x-enum-descriptions": [
+          "The health check will be performed via HTTP.",
+          "The health check will be performed via HTTPS.",
+          "The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol."
+        ]
+      },
+      "HealthCheckRequest": {
         "type": "object",
         "properties": {
           "protocol": {
@@ -8576,15 +8626,6 @@
             "nullable": true
           }
         }
-      },
-      "HealthCheckProtocol": {
-        "type": "string",
-        "description": "\n| Value | Description |\n| ----- | ----------- |\n| http | The health check will be performed via HTTP. |\n| https | The health check will be performed via HTTPS. |\n| both | The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol. |\n\n",
-        "x-enum-descriptions": [
-          "The health check will be performed via HTTP.",
-          "The health check will be performed via HTTPS.",
-          "The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol."
-        ]
       },
       "Host": {
         "required": [
@@ -9380,21 +9421,18 @@
             "type": "integer",
             "description": "The ID of the load balancer.",
             "format": "int64",
-            "readOnly": true,
             "x-cli-format": 1
           },
           "name": {
             "minLength": 1,
             "type": "string",
             "description": "The hostname of the load balancer.",
-            "readOnly": true,
             "x-cli-format": 2
           },
           "ip": {
             "minLength": 1,
             "type": "string",
             "description": "The IPv4 address of the load balancer.",
-            "readOnly": true,
             "x-cli-format": 4
           },
           "status": {
@@ -9403,21 +9441,19 @@
                 "$ref": "#/components/schemas/LoadBalancerStatus"
               }
             ],
-            "readOnly": true
+            "description": "The current status of the load balancer.\n\n| Value | Description |\n| ----- | ----------- |\n| new | The load balancer is currently being built and is not ready to accept connections. |\n| active | The load balancer is available. |\n| errored | The load balancer is in an errored state. |\n\n"
           },
           "created_at": {
             "type": "string",
             "description": "The date and time in ISO8601 format of the creation of the load balancer.",
-            "format": "date-time",
-            "readOnly": true
+            "format": "date-time"
           },
           "forwarding_rules": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ForwardingRule"
             },
-            "description": "The rules that control which traffic the load balancer will forward to servers in the pool.",
-            "readOnly": true
+            "description": "The rules that control which traffic the load balancer will forward to servers in the pool."
           },
           "health_check": {
             "allOf": [
@@ -9426,7 +9462,6 @@
               }
             ],
             "description": "The rules that determine which servers are considered 'healthy' and in the server pool for the load balancer.",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "health_check"
             }
@@ -9439,7 +9474,6 @@
             ],
             "description": "The region the load balancer is located in. If this value is null the load balancer is an 'AnyCast' load balancer.",
             "nullable": true,
-            "readOnly": true,
             "x-cli-format": 3
           },
           "server_ids": {
@@ -9448,8 +9482,7 @@
               "type": "integer",
               "format": "int64"
             },
-            "description": "The server IDs of the servers that are currently in the load balancer pool (regardless of their current 'health').",
-            "readOnly": true
+            "description": "The server IDs of the servers that are currently in the load balancer pool (regardless of their current 'health')."
           }
         }
       },
@@ -9467,8 +9500,7 @@
               "type": "string"
             },
             "description": "The slugs of regions where this load balancer option is available. If this is an Anycast load balancer option this will be null.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "anycast": {
             "type": "boolean",
@@ -9478,8 +9510,7 @@
           "price_monthly": {
             "type": "number",
             "description": "Monthly Price in AU$.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "price_hourly": {
             "type": "number",
@@ -12290,7 +12321,7 @@
           "forwarding_rules": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ForwardingRule"
+              "$ref": "#/components/schemas/ForwardingRuleRequest"
             },
             "description": "The rules that control which traffic the load balancer will forward to servers in the pool. Leave null to accept a default \"HTTP\" only forwarding rule.",
             "nullable": true
@@ -12298,7 +12329,7 @@
           "health_check": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/HealthCheck"
+                "$ref": "#/components/schemas/HealthCheckRequest"
               }
             ],
             "description": "The rules that determine which servers are considered 'healthy' and in the server pool for the load balancer. Leave this null to accept appropriate defaults based on the forwarding_rules.",

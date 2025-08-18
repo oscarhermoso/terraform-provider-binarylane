@@ -26,8 +26,8 @@ func LoadBalancerResourceSchema(ctx context.Context) schema.Schema {
 					Attributes: map[string]schema.Attribute{
 						"entry_protocol": schema.StringAttribute{
 							Required:            true,
-							Description:         "The protocol that traffic must match for the load balancer to forward it. Valid values are \"http\" and \"https\".",
-							MarkdownDescription: "The protocol that traffic must match for the load balancer to forward it. Valid values are \"http\" and \"https\".",
+							Description:         "The protocol that traffic must match for this load balancer to forward traffic according to this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| http | The load balancer will forward HTTP traffic that matches this rule. |\n| https | The load balancer will forward HTTPS traffic that matches this rule. |\n\n",
+							MarkdownDescription: "The protocol that traffic must match for this load balancer to forward traffic according to this rule.\n\n| Value | Description |\n| ----- | ----------- |\n| http | The load balancer will forward HTTP traffic that matches this rule. |\n| https | The load balancer will forward HTTPS traffic that matches this rule. |\n\n",
 							Validators: []validator.String{
 								stringvalidator.OneOf(
 									"http",
