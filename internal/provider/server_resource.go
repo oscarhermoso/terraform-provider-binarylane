@@ -256,6 +256,40 @@ func serverSchema(ctx context.Context) schema.Schema {
 		},
 	}
 
+	ipv6Description := "If `true` this will enable ipv6. By default, ipv6 are disabled."
+	s.Attributes["ipv6"] = schema.BoolAttribute{
+		Description:         ipv6Description,
+		MarkdownDescription: ipv6Description,
+		Optional:            true,
+		Computed:            true,
+		Default:             booldefault.StaticBool(false), // Add default to ipv6
+	}
+
+	publicIpv6AddressesDescription := "The public IPv6 addresses assigned to the server."
+	s.Attributes["public_ipv6_addresses"] = schema.ListAttribute{
+		Description:         publicIpv6AddressesDescription,
+		MarkdownDescription: publicIpv6AddressesDescription,
+		ElementType:         types.StringType,
+		// read only
+		Optional: false,
+		Required: false,
+		Computed: true,
+	}
+
+	privateIpv6AddressesDescription := "The private IPv6 addresses assigned to the server."
+	s.Attributes["private_ipv6_addresses"] = schema.ListAttribute{
+		Description:         privateIpv6AddressesDescription,
+		MarkdownDescription: privateIpv6AddressesDescription,
+		ElementType:         types.StringType,
+		// read only
+		Optional: false,
+		Required: false,
+		Computed: true,
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.UseStateForUnknown(),
+		},
+	}
+
 	s.Attributes["permalink"] = schema.StringAttribute{
 		Description:         "A randomly generated two-word identifier assigned to servers in regions that support this feature",
 		MarkdownDescription: "A randomly generated two-word identifier assigned to servers in regions that support this feature",
@@ -414,6 +448,17 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		)
 	}
 
+	if !plan.Ipv6.Equal(state.Ipv6) {
+		if plan.Ipv6.ValueBool() {
+			plan.PublicIpv6Addresses = types.ListUnknown(state.PublicIpv6Addresses.ElementType(ctx))
+			plan.PrivateIpv6Addresses = types.ListUnknown(state.PrivateIpv6Addresses.ElementType(ctx))
+		} else {
+			plan.PublicIpv6Addresses = types.ListNull(state.PublicIpv6Addresses.ElementType(ctx))
+			plan.PrivateIpv6Addresses = types.ListNull(state.PrivateIpv6Addresses.ElementType(ctx))
+		}
+	}
+
+
 	// Use state for unknown disk/memory values, as long as server size is the same
 	if (plan.Memory.IsNull() || plan.Memory.IsUnknown()) && plan.Size.Equal(state.Size) {
 		plan.Memory = state.Memory
@@ -527,6 +572,7 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 			Ipv4Addresses: data.PublicIpv4Count.ValueInt32Pointer(),
 		},
 		Backups: data.Backups.ValueBoolPointer(),
+		Ipv6:    data.Ipv6.ValueBoolPointer(),
 	}
 
 	if !data.Memory.IsNull() && !data.Memory.IsUnknown() {
@@ -584,6 +630,7 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	data.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
 	data.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
 	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
+	data.Ipv6 = types.BoolValue(len(serverResp.JSON200.Server.Networks.V6) > 0)
 	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
 	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
@@ -888,6 +935,43 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		if resp.Diagnostics.HasError() {
 			return
 		}
+	}
+
+	// Change ipv6
+	if !plan.Ipv6.Equal(state.Ipv6) {
+		ipv6Resp, err := r.bc.client.PostServersServerIdActionsChangeIpv6WithResponse(
+			ctx,
+			state.Id.ValueInt64(),
+			binarylane.PostServersServerIdActionsChangeIpv6JSONRequestBody{
+				Type:    "change_ipv6",
+				Enabled: plan.Ipv6.ValueBool(),
+			},
+		)
+		if err != nil {
+			resp.Diagnostics.AddError("Error changing IPv6", err.Error())
+			return
+		}
+
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *ipv6Resp.JSON200.Action.Id)
+		if err != nil {
+			resp.Diagnostics.AddError("Error waiting for changing IPv6", err.Error())
+			return
+		}
+
+		state.Ipv6 = plan.Ipv6
+		state.PublicIpv6Addresses = plan.PublicIpv6Addresses
+		state.PrivateIpv6Addresses = plan.PrivateIpv6Addresses
+
+		if state.PublicIpv6Addresses.IsUnknown() || state.PrivateIpv6Addresses.IsUnknown() || listContainsUnknown(ctx, state.PublicIpv6Addresses) || listContainsUnknown(ctx, state.PrivateIpv6Addresses) {
+			refreshNeeded = true
+		}
+
+		// Save updated data into Terraform state
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 	}
 
 	// Rebuild operation
@@ -1258,6 +1342,8 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 	state.Memory = types.Int32Value(*serverResp.JSON200.Server.Memory)
 	state.Disk = types.Int32Value(*serverResp.JSON200.Server.Disk)
 	state.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
+	state.Ipv6 = types.BoolValue(len(serverResp.JSON200.Server.Networks.V6) > 0)
+
 
 	advFeat := *serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
 	state.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
@@ -1305,6 +1391,33 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 		state.PrivateIPv4Addresses = types.ListUnknown(state.PrivateIPv4Addresses.ElementType(ctx))
 	} else {
 		state.PrivateIPv4Addresses = tfPrivateIpv4Addresses
+	}
+
+	publicIpv6Addresses := []string{}
+	privateIpv6Addresses := []string{}
+
+	for _, v6address := range serverResp.JSON200.Server.Networks.V6 {
+		if v6address.Type == "public" {
+			publicIpv6Addresses = append(publicIpv6Addresses, v6address.IpAddress)
+		} else {
+			privateIpv6Addresses = append(privateIpv6Addresses, v6address.IpAddress)
+		}
+	}
+
+	tfPublicIpv6Addresses, diag := types.ListValueFrom(ctx, types.StringType, publicIpv6Addresses)
+	diags.Append(diag...)
+	if (diag.HasError() || tfPublicIpv6Addresses.IsNull()) {
+		state.PublicIpv6Addresses = types.ListUnknown(state.PublicIpv6Addresses.ElementType(ctx))
+	} else {
+		state.PublicIpv6Addresses = tfPublicIpv6Addresses
+	}
+
+	tfPrivateIpv6Addresses, diag := types.ListValueFrom(ctx, types.StringType, privateIpv6Addresses)
+	diags.Append(diag...)
+	if (diag.HasError() || tfPrivateIpv6Addresses.IsNull()) {
+		state.PrivateIpv6Addresses = types.ListUnknown(state.PrivateIpv6Addresses.ElementType(ctx))
+	} else {
+		state.PrivateIpv6Addresses = tfPrivateIpv6Addresses
 	}
 
 	return diags

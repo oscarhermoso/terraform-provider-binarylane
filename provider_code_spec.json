@@ -835,6 +835,13 @@
 						}
 					},
 					{
+						"name": "ipv6",
+						"bool": {
+							"computed_optional_required": "computed_optional",
+							"description": "If true this will enable IPv6 for this server."
+						}
+					},
+					{
 						"name": "name",
 						"string": {
 							"computed_optional_required": "computed_optional",

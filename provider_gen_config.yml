@@ -40,7 +40,6 @@ resources:
               default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to
               disable deployment of default keys.
       ignores:
-        - ipv6
         - licenses
         - links
         - server

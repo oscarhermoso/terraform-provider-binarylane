@@ -105,6 +105,12 @@ func ServerResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "The slug of the selected operating system.",
 				MarkdownDescription: "The slug of the selected operating system.",
 			},
+			"ipv6": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         "If true this will enable IPv6 for this server.",
+				MarkdownDescription: "If true this will enable IPv6 for this server.",
+			},
 			"name": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
@@ -164,6 +170,7 @@ type ServerModel struct {
 	Backups          types.Bool            `tfsdk:"backups"`
 	Id               types.Int64           `tfsdk:"id"`
 	Image            types.String          `tfsdk:"image"`
+	Ipv6             types.Bool            `tfsdk:"ipv6"`
 	Name             types.String          `tfsdk:"name"`
 	PortBlocking     types.Bool            `tfsdk:"port_blocking"`
 	Region           types.String          `tfsdk:"region"`

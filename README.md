@@ -22,7 +22,7 @@ Planned features:
   - [x] "Advanced Features"
   - [ ] Customised Backups
   - [ ] Software
-  - [ ] IPV6
+  - [x] IPV6
   - [ ] Alerts
 - [x] SSH Keys
 - [x] Virtual Private Cloud

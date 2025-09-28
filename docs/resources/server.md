@@ -44,6 +44,7 @@ resource "binarylane_server" "example" {
   - must be a multiple of 5
   - \> 60 GB must be a multiple of 10
   - \> 200 GB must be a multiple of 100
+- `ipv6` (Boolean) If `true` this will enable ipv6. By default, ipv6 are disabled.
 - `memory` (Number) The total memory in MB for this server. Leave null to accept the default size. Valid values:
   - must be a multiple of 128
   - \> 2048 MB must be a multiple of 1024
@@ -64,7 +65,9 @@ resource "binarylane_server" "example" {
 - `password_change_supported` (Boolean) If this is true then the `password` attribute can be changed with Terraform. If this is false then the `password` attribute can only be replaced with a null/empty value, which will clear the root/administrator password allowing the password to be changed via the web console.
 - `permalink` (String) A randomly generated two-word identifier assigned to servers in regions that support this feature
 - `private_ipv4_addresses` (List of String) The private IPv4 addresses assigned to the server.
+- `private_ipv6_addresses` (List of String) The private IPv6 addresses assigned to the server.
 - `public_ipv4_addresses` (List of String) The public IPv4 addresses assigned to the server.
+- `public_ipv6_addresses` (List of String) The public IPv6 addresses assigned to the server.
 
 <a id="nestedatt--advanced_features"></a>
 ### Nested Schema for `advanced_features`

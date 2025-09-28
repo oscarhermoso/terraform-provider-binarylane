@@ -34,6 +34,7 @@ data "binarylane_server" "example" {
   - \> 60 GB must be a multiple of 10
   - \> 200 GB must be a multiple of 100
 - `image` (String) The slug of the selected operating system, such as `debian-12`. You can fetch a full list of images from the BinaryLane API.
+- `ipv6` (Boolean) If `true` this will enable ipv6. By default, ipv6 are disabled.
 - `memory` (Number) The total memory in MB for this server. Leave null to accept the default size. Valid values:
   - must be a multiple of 128
   - \> 2048 MB must be a multiple of 1024
@@ -43,7 +44,9 @@ data "binarylane_server" "example" {
 - `permalink` (String) A randomly generated two-word identifier assigned to servers in regions that support this feature
 - `port_blocking` (Boolean) Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.
 - `private_ipv4_addresses` (List of String) The private IPv4 addresses assigned to the server.
+- `private_ipv6_addresses` (List of String) The private IPv6 addresses assigned to the server.
 - `public_ipv4_addresses` (List of String) The public IPv4 addresses assigned to the server.
+- `public_ipv6_addresses` (List of String) The public IPv6 addresses assigned to the server.
 - `region` (String) The slug of the selected region.
 - `size` (String) The slug of the selected size.
 - `source_and_destination_check` (Boolean) This attribute can only be set if your server also has a `vpc_id` attribute set. When enabled (which is `true` by default), your server will only be able to send or receive packets that are directly addressed to one of the IP addresses associated with the Cloud Server. Generally, this is desirable behaviour because it prevents IP conflicts and other hard-to-diagnose networking faults due to incorrect network configuration. When `source_and_destination_check` is `false`, your Cloud Server will be able to send and receive packets addressed to any server. This is typically used when you want to use your Cloud Server as a VPN endpoint, a NAT server to provide internet access, or IP forwarding.
