@@ -31,6 +31,8 @@ type serverDataModel struct {
 	resources.ServerModel
 	PublicIpv4Addresses       types.List   `tfsdk:"public_ipv4_addresses"`
 	PrivateIPv4Addresses      types.List   `tfsdk:"private_ipv4_addresses"`
+	PublicIpv6Addresses       types.List   `tfsdk:"public_ipv6_addresses"`
+	PrivateIpv6Addresses      types.List   `tfsdk:"private_ipv6_addresses"`
 	Permalink                 types.String `tfsdk:"permalink"`
 	Memory                    types.Int32  `tfsdk:"memory"`
 	Disk                      types.Int32  `tfsdk:"disk"`
@@ -109,6 +111,7 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
 	data.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
 	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
+	data.Ipv6 = types.BoolValue(len(serverResp.JSON200.Server.Networks.V6) > 0)
 	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
 	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
@@ -160,6 +163,33 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		data.PrivateIPv4Addresses = types.ListUnknown(data.PrivateIPv4Addresses.ElementType(ctx))
 	} else {
 		data.PrivateIPv4Addresses = tfPrivateIpv4Addresses
+	}
+
+	publicIpv6Addresses := []string{}
+	privateIpv6Addresses := []string{}
+
+	for _, v6address := range serverResp.JSON200.Server.Networks.V6 {
+		if v6address.Type == "public" {
+			publicIpv6Addresses = append(publicIpv6Addresses, v6address.IpAddress)
+		} else {
+			privateIpv6Addresses = append(privateIpv6Addresses, v6address.IpAddress)
+		}
+	}
+
+	tfPublicIpv6Addresses, diag := types.ListValueFrom(ctx, types.StringType, publicIpv6Addresses)
+	diags.Append(diag...)
+	if diag.HasError() {
+		data.PublicIpv6Addresses = types.ListUnknown(data.PublicIpv6Addresses.ElementType(ctx))
+	} else {
+		data.PublicIpv6Addresses = tfPublicIpv6Addresses
+	}
+
+	tfPrivateIpv6Addresses, diag := types.ListValueFrom(ctx, types.StringType, privateIpv6Addresses)
+	diags.Append(diag...)
+	if diag.HasError() {
+		data.PrivateIpv6Addresses = types.ListUnknown(data.PrivateIpv6Addresses.ElementType(ctx))
+	} else {
+		data.PrivateIpv6Addresses = tfPrivateIpv6Addresses
 	}
 
 	// Get user data script
