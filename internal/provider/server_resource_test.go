@@ -104,6 +104,8 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("binarylane_server.test", "advanced_features.cloud_init", "true"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "advanced_features.qemu_guest_agent", "false"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "advanced_features.uefi_boot", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "ipv6", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv6_addresses.#", "0"),
 
 					// Verify data source values
 					resource.TestCheckResourceAttrPair("data.binarylane_server.test", "id", "binarylane_server.test", "id"),
@@ -130,6 +132,8 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "advanced_features.cloud_init", "true"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "advanced_features.qemu_guest_agent", "false"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "advanced_features.uefi_boot", "false"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "ipv6", "false"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "public_ipv6_addresses.#", "0"),
 				),
 			},
 			// Test import by ID
@@ -180,6 +184,7 @@ resource "binarylane_server" "test" {
 	advanced_features = {
 	  emulated_hyperv = true
 	}
+	ipv6							= true
 
 	# source_and_destination_check =  null  # defaults to null
 	# backups				  = false  # defaults to false
@@ -214,6 +219,9 @@ echo "Hello Whitespace" > /var/tmp/output.txt
 
 
 `),
+					resource.TestCheckResourceAttr("binarylane_server.test", "ipv6", "true"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv6_addresses.#", "1"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "private_ipv6_addresses.#", "1"),
 				),
 			},
 			// Change password testing (Cannot run at same time as Rebuild operation, so it has it's own test)

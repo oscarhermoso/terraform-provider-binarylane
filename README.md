@@ -20,9 +20,9 @@ Planned features:
   - [x] Cloud Init
   - [x] Updating server properties
   - [x] "Advanced Features"
+  - [x] IPV6
   - [ ] Customised Backups
   - [ ] Software
-  - [x] IPV6
   - [ ] Alerts
 - [x] SSH Keys
 - [x] Virtual Private Cloud

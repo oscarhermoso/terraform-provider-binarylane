@@ -1915,6 +1915,11 @@ type License struct {
 
 // LicensedSoftware defines model for LicensedSoftware.
 type LicensedSoftware struct {
+	// Incompatible Software that is incompatible with the server will be automatically removed at the next plan change.
+	// Servers may have incompatible software due to changes made by support. Software is not incompatible merely because it is disabled;
+	// disabled software may be retained by servers that already have it, incompatible software will be removed.
+	Incompatible bool `json:"incompatible"`
+
 	// LicenceCount The current licence count for the software.
 	LicenceCount int32 `json:"licence_count"`
 
@@ -2316,7 +2321,7 @@ type Resize struct {
 	// ChangeImage This may be left null to keep the current base image for the server. If this is provided the server disks will be destroyed and the server will be rebuilt from the selected image.
 	ChangeImage *ChangeImage `json:"change_image"`
 
-	// ChangeLicenses This may be left null to keep the current licenses for the server. If this is provided any licenses that are not included will be removed.
+	// ChangeLicenses This may be left null to keep the current licenses for the server. If this is provided any licenses that are not included will be removed. Any licences that are invalid will be removed regardless, see the documentation for `servers/{server_id}/software` for more information.
 	ChangeLicenses *ChangeLicenses `json:"change_licenses"`
 
 	// Options If this is null and the server has no selected size options the defaults for the size will be used. If this is null and the server has currently selected size options those will be preserved. If this is provided any option fields that are not included will be removed from the existing server.

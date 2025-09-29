@@ -44,7 +44,7 @@ resource "binarylane_server" "example" {
   - must be a multiple of 5
   - \> 60 GB must be a multiple of 10
   - \> 200 GB must be a multiple of 100
-- `ipv6` (Boolean) If `true` this will enable ipv6. By default, ipv6 are disabled.
+- `ipv6` (Boolean) If `true` this will add a public and private IPv6 address to the server. By default, IPv6 is disabled.
 - `memory` (Number) The total memory in MB for this server. Leave null to accept the default size. Valid values:
   - must be a multiple of 128
   - \> 2048 MB must be a multiple of 1024

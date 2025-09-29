@@ -256,7 +256,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 		},
 	}
 
-	ipv6Description := "If `true` this will enable ipv6. By default, ipv6 are disabled."
+	ipv6Description := "If `true` this will add a public and private IPv6 address to the server. By default, IPv6 is disabled."
 	s.Attributes["ipv6"] = schema.BoolAttribute{
 		Description:         ipv6Description,
 		MarkdownDescription: ipv6Description,
@@ -457,7 +457,6 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 			plan.PrivateIpv6Addresses = types.ListNull(state.PrivateIpv6Addresses.ElementType(ctx))
 		}
 	}
-
 
 	// Use state for unknown disk/memory values, as long as server size is the same
 	if (plan.Memory.IsNull() || plan.Memory.IsUnknown()) && plan.Size.Equal(state.Size) {
@@ -1344,7 +1343,6 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 	state.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
 	state.Ipv6 = types.BoolValue(len(serverResp.JSON200.Server.Networks.V6) > 0)
 
-
 	advFeat := *serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
 	state.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
 		resources.AdvancedFeaturesValue{}.AttributeTypes(ctx),
@@ -1406,7 +1404,7 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 
 	tfPublicIpv6Addresses, diag := types.ListValueFrom(ctx, types.StringType, publicIpv6Addresses)
 	diags.Append(diag...)
-	if (diag.HasError() || tfPublicIpv6Addresses.IsNull()) {
+	if diag.HasError() || tfPublicIpv6Addresses.IsNull() {
 		state.PublicIpv6Addresses = types.ListUnknown(state.PublicIpv6Addresses.ElementType(ctx))
 	} else {
 		state.PublicIpv6Addresses = tfPublicIpv6Addresses
@@ -1414,7 +1412,7 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 
 	tfPrivateIpv6Addresses, diag := types.ListValueFrom(ctx, types.StringType, privateIpv6Addresses)
 	diags.Append(diag...)
-	if (diag.HasError() || tfPrivateIpv6Addresses.IsNull()) {
+	if diag.HasError() || tfPrivateIpv6Addresses.IsNull() {
 		state.PrivateIpv6Addresses = types.ListUnknown(state.PrivateIpv6Addresses.ElementType(ctx))
 	} else {
 		state.PrivateIpv6Addresses = tfPrivateIpv6Addresses

@@ -8,7 +8,7 @@
       "url": "https://support.binarylane.com.au",
       "email": "support@binarylane.com.au"
     },
-    "version": "0.32.1",
+    "version": "0.33.0",
     "x-logo": {
       "url": "https://www.binarylane.com.au/res/images/binarylane/logo.png",
       "backgroundColor": "#000000",
@@ -9336,6 +9336,7 @@
       },
       "LicensedSoftware": {
         "required": [
+          "incompatible",
           "licence_count",
           "software"
         ],
@@ -9353,6 +9354,10 @@
             "type": "integer",
             "description": "The current licence count for the software.",
             "format": "int32"
+          },
+          "incompatible": {
+            "type": "boolean",
+            "description": "Software that is incompatible with the server will be automatically removed at the next plan change.\nServers may have incompatible software due to changes made by support. Software is not incompatible merely because it is disabled;\ndisabled software may be retained by servers that already have it, incompatible software will be removed."
           }
         }
       },
@@ -10268,7 +10273,7 @@
                 "$ref": "#/components/schemas/ChangeLicenses"
               }
             ],
-            "description": "This may be left null to keep the current licenses for the server. If this is provided any licenses that are not included will be removed.",
+            "description": "This may be left null to keep the current licenses for the server. If this is provided any licenses that are not included will be removed. Any licences that are invalid will be removed regardless, see the documentation for `servers/{server_id}/software` for more information.",
             "nullable": true
           },
           "pre_action_backup": {
