@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"maps"
 	"net/http"
+	"slices"
 	"strings"
 	"terraform-provider-binarylane/internal/binarylane"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestLoadBalancerResource(t *testing.T) {
@@ -50,8 +53,8 @@ data "binarylane_load_balancer" "test" {
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "name", "tf-test-lb"),
 					resource.TestCheckNoResourceAttr("binarylane_load_balancer.test", "region"),
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "server_ids.#", "2"),
-					resource.TestCheckResourceAttrPair("binarylane_load_balancer.test", "server_ids.0", "binarylane_server.test.0", "id"),
-					resource.TestCheckResourceAttrPair("binarylane_load_balancer.test", "server_ids.1", "binarylane_server.test.1", "id"),
+					testCheckIfResourceAttrContainsAttr("binarylane_load_balancer.test", "server_ids", "binarylane_server.test.0", "id"),
+					testCheckIfResourceAttrContainsAttr("binarylane_load_balancer.test", "server_ids", "binarylane_server.test.1", "id"),
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "forwarding_rules.#", "1"),
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "forwarding_rules.0.entry_protocol", "http"),
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "health_check.path", "/"),
@@ -63,8 +66,8 @@ data "binarylane_load_balancer" "test" {
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "name", "tf-test-lb"),
 					resource.TestCheckNoResourceAttr("data.binarylane_load_balancer.test", "region"),
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "server_ids.#", "2"),
-					resource.TestCheckResourceAttrPair("data.binarylane_load_balancer.test", "server_ids.0", "binarylane_server.test.0", "id"),
-					resource.TestCheckResourceAttrPair("data.binarylane_load_balancer.test", "server_ids.1", "binarylane_server.test.1", "id"),
+					testCheckIfResourceAttrContainsAttr("data.binarylane_load_balancer.test", "server_ids", "binarylane_server.test.0", "id"),
+					testCheckIfResourceAttrContainsAttr("data.binarylane_load_balancer.test", "server_ids", "binarylane_server.test.1", "id"),
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "forwarding_rules.#", "1"),
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "forwarding_rules.0.entry_protocol", "http"),
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "health_check.path", "/"),
@@ -86,6 +89,7 @@ data "binarylane_load_balancer" "test" {
 				ImportStateVerify: true,
 			},
 			{
+				Taint: []string{"binarylane_server.test[0]"},
 				Config: providerConfig + `
 resource "binarylane_server" "test" {
   count             = 2
@@ -120,8 +124,8 @@ data "binarylane_load_balancer" "test" {
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "name", "tf-test-lb"),
 					resource.TestCheckNoResourceAttr("binarylane_load_balancer.test", "region"),
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "server_ids.#", "2"),
-					resource.TestCheckResourceAttrPair("binarylane_load_balancer.test", "server_ids.0", "binarylane_server.test.0", "id"),
-					resource.TestCheckResourceAttrPair("binarylane_load_balancer.test", "server_ids.1", "binarylane_server.test.1", "id"),
+					testCheckIfResourceAttrContainsAttr("binarylane_load_balancer.test", "server_ids", "binarylane_server.test.0", "id"),
+					testCheckIfResourceAttrContainsAttr("binarylane_load_balancer.test", "server_ids", "binarylane_server.test.1", "id"),
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "forwarding_rules.#", "1"),
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "forwarding_rules.0.entry_protocol", "https"),
 					resource.TestCheckResourceAttr("binarylane_load_balancer.test", "health_check.path", "/test-health"),
@@ -133,8 +137,8 @@ data "binarylane_load_balancer" "test" {
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "name", "tf-test-lb"),
 					resource.TestCheckNoResourceAttr("data.binarylane_load_balancer.test", "region"),
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "server_ids.#", "2"),
-					resource.TestCheckResourceAttrPair("data.binarylane_load_balancer.test", "server_ids.0", "binarylane_server.test.0", "id"),
-					resource.TestCheckResourceAttrPair("data.binarylane_load_balancer.test", "server_ids.1", "binarylane_server.test.1", "id"),
+					testCheckIfResourceAttrContainsAttr("data.binarylane_load_balancer.test", "server_ids", "binarylane_server.test.0", "id"),
+					testCheckIfResourceAttrContainsAttr("data.binarylane_load_balancer.test", "server_ids", "binarylane_server.test.1", "id"),
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "forwarding_rules.#", "1"),
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "forwarding_rules.0.entry_protocol", "https"),
 					resource.TestCheckResourceAttr("data.binarylane_load_balancer.test", "health_check.path", "/test-health"),
@@ -201,4 +205,66 @@ func init() {
 			return nil
 		},
 	})
+}
+
+func primaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
+	ms := s.RootModule()
+
+	rs, ok := ms.Resources[name]
+	if !ok {
+		return nil, fmt.Errorf("Not found: %s in %s, resources: %v", name, ms.Path, slices.Collect(maps.Keys(ms.Resources)))
+	}
+	is := rs.Primary
+	if is == nil {
+		return nil, fmt.Errorf("No primary instance: %s in %s", name, ms.Path)
+	}
+	return is, nil
+}
+
+func testCheckIfResourceAttrContainsAttr(collectionKey, collectionPath, otherResourceKey, otherAttrPath string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		collectionState, err := primaryInstanceState(s, collectionKey)
+		if err != nil {
+			return err
+		}
+
+		elementState, err := primaryInstanceState(s, otherResourceKey)
+		if err != nil {
+			return err
+		}
+
+		if collectionKey == otherResourceKey && collectionPath == otherAttrPath {
+			return fmt.Errorf(
+				"comparing self: resource %s attribute %s",
+				collectionKey,
+				collectionPath,
+			)
+		}
+
+		vElement, okElement := elementState.Attributes[otherAttrPath]
+		if !okElement {
+			return fmt.Errorf("%s: Attribute %q not set, cannot be contained in %q from %s", otherResourceKey, otherAttrPath, collectionPath, collectionKey)
+		}
+
+		vCollection, okCollection := collectionState.Attributes[collectionPath+".#"]
+		if !okCollection {
+			return fmt.Errorf("%s: Attribute %q not a collection, cannot contain %q from %s", collectionKey, collectionPath, otherAttrPath, otherResourceKey)
+		}
+
+		for attrKey, attrValue := range collectionState.Attributes {
+			if strings.HasPrefix(attrKey, collectionPath+".") &&
+				!(strings.HasSuffix(attrKey, ".%")) &&
+				!strings.HasSuffix(attrKey, ".#") &&
+				attrValue == vElement {
+				return nil
+			}
+		}
+
+		return fmt.Errorf(
+			"%s: Attribute '%s' expected to contain %#v, got %#v",
+			collectionKey,
+			collectionPath,
+			vElement,
+			vCollection)
+	}
 }

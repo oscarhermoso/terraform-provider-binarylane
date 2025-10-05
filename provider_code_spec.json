@@ -798,7 +798,7 @@
 					},
 					{
 						"name": "server_ids",
-						"list": {
+						"set": {
 							"computed_optional_required": "computed_optional",
 							"element_type": {
 								"int64": {}
@@ -1316,5 +1316,6 @@
 			}
 		}
 	],
-	"version": "0.1"
+	"version": "0.1",
+	"$schema": "https://raw.githubusercontent.com/hashicorp/terraform-plugin-codegen-spec/main/spec/v0.1/schema.json"
 }

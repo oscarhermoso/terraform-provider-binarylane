@@ -32,7 +32,7 @@ data "binarylane_load_balancer" "example" {
 - `ip` (String) The IPv4 address of the load balancer.
 - `name` (String) The hostname of the load balancer.
 - `region` (String) Leave null to create an anycast load balancer.
-- `server_ids` (List of Number) A list of server IDs to assign to this load balancer.
+- `server_ids` (Set of Number) A list of server IDs to assign to this load balancer.
 
 <a id="nestedatt--forwarding_rules"></a>
 ### Nested Schema for `forwarding_rules`
