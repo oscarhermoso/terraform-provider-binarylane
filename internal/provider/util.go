@@ -127,6 +127,45 @@ func convertResourceAttrToDataSourceAttr(name string, attribute r_schema.Attribu
 		}, nil
 
 	default:
+		if t, isSet := attribute.(r_schema.SetNestedAttribute); isSet {
+			nestedObjectAttrs := make(map[string]d_schema.Attribute)
+			for name, attribute := range t.NestedObject.Attributes {
+				nestedAttribute, err := convertResourceAttrToDataSourceAttr(name, attribute, required, optional)
+				if err != nil {
+					return nil, err
+				}
+				nestedObjectAttrs[name] = nestedAttribute
+			}
+			return d_schema.SetNestedAttribute{
+				NestedObject: d_schema.NestedAttributeObject{
+					Attributes: nestedObjectAttrs,
+					CustomType: t.NestedObject.CustomType,
+					Validators: t.NestedObject.Validators,
+				},
+				CustomType:          t.CustomType,
+				Description:         attribute.GetDescription(),
+				Required:            required,
+				Optional:            optional,
+				Computed:            !required,
+				Sensitive:           attribute.IsSensitive(),
+				MarkdownDescription: attribute.GetMarkdownDescription(),
+				DeprecationMessage:  attribute.GetDeprecationMessage(),
+			}, nil
+		}
+
+		if t, isSet := attribute.GetType().(types.SetType); isSet {
+			return d_schema.SetAttribute{
+				ElementType:         t.ElemType,
+				Description:         attribute.GetDescription(),
+				Required:            required,
+				Optional:            optional,
+				Computed:            !required,
+				Sensitive:           attribute.IsSensitive(),
+				MarkdownDescription: attribute.GetMarkdownDescription(),
+				DeprecationMessage:  attribute.GetDeprecationMessage(),
+			}, nil
+		}
+
 		if t, isList := attribute.(r_schema.ListNestedAttribute); isList {
 			nestedObjectAttrs := make(map[string]d_schema.Attribute)
 			for name, attribute := range t.NestedObject.Attributes {
@@ -165,6 +204,7 @@ func convertResourceAttrToDataSourceAttr(name string, attribute r_schema.Attribu
 				DeprecationMessage:  attribute.GetDeprecationMessage(),
 			}, nil
 		}
+
 		if t, isObject := attribute.(r_schema.SingleNestedAttribute); isObject {
 			attributeTypes := make(map[string]attr.Type, len(t.GetAttributes()))
 			for name, attribute := range t.GetAttributes() {

@@ -129,6 +129,9 @@ func loadBalancerSchema(ctx context.Context) schema.Schema {
 		Required:            false,
 		Optional:            false,
 		Computed:            true,
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		},
 	}
 
 	return s
@@ -140,6 +143,7 @@ func (r *loadBalancerResource) Schema(ctx context.Context, req resource.SchemaRe
 	resp.Schema.Attributes["timeouts"] =
 		timeouts.Attributes(ctx, timeouts.Opts{
 			Create: true,
+			Update: true,
 		})
 }
 
@@ -153,9 +157,14 @@ func (r *loadBalancerResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
+	timeout, diags := data.Timeouts.Create(ctx, 20*time.Minute)
+	resp.Diagnostics.Append(diags...)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	// Create API call logic
 	forwardingRules := []binarylane.ForwardingRuleRequest{}
-	diags := data.LoadBalancerModel.ForwardingRules.ElementsAs(ctx, &forwardingRules, false)
+	diags = data.LoadBalancerModel.ForwardingRules.ElementsAs(ctx, &forwardingRules, false)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -209,59 +218,19 @@ func (r *loadBalancerResource) Create(ctx context.Context, req resource.CreateRe
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
-	// Wait for server to be ready
-	var createActionId int64
+	// Wait for load balancer to be ready
+	var actionId int64
 	for _, action := range *lbResp.JSON200.Links.Actions {
 		if *action.Rel == "create_load_balancer" {
-			createActionId = *action.Id
+			actionId = *action.Id
 			break
 		}
 	}
-	if createActionId == 0 {
-		resp.Diagnostics.AddError(
-			"Unable to wait for load balancer to be created, links.actions with rel=create_load_balancer missing from response",
-			fmt.Sprintf("Received %s creating new load balancer: name=%s. Details: %s", lbResp.Status(), data.Name.ValueString(), lbResp.Body))
+
+	err = r.waitForAction(ctx, actionId)
+	if err != nil {
+		resp.Diagnostics.AddError("Error waiting for load balancer to be created", err.Error())
 		return
-	}
-
-	createTimeout, diags := data.Timeouts.Create(ctx, 20*time.Minute)
-	resp.Diagnostics.Append(diags...)
-	ctx, cancel := context.WithTimeout(ctx, createTimeout)
-	defer cancel()
-	var lastReadyResp *binarylane.GetActionsActionIdResponse
-
-retryLoop:
-	for {
-		select {
-		case <-ctx.Done():
-			if lastReadyResp == nil {
-				return
-			}
-			resp.Diagnostics.AddError(
-				"Timed out waiting for load balancer to be created",
-				fmt.Sprintf(
-					"Timed out waiting for load balancer %s to be created, last response was status=%s, body: %s",
-					data.Name.ValueString(),
-					lastReadyResp.Status(),
-					lastReadyResp.Body,
-				),
-			)
-			return
-		default:
-			readyResp, err := r.bc.client.GetActionsActionIdWithResponse(ctx, createActionId)
-			if err != nil {
-				resp.Diagnostics.AddError("Error waiting for load balancer to be created", err.Error())
-				return
-			}
-
-			if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {
-				break retryLoop
-			}
-
-			lastReadyResp = readyResp
-			tflog.Debug(ctx, fmt.Sprintf("Waiting for load balancer to be created: name=%s, status=%s, details: %s", data.Name.ValueString(), readyResp.Status(), readyResp.Body))
-		}
-		time.Sleep(time.Second * 5)
 	}
 }
 
@@ -346,6 +315,11 @@ func (r *loadBalancerResource) Update(ctx context.Context, req resource.UpdateRe
 		ServerIds: serverIds,
 	}
 
+	timeout, diags := data.Timeouts.Update(ctx, 20*time.Minute)
+	resp.Diagnostics.Append(diags...)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	lbResp, err := r.bc.client.PutLoadBalancersLoadBalancerIdWithResponse(ctx, data.Id.ValueInt64(), body)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -366,6 +340,21 @@ func (r *loadBalancerResource) Update(ctx context.Context, req resource.UpdateRe
 	diags = setLoadBalancerModelState(ctx, &data.loadBalancerDataModel, lbResp.JSON200.LoadBalancer)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Wait for load balancer to be ready
+	var actionId int64
+	for _, action := range *lbResp.JSON200.Links.Actions {
+		if *action.Rel == "update_load_balancer" {
+			actionId = *action.Id
+			break
+		}
+	}
+
+	err = r.waitForAction(ctx, actionId)
+	if err != nil {
+		resp.Diagnostics.AddError("Error waiting for load balancer to be updated", err.Error())
 		return
 	}
 
@@ -473,7 +462,7 @@ func setLoadBalancerModelState(ctx context.Context, data *loadBalancerDataModel,
 		data.Region = types.StringValue(*lb.Region.Slug)
 	}
 
-	data.ServerIds, diags = types.ListValueFrom(ctx, types.Int64Type, lb.ServerIds)
+	data.ServerIds, diags = types.SetValueFrom(ctx, types.Int64Type, lb.ServerIds)
 
 	data.HealthCheck, diag = resources.NewHealthCheckValue(
 		resources.HealthCheckValue{}.AttributeTypes(ctx),
@@ -491,4 +480,38 @@ func setLoadBalancerModelState(ctx context.Context, data *loadBalancerDataModel,
 	diags.Append(diag...)
 
 	return diags
+}
+
+func (r *loadBalancerResource) waitForAction(ctx context.Context, actionId int64) error {
+	var lastReadyResp *binarylane.GetActionsActionIdResponse
+
+	for {
+		select {
+		case <-ctx.Done():
+			if lastReadyResp == nil {
+				return fmt.Errorf("timed out waiting for action: action_id=%d", actionId)
+			} else {
+				return fmt.Errorf("timed out waiting for action: action_id=%d, last response was status=%s, body: %s",
+					actionId, lastReadyResp.Status(), lastReadyResp.Body)
+			}
+		default:
+			readyResp, err := r.bc.client.GetActionsActionIdWithResponse(ctx, actionId)
+			if err != nil {
+				return fmt.Errorf("unexpected error waiting for action: action_id=%d, error: %w", actionId, err)
+			}
+			if readyResp.StatusCode() == http.StatusOK && *readyResp.JSON200.Action.Status == binarylane.Errored {
+				return fmt.Errorf("action failed with error: action_id=%d, error: %s", actionId, readyResp.Body)
+			}
+			if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {
+				return nil
+			}
+			lastReadyResp = readyResp
+			tflog.Debug(ctx,
+				fmt.Sprintf("waiting for action for action_id=%d: last response was status=%s, details: %s",
+					actionId, readyResp.Status(), readyResp.Body,
+				),
+			)
+		}
+		time.Sleep(time.Second * 5)
+	}
 }

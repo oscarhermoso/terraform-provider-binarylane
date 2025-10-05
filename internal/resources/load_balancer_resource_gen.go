@@ -95,7 +95,7 @@ func LoadBalancerResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Leave null to create an anycast load balancer.",
 				MarkdownDescription: "Leave null to create an anycast load balancer.",
 			},
-			"server_ids": schema.ListAttribute{
+			"server_ids": schema.SetAttribute{
 				ElementType:         types.Int64Type,
 				Optional:            true,
 				Computed:            true,
@@ -112,7 +112,7 @@ type LoadBalancerModel struct {
 	Id              types.Int64      `tfsdk:"id"`
 	Name            types.String     `tfsdk:"name"`
 	Region          types.String     `tfsdk:"region"`
-	ServerIds       types.List       `tfsdk:"server_ids"`
+	ServerIds       types.Set        `tfsdk:"server_ids"`
 }
 
 var _ basetypes.ObjectTypable = ForwardingRulesType{}
