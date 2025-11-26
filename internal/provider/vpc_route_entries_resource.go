@@ -94,7 +94,7 @@ func (r *vpcRouteEntriesResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	routeEntriesState, diags := GetRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
+	routeEntriesState, diags := GetRouteEntriesState(ctx, &vpcResp.JSON200.Vpc.RouteEntries)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -136,7 +136,7 @@ func (r *vpcRouteEntriesResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	routeEntries, routeEntriesDiags := GetRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
+	routeEntries, routeEntriesDiags := GetRouteEntriesState(ctx, &vpcResp.JSON200.Vpc.RouteEntries)
 	resp.Diagnostics.Append(routeEntriesDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -183,7 +183,7 @@ func (r *vpcRouteEntriesResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	routeEntriesState, diags := GetRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
+	routeEntriesState, diags := GetRouteEntriesState(ctx, &vpcResp.JSON200.Vpc.RouteEntries)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -253,8 +253,8 @@ func GetRouteEntriesState(ctx context.Context, routeEntries *[]binarylane.RouteE
 			// TODO: This panics if invalid, should be handled better
 			r := resources.NewRouteEntriesValueMust(routeEntriesValue.AttributeTypes(ctx), map[string]attr.Value{
 				"description": types.StringValue(*route.Description),
-				"destination": types.StringValue(*route.Destination),
-				"router":      types.StringValue(*route.Router),
+				"destination": types.StringValue(route.Destination),
+				"router":      types.StringValue(route.Router),
 			})
 			routeEntriesValues = append(routeEntriesValues, r)
 		}

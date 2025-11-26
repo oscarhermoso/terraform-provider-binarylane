@@ -209,7 +209,7 @@ func (r *loadBalancerResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	diags = setLoadBalancerModelState(ctx, &data.loadBalancerDataModel, lbResp.JSON200.LoadBalancer)
+	diags = setLoadBalancerModelState(ctx, &data.loadBalancerDataModel, &lbResp.JSON200.LoadBalancer)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -220,9 +220,9 @@ func (r *loadBalancerResource) Create(ctx context.Context, req resource.CreateRe
 
 	// Wait for load balancer to be ready
 	var actionId int64
-	for _, action := range *lbResp.JSON200.Links.Actions {
-		if *action.Rel == "create_load_balancer" {
-			actionId = *action.Id
+	for _, action := range lbResp.JSON200.Links.Actions {
+		if action.Rel == "create_load_balancer" {
+			actionId = action.Id
 			break
 		}
 	}
@@ -268,7 +268,7 @@ func (r *loadBalancerResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	diags := setLoadBalancerModelState(ctx, &data.loadBalancerDataModel, lbResp.JSON200.LoadBalancer)
+	diags := setLoadBalancerModelState(ctx, &data.loadBalancerDataModel, &lbResp.JSON200.LoadBalancer)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -337,7 +337,7 @@ func (r *loadBalancerResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	diags = setLoadBalancerModelState(ctx, &data.loadBalancerDataModel, lbResp.JSON200.LoadBalancer)
+	diags = setLoadBalancerModelState(ctx, &data.loadBalancerDataModel, &lbResp.JSON200.LoadBalancer)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -345,9 +345,9 @@ func (r *loadBalancerResource) Update(ctx context.Context, req resource.UpdateRe
 
 	// Wait for load balancer to be ready
 	var actionId int64
-	for _, action := range *lbResp.JSON200.Links.Actions {
-		if *action.Rel == "update_load_balancer" {
-			actionId = *action.Id
+	for _, action := range lbResp.JSON200.Links.Actions {
+		if action.Rel == "update_load_balancer" {
+			actionId = action.Id
 			break
 		}
 	}
@@ -429,7 +429,7 @@ func (r *loadBalancerResource) ImportState(
 			return
 		}
 
-		loadBalancers := *lbResp.JSON200.LoadBalancers
+		loadBalancers := lbResp.JSON200.LoadBalancers
 		for _, lb := range loadBalancers {
 			if lb.Name == req.ID {
 				loadBalancer = lb
@@ -437,7 +437,7 @@ func (r *loadBalancerResource) ImportState(
 				break
 			}
 		}
-		if lbResp.JSON200.Links == nil || lbResp.JSON200.Links.Pages == nil || lbResp.JSON200.Links.Pages.Next == nil {
+		if lbResp.JSON200.Links == nil || lbResp.JSON200.Links.Pages.Next == nil {
 			nextPage = false
 			break
 		}
@@ -459,7 +459,7 @@ func setLoadBalancerModelState(ctx context.Context, data *loadBalancerDataModel,
 	if lb.Region == nil {
 		data.Region = types.StringNull()
 	} else {
-		data.Region = types.StringValue(*lb.Region.Slug)
+		data.Region = types.StringValue(lb.Region.Slug)
 	}
 
 	data.ServerIds, diags = types.SetValueFrom(ctx, types.Int64Type, lb.ServerIds)
@@ -499,7 +499,7 @@ func (r *loadBalancerResource) waitForAction(ctx context.Context, actionId int64
 			if err != nil {
 				return fmt.Errorf("unexpected error waiting for action: action_id=%d, error: %w", actionId, err)
 			}
-			if readyResp.StatusCode() == http.StatusOK && *readyResp.JSON200.Action.Status == binarylane.Errored {
+			if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.Status == binarylane.Errored {
 				return fmt.Errorf("action failed with error: action_id=%d, error: %s", actionId, readyResp.Body)
 			}
 			if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {

@@ -105,21 +105,21 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	data.Id = types.Int64Value(*serverResp.JSON200.Server.Id)
-	data.Name = types.StringValue(*serverResp.JSON200.Server.Name)
-	data.Image = types.StringValue(*serverResp.JSON200.Server.Image.Slug)
-	data.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
-	data.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
+	data.Id = types.Int64Value(serverResp.JSON200.Server.Id)
+	data.Name = types.StringValue(serverResp.JSON200.Server.Name)
+	data.Image = types.StringPointerValue(serverResp.JSON200.Server.Image.Slug)
+	data.Region = types.StringValue(serverResp.JSON200.Server.Region.Slug)
+	data.Size = types.StringValue(serverResp.JSON200.Server.Size.Slug)
 	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
 	data.Ipv6 = types.BoolValue(len(serverResp.JSON200.Server.Networks.V6) > 0)
 	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
 	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
-	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
-	data.Memory = types.Int32Value(*serverResp.JSON200.Server.Memory)
-	data.Disk = types.Int32Value(*serverResp.JSON200.Server.Disk)
+	data.Permalink = types.StringPointerValue(serverResp.JSON200.Server.Permalink)
+	data.Memory = types.Int32Value(serverResp.JSON200.Server.Memory)
+	data.Disk = types.Int32Value(serverResp.JSON200.Server.Disk)
 	data.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
 
-	advFeat := *serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
+	advFeat := serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
 	data.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
 		resources.AdvancedFeaturesValue{}.AttributeTypes(ctx),
 		map[string]attr.Value{

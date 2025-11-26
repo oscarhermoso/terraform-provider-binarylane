@@ -90,8 +90,8 @@ func (d *vpcDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 			fmt.Sprintf("Received %s reading VPC: id=%d. Details: %s", vpcResp.Status(), data.Id.ValueInt64(), vpcResp.Body))
 		return
 	}
-	data.IpRange = types.StringValue(*vpcResp.JSON200.Vpc.IpRange)
-	data.Name = types.StringValue(*vpcResp.JSON200.Vpc.Name)
+	data.IpRange = types.StringValue(vpcResp.JSON200.Vpc.IpRange)
+	data.Name = types.StringValue(vpcResp.JSON200.Vpc.Name)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

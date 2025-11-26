@@ -118,13 +118,13 @@ func (d *sshKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	data.Id = types.Int64Value(*sshResp.JSON200.SshKey.Id)
-	data.Default = types.BoolValue(*sshResp.JSON200.SshKey.Default)
+	data.Id = types.Int64Value(sshResp.JSON200.SshKey.Id)
+	data.Default = types.BoolValue(sshResp.JSON200.SshKey.Default)
 	data.Name = types.StringValue(*sshResp.JSON200.SshKey.Name)
 	data.PublicKey = TrimmedStringValue{
-		StringValue: types.StringValue(*sshResp.JSON200.SshKey.PublicKey),
+		StringValue: types.StringValue(sshResp.JSON200.SshKey.PublicKey),
 	}
-	data.Fingerprint = types.StringValue(*sshResp.JSON200.SshKey.Fingerprint)
+	data.Fingerprint = types.StringValue(sshResp.JSON200.SshKey.Fingerprint)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

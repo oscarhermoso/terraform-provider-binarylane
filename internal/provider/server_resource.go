@@ -481,7 +481,7 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 			debugAdvFeatResp, _ := json.Marshal(advFeatResp.JSON200)
 			tflog.Debug(ctx, fmt.Sprintf("Recieved response for available advanced features: %s", debugAdvFeatResp))
 
-			availableAdvFeat := *advFeatResp.JSON200.AvailableAdvancedServerFeatures.AdvancedFeatures
+			availableAdvFeat := advFeatResp.JSON200.AvailableAdvancedServerFeatures.AdvancedFeatures
 
 			if plan.AdvancedFeatures.EmulatedHyperv.ValueBool() && !slices.Contains(availableAdvFeat, "emulated-hyperv") {
 				resp.Diagnostics.AddAttributeError(
@@ -606,9 +606,9 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// Wait for server to be ready
 	var createActionId int64
-	for _, action := range *serverResp.JSON200.Links.Actions {
-		if *action.Rel == "create" {
-			createActionId = *action.Id
+	for _, action := range serverResp.JSON200.Links.Actions {
+		if action.Rel == "create" {
+			createActionId = action.Id
 			break
 		}
 	}
@@ -618,29 +618,29 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 			fmt.Sprintf("Received %s creating new server: name=%s. Details: %s", serverResp.Status(), data.Name.ValueString(), serverResp.Body))
 		return
 	}
-	err = r.waitForServerAction(ctx, *serverResp.JSON200.Server.Id, createActionId)
+	err = r.waitForServerAction(ctx, serverResp.JSON200.Server.Id, createActionId)
 	if err != nil {
 		resp.Diagnostics.AddError("Error waiting for server to be created", err.Error())
 	}
 
-	data.Id = types.Int64Value(*serverResp.JSON200.Server.Id)
-	data.Name = types.StringValue(*serverResp.JSON200.Server.Name)
-	data.Image = types.StringValue(*serverResp.JSON200.Server.Image.Slug)
-	data.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
-	data.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
+	data.Id = types.Int64Value(serverResp.JSON200.Server.Id)
+	data.Name = types.StringValue(serverResp.JSON200.Server.Name)
+	data.Image = types.StringPointerValue(serverResp.JSON200.Server.Image.Slug)
+	data.Region = types.StringValue(serverResp.JSON200.Server.Region.Slug)
+	data.Size = types.StringValue(serverResp.JSON200.Server.Size.Slug)
 	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
 	data.Ipv6 = types.BoolValue(len(serverResp.JSON200.Server.Networks.V6) > 0)
 	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
 	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
-	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
-	data.PasswordChangeSupported = types.BoolValue(*serverResp.JSON200.Server.PasswordChangeSupported)
-	data.Memory = types.Int32Value(*serverResp.JSON200.Server.Memory)
-	data.Disk = types.Int32Value(*serverResp.JSON200.Server.Disk)
+	data.Permalink = types.StringPointerValue(serverResp.JSON200.Server.Permalink)
+	data.PasswordChangeSupported = types.BoolValue(serverResp.JSON200.Server.PasswordChangeSupported)
+	data.Memory = types.Int32Value(serverResp.JSON200.Server.Memory)
+	data.Disk = types.Int32Value(serverResp.JSON200.Server.Disk)
 	plannedSourceDestCheck := data.SourceAndDestinationCheck
 	serverRespSourceDestCheck := types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
 	data.SourceAndDestinationCheck = serverRespSourceDestCheck
 
-	advFeat := *serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
+	advFeat := serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
 	data.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
 		resources.AdvancedFeaturesValue{}.AttributeTypes(ctx),
 		map[string]attr.Value{
@@ -830,7 +830,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 				fmt.Sprintf("Received %s changing network for server: server_id=%s. Details: %s", networkResp.Status(), state.Id.String(), networkResp.Body))
 			return
 		}
-		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *networkResp.JSON200.Action.Id)
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), networkResp.JSON200.Action.Id)
 		if err != nil {
 			resp.Diagnostics.AddError("Error waiting for server to change network", err.Error())
 			return
@@ -919,7 +919,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
-		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *resizeResp.JSON200.Action.Id)
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), resizeResp.JSON200.Action.Id)
 		if err != nil {
 			resp.Diagnostics.AddError("Error waiting for server to be resized", err.Error())
 			return
@@ -951,7 +951,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
-		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *ipv6Resp.JSON200.Action.Id)
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), ipv6Resp.JSON200.Action.Id)
 		if err != nil {
 			resp.Diagnostics.AddError("Error waiting for changing IPv6", err.Error())
 			return
@@ -1010,7 +1010,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 				fmt.Sprintf("Received %s rebuilding server: server_id=%s. Details: %s", rebuildResp.Status(), state.Id.String(), rebuildResp.Body))
 			return
 		}
-		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *rebuildResp.JSON200.Action.Id)
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), rebuildResp.JSON200.Action.Id)
 		if err != nil {
 			resp.Diagnostics.AddError("Error waiting for server to be rebuilt", err.Error())
 			return
@@ -1038,7 +1038,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 			resp.Diagnostics.AddError("Error resetting password", err.Error())
 			return
 		}
-		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *passwordResp.JSON200.Action.Id)
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), passwordResp.JSON200.Action.Id)
 		if err != nil {
 			resp.Diagnostics.AddError("Error waiting for password reset", err.Error())
 			return
@@ -1092,7 +1092,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 				resp.Diagnostics.AddError("Error enabling backups", err.Error())
 				return
 			}
-			err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *backupResp.JSON200.Action.Id)
+			err = r.waitForServerAction(ctx, state.Id.ValueInt64(), backupResp.JSON200.Action.Id)
 			if err != nil {
 				resp.Diagnostics.AddError("Error waiting for backups to be enabled", err.Error())
 				return
@@ -1105,7 +1105,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 				resp.Diagnostics.AddError("Error disabling backups", err.Error())
 				return
 			}
-			err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *backupResp.JSON200.Action.Id)
+			err = r.waitForServerAction(ctx, state.Id.ValueInt64(), backupResp.JSON200.Action.Id)
 			if err != nil {
 				resp.Diagnostics.AddError("Error waiting for backups to be disabled", err.Error())
 				return
@@ -1132,7 +1132,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 			resp.Diagnostics.AddError("Error changing \"port_blocking\" attribute", err.Error())
 			return
 		}
-		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *portBlockingResp.JSON200.Action.Id)
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), portBlockingResp.JSON200.Action.Id)
 		if err != nil {
 			resp.Diagnostics.AddError("Error waiting for \"port_blocking\" attribute to change", err.Error())
 			return
@@ -1210,8 +1210,8 @@ func (r *serverResource) ImportState(
 		return
 	}
 
-	servers := *serverResp.JSON200.Servers
-	idx := slices.IndexFunc(servers, func(s binarylane.Server) bool { return *s.Name == name })
+	servers := serverResp.JSON200.Servers
+	idx := slices.IndexFunc(servers, func(s binarylane.Server) bool { return s.Name == name })
 	if idx == -1 {
 		resp.Diagnostics.AddError(
 			"Could not find server by hostname",
@@ -1221,7 +1221,7 @@ func (r *serverResource) ImportState(
 	}
 	server := servers[idx]
 
-	diags := resp.State.SetAttribute(ctx, path.Root("id"), int32(*server.Id))
+	diags := resp.State.SetAttribute(ctx, path.Root("id"), int32(server.Id))
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -1242,7 +1242,7 @@ func (r *serverResource) waitForServerAction(ctx context.Context, serverId int64
 			if err != nil {
 				return fmt.Errorf("unexpected error waiting for server action: server_id=%d, action_id=%d, error: %w", serverId, actionId, err)
 			}
-			if readyResp.StatusCode() == http.StatusOK && *readyResp.JSON200.Action.Status == binarylane.Errored {
+			if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.Status == binarylane.Errored {
 				return fmt.Errorf("server action failed to with error: server_id=%d, action_id=%d, error: %s", serverId, actionId, readyResp.Body)
 			}
 			if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {
@@ -1298,7 +1298,7 @@ func (r *serverResource) updateSourceDestCheck(
 		return fmt.Errorf("unexpected HTTP status code changing source and destination check for server: server_id=%d, details: %s", serverId, sourceDestCheckResp.Body)
 	}
 
-	err = r.waitForServerAction(ctx, serverId, *sourceDestCheckResp.JSON200.Action.Id)
+	err = r.waitForServerAction(ctx, serverId, sourceDestCheckResp.JSON200.Action.Id)
 	if err != nil {
 		return fmt.Errorf("error changing source and destination check: %w", err)
 	}
@@ -1327,23 +1327,23 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 		}
 	}
 
-	state.Id = types.Int64Value(*serverResp.JSON200.Server.Id)
-	state.Name = types.StringValue(*serverResp.JSON200.Server.Name)
-	state.Image = types.StringValue(*serverResp.JSON200.Server.Image.Slug)
-	state.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
-	state.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
+	state.Id = types.Int64Value(serverResp.JSON200.Server.Id)
+	state.Name = types.StringValue(serverResp.JSON200.Server.Name)
+	state.Image = types.StringPointerValue(serverResp.JSON200.Server.Image.Slug)
+	state.Region = types.StringValue(serverResp.JSON200.Server.Region.Slug)
+	state.Size = types.StringValue(serverResp.JSON200.Server.Size.Slug)
 	state.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
 	state.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
 	state.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
-	state.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
-	state.PasswordChangeSupported = types.BoolValue(*serverResp.JSON200.Server.PasswordChangeSupported)
+	state.Permalink = types.StringPointerValue(serverResp.JSON200.Server.Permalink)
+	state.PasswordChangeSupported = types.BoolValue(serverResp.JSON200.Server.PasswordChangeSupported)
 	state.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
-	state.Memory = types.Int32Value(*serverResp.JSON200.Server.Memory)
-	state.Disk = types.Int32Value(*serverResp.JSON200.Server.Disk)
+	state.Memory = types.Int32Value(serverResp.JSON200.Server.Memory)
+	state.Disk = types.Int32Value(serverResp.JSON200.Server.Disk)
 	state.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
 	state.Ipv6 = types.BoolValue(len(serverResp.JSON200.Server.Networks.V6) > 0)
 
-	advFeat := *serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
+	advFeat := serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
 	state.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
 		resources.AdvancedFeaturesValue{}.AttributeTypes(ctx),
 		map[string]attr.Value{
@@ -1506,7 +1506,7 @@ func (r *serverResource) updateAdvancedFeatures(
 		return fmt.Errorf("unexpected HTTP status code updating advanced features for server: server_id=%d, details: %s", serverId, resp.Body)
 	}
 
-	err = r.waitForServerAction(ctx, serverId, *resp.JSON200.Action.Id)
+	err = r.waitForServerAction(ctx, serverId, resp.JSON200.Action.Id)
 	if err != nil {
 		return fmt.Errorf("failed to confirm advanced features for server was successful: %w", err)
 	}
