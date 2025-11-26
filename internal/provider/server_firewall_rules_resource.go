@@ -262,6 +262,8 @@ func GetFirewallRulesState(ctx context.Context, firewallRules *[]binarylane.Adva
 			if rule.DestinationPorts != nil {
 				destinationPorts, diag = types.ListValueFrom(ctx, types.StringType, rule.DestinationPorts)
 				diags.Append(diag...)
+			} else {
+				destinationPorts = types.ListNull(types.StringType)
 			}
 
 			sourceAddresses, diag := types.ListValueFrom(ctx, types.StringType, rule.SourceAddresses)
