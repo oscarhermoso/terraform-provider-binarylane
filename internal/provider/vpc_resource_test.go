@@ -156,20 +156,20 @@ func init() {
 				}
 
 				vpcs := listResp.JSON200.Vpcs
-				for _, vpc := range *vpcs {
-					if strings.HasPrefix(*vpc.Name, "tf-test-") {
+				for _, vpc := range vpcs {
+					if strings.HasPrefix(vpc.Name, "tf-test-") {
 
-						deleteResp, err := client.DeleteVpcsVpcIdWithResponse(ctx, *vpc.Id)
+						deleteResp, err := client.DeleteVpcsVpcIdWithResponse(ctx, vpc.Id)
 						if err != nil {
-							return fmt.Errorf("Error deleting VPC %d in test sweep: %w", *vpc.Id, err)
+							return fmt.Errorf("Error deleting VPC %d in test sweep: %w", vpc.Id, err)
 						}
 						if deleteResp.StatusCode() != http.StatusNoContent {
-							return fmt.Errorf("Unexpected status %d deleting VPC %d for test sweep: %s", deleteResp.StatusCode(), *vpc.Id, deleteResp.Body)
+							return fmt.Errorf("Unexpected status %d deleting VPC %d for test sweep: %s", deleteResp.StatusCode(), vpc.Id, deleteResp.Body)
 						}
-						log.Println("Deleted VPC for test sweep:", *vpc.Id)
+						log.Println("Deleted VPC for test sweep:", vpc.Id)
 					}
 				}
-				if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages == nil || listResp.JSON200.Links.Pages.Next == nil {
+				if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages.Next == nil {
 					nextPage = false
 					break
 				}

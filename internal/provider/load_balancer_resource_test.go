@@ -182,7 +182,7 @@ func init() {
 					return fmt.Errorf("Unexpected status code getting load balancers for test sweep: %s", listResp.Body)
 				}
 
-				loadBalancers := *listResp.JSON200.LoadBalancers
+				loadBalancers := listResp.JSON200.LoadBalancers
 				for _, lb := range loadBalancers {
 					if strings.HasPrefix(lb.Name, "tf-test-") {
 						deleteResp, err := client.DeleteLoadBalancersLoadBalancerIdWithResponse(ctx, lb.Id)
@@ -195,7 +195,7 @@ func init() {
 						log.Println("Deleted load balancer during test sweep:", lb.Id)
 					}
 				}
-				if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages == nil || listResp.JSON200.Links.Pages.Next == nil {
+				if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages.Next == nil {
 					nextPage = false
 					break
 				}
