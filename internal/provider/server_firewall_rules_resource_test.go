@@ -126,6 +126,46 @@ resource "binarylane_server_firewall_rules" "test" {
 					resource.TestCheckResourceAttr("binarylane_server_firewall_rules.test", "firewall_rules.0.action", "accept"),
 				),
 			},
+			// Test ICMP rule without destination_ports
+			{
+				Config: providerConfig + `
+
+resource "binarylane_server" "test" {
+  name              = "tf-test-server-fw-rules"
+  region            = "per"
+  image             = "debian-12"
+  size              = "std-min"
+  password          = "` + password + `"
+  public_ipv4_count = 0
+}
+
+resource "binarylane_server_firewall_rules" "test" {
+  server_id = binarylane_server.test.id
+  firewall_rules = [
+    {
+      description           = "Allow ICMP"
+      protocol              = "icmp"
+      source_addresses      = ["0.0.0.0/0"]
+      destination_addresses = [binarylane_server.test.private_ipv4_addresses.0]
+      action                = "accept"
+      # destination_ports intentionally not specified for ICMP
+    },
+  ]
+}
+	`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// Verify resource values with ICMP and no destination_ports
+					resource.TestCheckResourceAttrSet("binarylane_server_firewall_rules.test", "server_id"),
+					resource.TestCheckResourceAttr("binarylane_server_firewall_rules.test", "firewall_rules.#", "1"),
+					resource.TestCheckResourceAttr("binarylane_server_firewall_rules.test", "firewall_rules.0.description", "Allow ICMP"),
+					resource.TestCheckResourceAttr("binarylane_server_firewall_rules.test", "firewall_rules.0.protocol", "icmp"),
+					resource.TestCheckResourceAttr("binarylane_server_firewall_rules.test", "firewall_rules.0.source_addresses.#", "1"),
+					resource.TestCheckResourceAttr("binarylane_server_firewall_rules.test", "firewall_rules.0.source_addresses.0", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr("binarylane_server_firewall_rules.test", "firewall_rules.0.destination_addresses.#", "1"),
+					resource.TestCheckResourceAttrSet("binarylane_server_firewall_rules.test", "firewall_rules.0.destination_addresses.0"),
+					resource.TestCheckResourceAttr("binarylane_server_firewall_rules.test", "firewall_rules.0.action", "accept"),
+				),
+			},
 			// Delete testing automatically occurs in TestCase
 		},
 	})
