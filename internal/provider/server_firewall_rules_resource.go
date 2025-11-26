@@ -121,6 +121,29 @@ func (r *serverFirewallRulesResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
+	// Read back the firewall rules to get the actual state from the API
+	readResp, err := r.bc.client.GetServersServerIdAdvancedFirewallRulesWithResponse(ctx, data.ServerId.ValueInt64())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Error reading server firewall rules after create: server_id=%d", data.ServerId.ValueInt64()),
+			err.Error(),
+		)
+		return
+	}
+	if readResp.StatusCode() != http.StatusOK {
+		resp.Diagnostics.AddError(
+			"Unexpected HTTP status code reading server firewall rules after create",
+			fmt.Sprintf("Received %s reading server firewall rules: server_id=%d. Details: %s", readResp.Status(), data.ServerId.ValueInt64(), readResp.Body))
+		return
+	}
+
+	firewallRulesValue, diags := GetFirewallRulesState(ctx, &readResp.JSON200.FirewallRules)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	data.FirewallRules = firewallRulesValue
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -206,6 +229,29 @@ func (r *serverFirewallRulesResource) Update(ctx context.Context, req resource.U
 			fmt.Sprintf("Received %s updating server firewall rules: server_id=%s. Details: %s", serverResp.Status(), data.ServerId.String(), serverResp.Body))
 		return
 	}
+
+	// Read back the firewall rules to get the actual state from the API
+	readResp, err := r.bc.client.GetServersServerIdAdvancedFirewallRulesWithResponse(ctx, data.ServerId.ValueInt64())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Error reading server firewall rules after update: server_id=%d", data.ServerId.ValueInt64()),
+			err.Error(),
+		)
+		return
+	}
+	if readResp.StatusCode() != http.StatusOK {
+		resp.Diagnostics.AddError(
+			"Unexpected HTTP status code reading server firewall rules after update",
+			fmt.Sprintf("Received %s reading server firewall rules: server_id=%d. Details: %s", readResp.Status(), data.ServerId.ValueInt64(), readResp.Body))
+		return
+	}
+
+	firewallRulesValue, diags := GetFirewallRulesState(ctx, &readResp.JSON200.FirewallRules)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	data.FirewallRules = firewallRulesValue
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
