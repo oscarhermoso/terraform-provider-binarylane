@@ -163,6 +163,7 @@ resource "binarylane_server_firewall_rules" "test" {
 					resource.TestCheckResourceAttr("binarylane_server_firewall_rules.test", "firewall_rules.0.source_addresses.0", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr("binarylane_server_firewall_rules.test", "firewall_rules.0.destination_addresses.#", "1"),
 					resource.TestCheckResourceAttrSet("binarylane_server_firewall_rules.test", "firewall_rules.0.destination_addresses.0"),
+					resource.TestCheckResourceAttr("binarylane_server_firewall_rules.test", "firewall_rules.0.destination_ports.#", "0"),
 					resource.TestCheckResourceAttr("binarylane_server_firewall_rules.test", "firewall_rules.0.action", "accept"),
 				),
 			},
