@@ -93,7 +93,7 @@ func (d *vpcRouteEntriesDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	routeEntries, routeEntriesDiags := GetRouteEntriesState(ctx, vpcResp.JSON200.Vpc.RouteEntries)
+	routeEntries, routeEntriesDiags := GetRouteEntriesState(ctx, &vpcResp.JSON200.Vpc.RouteEntries)
 	resp.Diagnostics.Append(routeEntriesDiags...)
 	if resp.Diagnostics.HasError() {
 		return

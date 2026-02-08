@@ -362,25 +362,25 @@ func init() {
 					return fmt.Errorf("Unexpected status code getting servers in test sweep: %s", listResp.Body)
 				}
 
-				servers := *listResp.JSON200.Servers
-				for _, s := range servers {
-					if strings.HasPrefix(*s.Name, "tf-test-") {
-						reason := "Terraform deletion"
-						params := binarylane.DeleteServersServerIdParams{
-							Reason: &reason,
-						}
+			servers := listResp.JSON200.Servers
+			for _, s := range servers {
+				if strings.HasPrefix(s.Name, "tf-test-") {
+					reason := "Terraform deletion"
+					params := binarylane.DeleteServersServerIdParams{
+						Reason: &reason,
+					}
 
-						deleteResp, err := client.DeleteServersServerIdWithResponse(ctx, *s.Id, &params)
-						if err != nil {
-							return fmt.Errorf("Error deleting server %d during test sweep: %w", *s.Id, err)
-						}
-						if deleteResp.StatusCode() != http.StatusNoContent {
-							return fmt.Errorf("Unexpected status %d deleting server %d in test sweep: %s", deleteResp.StatusCode(), *s.Id, deleteResp.Body)
-						}
-						log.Println("Deleted server during test sweep:", *s.Id)
+					deleteResp, err := client.DeleteServersServerIdWithResponse(ctx, s.Id, &params)
+					if err != nil {
+						return fmt.Errorf("Error deleting server %d during test sweep: %w", s.Id, err)
+					}
+					if deleteResp.StatusCode() != http.StatusNoContent {
+						return fmt.Errorf("Unexpected status %d deleting server %d in test sweep: %s", deleteResp.StatusCode(), s.Id, deleteResp.Body)
+					}
+					log.Println("Deleted server during test sweep:", s.Id)
 					}
 				}
-				if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages == nil || listResp.JSON200.Links.Pages.Next == nil {
+				if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages.Next == nil {
 					nextPage = false
 					break
 				}

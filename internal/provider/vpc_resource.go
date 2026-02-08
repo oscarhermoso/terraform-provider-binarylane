@@ -120,8 +120,8 @@ func (r *vpcResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	data.Id = types.Int64Value(*vpcResp.JSON200.Vpc.Id)
-	data.Name = types.StringValue(*vpcResp.JSON200.Vpc.Name)
+	data.Id = types.Int64Value(vpcResp.JSON200.Vpc.Id)
+	data.Name = types.StringValue(vpcResp.JSON200.Vpc.Name)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -157,9 +157,9 @@ func (r *vpcResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 			fmt.Sprintf("Received %s reading VPC: id=%d. Details: %s", vpcResp.Status(), data.Id.ValueInt64(), vpcResp.Body))
 		return
 	}
-	data.Id = types.Int64Value(*vpcResp.JSON200.Vpc.Id)
-	data.IpRange = types.StringValue(*vpcResp.JSON200.Vpc.IpRange)
-	data.Name = types.StringValue(*vpcResp.JSON200.Vpc.Name)
+	data.Id = types.Int64Value(vpcResp.JSON200.Vpc.Id)
+	data.IpRange = types.StringValue(vpcResp.JSON200.Vpc.IpRange)
+	data.Name = types.StringValue(vpcResp.JSON200.Vpc.Name)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -203,8 +203,8 @@ func (r *vpcResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	state.Id = types.Int64Value(*vpcResp.JSON200.Vpc.Id)
-	state.Name = types.StringValue(*vpcResp.JSON200.Vpc.Name)
+	state.Id = types.Int64Value(vpcResp.JSON200.Vpc.Id)
+	state.Name = types.StringValue(vpcResp.JSON200.Vpc.Name)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)

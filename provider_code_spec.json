@@ -930,6 +930,13 @@
 						}
 					},
 					{
+						"name": "vpc_ipv4_address",
+						"string": {
+							"computed_optional_required": "computed_optional",
+							"description": "If provided this will be the Ipv4 address for the server's private VPC network adapter. If this is null an unused Ipv4 address will be assigned. This field is only valid when VpcId is provided."
+						}
+					},
+					{
 						"name": "id",
 						"int64": {
 							"computed_optional_required": "computed_optional",

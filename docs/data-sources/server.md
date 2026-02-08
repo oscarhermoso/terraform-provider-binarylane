@@ -53,6 +53,7 @@ data "binarylane_server" "example" {
 - `ssh_keys` (List of Number) This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys.
 - `user_data` (String) A script or cloud-config YAML file to configure the server. Can only be specified if the OS image supports UserData (i.e. not Windows). See more: https://cloudinit.readthedocs.io/en/latest/explanation/format.html#user-data-script
 - `vpc_id` (Number) Leave null to use default (public) network for the selected region.
+- `vpc_ipv4_address` (String) If provided this will be the Ipv4 address for the server's private VPC network adapter. If this is null an unused Ipv4 address will be assigned. This field is only valid when VpcId is provided.
 
 <a id="nestedatt--advanced_features"></a>
 ### Nested Schema for `advanced_features`

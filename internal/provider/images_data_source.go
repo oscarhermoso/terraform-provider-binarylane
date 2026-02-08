@@ -82,9 +82,9 @@ func (d *imagesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 			resp.Diagnostics.AddError("Unexpected status code listing images", string(listResp.Body))
 			return
 		}
-		imgResults = append(imgResults, *listResp.JSON200.Images...)
+		imgResults = append(imgResults, listResp.JSON200.Images...)
 
-		if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages == nil || listResp.JSON200.Links.Pages.Next == nil {
+		if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages.Next == nil {
 			nextPage = false
 			break
 		}
