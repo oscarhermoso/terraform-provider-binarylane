@@ -186,10 +186,9 @@ func serverSchema(ctx context.Context) schema.Schema {
 	}
 
 	// Additional attributes
-	pwDescription :=
-		"If this is provided the specified or default remote user's account password will be set to this value. " +
-			"Only valid if the server supports password change actions. If omitted and the server supports password " +
-			"change actions a random password will be generated and emailed to the account email address."
+	pwDescription := "If this is provided the specified or default remote user's account password will be set to this value. " +
+		"Only valid if the server supports password change actions. If omitted and the server supports password " +
+		"change actions a random password will be generated and emailed to the account email address."
 	s.Attributes["password"] = schema.StringAttribute{
 		Description:         pwDescription,
 		MarkdownDescription: pwDescription,
@@ -364,11 +363,29 @@ func serverSchema(ctx context.Context) schema.Schema {
 		},
 	}
 
-	s.Attributes["timeouts"] =
-		timeouts.Attributes(ctx, timeouts.Opts{
-			Create: true,
-			Update: true,
-		})
+	s.Attributes["timeouts"] = timeouts.Attributes(ctx, timeouts.Opts{
+		Create: true,
+		Update: true,
+	})
+
+	vpcIpv4Addr := s.Attributes["vpc_ipv4_address"]
+	vpcIpv4AddrDescription := "If provided this will be the IPv4 address for the server's private VPC network adapter." +
+		" If this is unspecified, then an unused IPv4 address will be assigned. This field is only valid when `vpc_id`" +
+		" is provided."
+	s.Attributes["vpc_ipv4_address"] = schema.StringAttribute{
+		Description:         vpcIpv4AddrDescription,
+		MarkdownDescription: vpcIpv4AddrDescription,
+		Optional:            vpcIpv4Addr.IsOptional(),
+		Computed:            vpcIpv4Addr.IsComputed(),
+		Validators: []validator.String{
+			stringvalidator.AlsoRequires(path.Expressions{
+				path.MatchRoot("vpc_id"),
+			}...),
+		},
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		},
+	}
 
 	return s
 }
@@ -401,6 +418,15 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
 	}
 
+	if plan.VpcIpv4Address.IsUnknown() {
+		if plan.VpcId.IsNull() {
+			plan.VpcIpv4Address = types.StringNull()
+		} else {
+			plan.VpcIpv4Address = types.StringUnknown()
+		}
+		resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
+	}
+
 	if req.State.Raw.IsNull() {
 		// Creation plan, no further modification needed
 		return
@@ -412,7 +438,10 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		return
 	}
 
-	if !plan.VpcId.Equal(state.VpcId) {
+	if !plan.VpcId.Equal(state.VpcId) || !plan.VpcIpv4Address.Equal(state.VpcIpv4Address) {
+		if config.VpcIpv4Address.IsNull() {
+			plan.VpcIpv4Address = types.StringUnknown()
+		}
 		plan.PrivateIPv4Addresses = types.ListUnknown(plan.PrivateIPv4Addresses.ElementType(ctx))
 	}
 
@@ -580,7 +609,9 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	if !data.Disk.IsNull() && !data.Disk.IsUnknown() {
 		body.Options.Disk = data.Disk.ValueInt32Pointer()
 	}
-
+	if !data.VpcIpv4Address.IsNull() && !data.VpcIpv4Address.IsUnknown() {
+		body.VpcIpv4Address = data.VpcIpv4Address.ValueStringPointer()
+	}
 	if data.Password.IsNull() {
 		data.Password = types.StringNull()
 	} else {
@@ -639,6 +670,18 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	plannedSourceDestCheck := data.SourceAndDestinationCheck
 	serverRespSourceDestCheck := types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
 	data.SourceAndDestinationCheck = serverRespSourceDestCheck
+
+	if serverResp.JSON200.Server.VpcId == nil {
+		data.VpcIpv4Address = types.StringNull()
+	} else if len(serverResp.JSON200.Server.Networks.V4) > 0 {
+		for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
+			// Skip addresses in 172.21.0.0/16, these are BL internal addresses that are not part of the user's VPC
+			if v4address.Type == "private" && !strings.HasPrefix(v4address.IpAddress, "172.21.") {
+				data.VpcIpv4Address = types.StringValue(v4address.IpAddress)
+				break
+			}
+		}
+	}
 
 	advFeat := serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
 	data.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
@@ -843,6 +886,55 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 	}
 
+	// Change VPC IPv4 address
+	if !plan.VpcIpv4Address.Equal(state.VpcIpv4Address) && !plan.VpcIpv4Address.IsNull() && !plan.VpcIpv4Address.IsUnknown() {
+		// If VPC was just changed, IP address needs to be fetched so it can be sent in the request
+		if refreshNeeded {
+			diag := r.fetchServerResourceState(ctx, &state)
+			resp.Diagnostics.Append(diag...)
+			resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+		}
+
+		// We might have got lucky - the new randomly assigned IP address might be the one we want, so check before making API call
+		if state.VpcIpv4Address.ValueString() != plan.VpcIpv4Address.ValueString() {
+			vpcIpv4Resp, err := r.bc.client.PostServersServerIdActionsChangeVpcIpv4WithResponse(
+				ctx,
+				state.Id.ValueInt64(),
+				binarylane.PostServersServerIdActionsChangeVpcIpv4JSONRequestBody{
+					Type:               "change_vpc_ipv4",
+					CurrentIpv4Address: state.VpcIpv4Address.ValueString(),
+					NewIpv4Address:     plan.VpcIpv4Address.ValueString(),
+				},
+			)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					fmt.Sprintf("Error changing VPC IPv4 address for server: server_id=%s", state.Id.String()),
+					err.Error())
+				return
+			}
+			if vpcIpv4Resp.StatusCode() != http.StatusOK {
+				resp.Diagnostics.AddError(
+					"Unexpected HTTP status code changing VPC IPv4 address for server",
+					fmt.Sprintf("Received %s changing VPC IPv4 address for server: server_id=%s. Details: %s", vpcIpv4Resp.Status(), state.Id.String(), vpcIpv4Resp.Body))
+				return
+			}
+			err = r.waitForServerAction(ctx, state.Id.ValueInt64(), vpcIpv4Resp.JSON200.Action.Id)
+			if err != nil {
+				resp.Diagnostics.AddError("Error waiting for VPC IPv4 address to change", err.Error())
+				return
+			}
+			state.VpcIpv4Address = plan.VpcIpv4Address
+			resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+			refreshNeeded = true // Refresh to populate private_ipv4_addresses
+			if resp.Diagnostics.HasError() {
+				return
+			}
+		}
+	}
+
 	// Resize operation
 	if !plan.Size.Equal(state.Size) ||
 		!plan.Memory.IsNull() && !plan.Memory.IsUnknown() && !plan.Memory.Equal(state.Memory) ||
@@ -936,7 +1028,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 	}
 
-	// Change ipv6
+	// Change IPv6
 	if !plan.Ipv6.Equal(state.Ipv6) {
 		ipv6Resp, err := r.bc.client.PostServersServerIdActionsChangeIpv6WithResponse(
 			ctx,
@@ -1343,6 +1435,18 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 	state.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
 	state.Ipv6 = types.BoolValue(len(serverResp.JSON200.Server.Networks.V6) > 0)
 
+	if serverResp.JSON200.Server.VpcId == nil {
+		state.VpcIpv4Address = types.StringNull()
+	} else if len(serverResp.JSON200.Server.Networks.V4) > 0 {
+		for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
+			// Skip addresses in 172.21.0.0/16, these are BL internal addresses that are not part of the user's VPC
+			if v4address.Type == "private" && !strings.HasPrefix(v4address.IpAddress, "172.21.") {
+				state.VpcIpv4Address = types.StringValue(v4address.IpAddress)
+				break
+			}
+		}
+	}
+
 	advFeat := serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
 	state.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
 		resources.AdvancedFeaturesValue{}.AttributeTypes(ctx),
@@ -1366,9 +1470,10 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 	privateIpv4Addresses := []string{}
 
 	for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
-		if v4address.Type == "public" {
+		switch v4address.Type {
+		case "public":
 			publicIpv4Addresses = append(publicIpv4Addresses, v4address.IpAddress)
-		} else if v4address.Type == "private" {
+		case "private":
 			privateIpv4Addresses = append(privateIpv4Addresses, v4address.IpAddress)
 		}
 	}
@@ -1395,9 +1500,10 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 	privateIpv6Addresses := []string{}
 
 	for _, v6address := range serverResp.JSON200.Server.Networks.V6 {
-		if v6address.Type == "public" {
+		switch v6address.Type {
+		case "public":
 			publicIpv6Addresses = append(publicIpv6Addresses, v6address.IpAddress)
-		} else {
+		case "private":
 			privateIpv6Addresses = append(privateIpv6Addresses, v6address.IpAddress)
 		}
 	}

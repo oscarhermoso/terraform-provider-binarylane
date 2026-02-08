@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 	"terraform-provider-binarylane/internal/binarylane"
 	"testing"
@@ -81,6 +82,7 @@ data "binarylane_server" "test" {
 					resource.TestCheckResourceAttr("binarylane_server.test", "memory", "1152"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "disk", "20"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "vpc_id"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "vpc_ipv4_address"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_count", "1"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "password", password1),
 					resource.TestCheckResourceAttr("binarylane_server.test", "user_data", `#cloud-config
@@ -114,6 +116,7 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "image", "debian-11"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "size", "std-min"),
 					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "vpc_id"),
+					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "vpc_ipv4_address"),
 					resource.TestCheckResourceAttrPair("data.binarylane_server.test", "permalink", "binarylane_server.test", "permalink"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "user_data", `#cloud-config
 echo "Hello World" > /var/tmp/output.txt
@@ -321,6 +324,153 @@ resource "binarylane_server" "test" {
 	})
 }
 
+func TestServerVpcIpv4Change(t *testing.T) {
+	// Must assign a password to the server or Binary Lane will send emails
+	password := GenerateTestPassword(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Plan should fail if vpc_ipv4_address is set without vpc_id
+			{
+				Config: providerConfig + `
+resource "binarylane_server" "test" {
+	name              = "tf-test-server-vpcipv4-1"
+	region            = "per"
+	image             = "debian-11"
+	size              = "std-min"
+	public_ipv4_count = 0
+	password          = "` + password + `"
+	vpc_ipv4_address  = "10.241.69.69"
+}
+`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Attribute \"vpc_id\" must be specified when \"vpc_ipv4_address\" is specified"),
+			},
+			// Setup
+			{
+				Config: providerConfig + `
+resource "binarylane_vpc" "test1" {
+  name     = "tf-test-server-vpcipv4-1"
+  ip_range = "10.240.0.0/16"
+}
+
+resource "binarylane_vpc" "test2" {
+  name     = "tf-test-server-vpcipv4-2"
+  ip_range = "10.241.0.0/16"
+}
+
+resource "binarylane_server" "test" {
+	name              = "tf-test-server-vpcipv4-1"
+	region            = "per"
+	image             = "debian-11"
+	size              = "std-min"
+	public_ipv4_count = 0
+	password          = "` + password + `"
+	vpc_id            = binarylane_vpc.test1.id
+	vpc_ipv4_address  = "10.240.0.69"
+}
+
+data "binarylane_server" "test" {
+  depends_on = [binarylane_server.test]
+
+  id = binarylane_server.test.id
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair("binarylane_server.test", "vpc_id", "binarylane_vpc.test1", "id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "vpc_ipv4_address", "10.240.0.69"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "private_ipv4_addresses.#", "1"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "private_ipv4_addresses.0", "10.240.0.69"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "vpc_ipv4_address", "10.240.0.69"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "private_ipv4_addresses.#", "1"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "private_ipv4_addresses.0", "10.240.0.69"),
+				),
+			},
+			// Change IP without changing VPC
+			{
+				Config: providerConfig + `
+resource "binarylane_vpc" "test1" {
+  name     = "tf-test-server-vpcipv4-1"
+  ip_range = "10.240.0.0/16"
+}
+
+resource "binarylane_vpc" "test2" {
+  name     = "tf-test-server-vpcipv4-2"
+  ip_range = "10.241.0.0/16"
+}
+
+resource "binarylane_server" "test" {
+	name              = "tf-test-server-vpcipv4-1"
+	region            = "per"
+	image             = "debian-11"
+	size              = "std-min"
+	public_ipv4_count = 0
+	password          = "` + password + `"
+	vpc_id            = binarylane_vpc.test1.id
+	vpc_ipv4_address  = "10.240.4.20"
+}
+
+data "binarylane_server" "test" {
+  depends_on = [binarylane_server.test]
+
+  id = binarylane_server.test.id
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair("binarylane_server.test", "vpc_id", "binarylane_vpc.test1", "id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "vpc_ipv4_address", "10.240.4.20"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "private_ipv4_addresses.#", "1"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "private_ipv4_addresses.0", "10.240.4.20"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "vpc_ipv4_address", "10.240.4.20"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "private_ipv4_addresses.#", "1"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "private_ipv4_addresses.0", "10.240.4.20"),
+				),
+			},
+			// Change VPC (should also change IP)
+			{
+				Config: providerConfig + `
+resource "binarylane_vpc" "test1" {
+  name     = "tf-test-server-vpcipv4-1"
+  ip_range = "10.240.0.0/16"
+}
+
+resource "binarylane_vpc" "test2" {
+  name     = "tf-test-server-vpcipv4-2"
+  ip_range = "10.241.0.0/16"
+}
+
+resource "binarylane_server" "test" {
+	name              = "tf-test-server-vpcipv4-1"
+	region            = "per"
+	image             = "debian-11"
+	size              = "std-min"
+	public_ipv4_count = 0
+	password          = "` + password + `"
+	vpc_id						= binarylane_vpc.test2.id
+	vpc_ipv4_address  = "10.241.69.69"
+}
+
+data "binarylane_server" "test" {
+  depends_on = [binarylane_server.test]
+
+  id = binarylane_server.test.id
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair("binarylane_server.test", "vpc_id", "binarylane_vpc.test2", "id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "vpc_ipv4_address", "10.241.69.69"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "private_ipv4_addresses.#", "1"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "private_ipv4_addresses.0", "10.241.69.69"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "vpc_ipv4_address", "10.241.69.69"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "private_ipv4_addresses.#", "1"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "private_ipv4_addresses.0", "10.241.69.69"),
+				),
+			},
+		},
+	})
+}
+
 func GenerateTestPassword(t *testing.T) string {
 	t.Helper()
 	pwBytes := make([]byte, 12)
@@ -336,7 +486,6 @@ func init() {
 		Name: "server",
 		F: func(_ string) error {
 			client, err := binarylane.NewClientWithDefaultConfig()
-
 			if err != nil {
 				return fmt.Errorf("Error creating Binary Lane API client: %w", err)
 			}
@@ -362,22 +511,22 @@ func init() {
 					return fmt.Errorf("Unexpected status code getting servers in test sweep: %s", listResp.Body)
 				}
 
-			servers := listResp.JSON200.Servers
-			for _, s := range servers {
-				if strings.HasPrefix(s.Name, "tf-test-") {
-					reason := "Terraform deletion"
-					params := binarylane.DeleteServersServerIdParams{
-						Reason: &reason,
-					}
+				servers := listResp.JSON200.Servers
+				for _, s := range servers {
+					if strings.HasPrefix(s.Name, "tf-test-") {
+						reason := "Terraform deletion"
+						params := binarylane.DeleteServersServerIdParams{
+							Reason: &reason,
+						}
 
-					deleteResp, err := client.DeleteServersServerIdWithResponse(ctx, s.Id, &params)
-					if err != nil {
-						return fmt.Errorf("Error deleting server %d during test sweep: %w", s.Id, err)
-					}
-					if deleteResp.StatusCode() != http.StatusNoContent {
-						return fmt.Errorf("Unexpected status %d deleting server %d in test sweep: %s", deleteResp.StatusCode(), s.Id, deleteResp.Body)
-					}
-					log.Println("Deleted server during test sweep:", s.Id)
+						deleteResp, err := client.DeleteServersServerIdWithResponse(ctx, s.Id, &params)
+						if err != nil {
+							return fmt.Errorf("Error deleting server %d during test sweep: %w", s.Id, err)
+						}
+						if deleteResp.StatusCode() != http.StatusNoContent {
+							return fmt.Errorf("Unexpected status %d deleting server %d in test sweep: %s", deleteResp.StatusCode(), s.Id, deleteResp.Body)
+						}
+						log.Println("Deleted server during test sweep:", s.Id)
 					}
 				}
 				if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages.Next == nil {

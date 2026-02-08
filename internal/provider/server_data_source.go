@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
+	"strings"
 	"terraform-provider-binarylane/internal/resources"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -118,6 +119,18 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.Memory = types.Int32Value(serverResp.JSON200.Server.Memory)
 	data.Disk = types.Int32Value(serverResp.JSON200.Server.Disk)
 	data.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
+
+	if serverResp.JSON200.Server.VpcId == nil {
+		data.VpcIpv4Address = types.StringNull()
+	} else if len(serverResp.JSON200.Server.Networks.V4) > 0 {
+		for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
+			// Skip addresses in 172.21.0.0/16, these are BL internal addresses that are not part of the user's VPC
+			if v4address.Type == "private" && !strings.HasPrefix(v4address.IpAddress, "172.21.") {
+				data.VpcIpv4Address = types.StringValue(v4address.IpAddress)
+				break
+			}
+		}
+	}
 
 	advFeat := serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
 	data.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
