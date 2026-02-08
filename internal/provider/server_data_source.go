@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
+	"strings"
 	"terraform-provider-binarylane/internal/resources"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -105,21 +106,33 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	data.Id = types.Int64Value(*serverResp.JSON200.Server.Id)
-	data.Name = types.StringValue(*serverResp.JSON200.Server.Name)
+	data.Id = types.Int64Value(serverResp.JSON200.Server.Id)
+	data.Name = types.StringValue(serverResp.JSON200.Server.Name)
 	data.Image = types.StringValue(*serverResp.JSON200.Server.Image.Slug)
-	data.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
-	data.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
+	data.Region = types.StringValue(serverResp.JSON200.Server.Region.Slug)
+	data.Size = types.StringValue(serverResp.JSON200.Server.Size.Slug)
 	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
 	data.Ipv6 = types.BoolValue(len(serverResp.JSON200.Server.Networks.V6) > 0)
 	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
 	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
-	data.Memory = types.Int32Value(*serverResp.JSON200.Server.Memory)
-	data.Disk = types.Int32Value(*serverResp.JSON200.Server.Disk)
+	data.Memory = types.Int32Value(serverResp.JSON200.Server.Memory)
+	data.Disk = types.Int32Value(serverResp.JSON200.Server.Disk)
 	data.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
 
-	advFeat := *serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
+	if serverResp.JSON200.Server.VpcId == nil {
+		data.VpcIpv4Address = types.StringNull()
+	} else if len(serverResp.JSON200.Server.Networks.V4) > 0 {
+		for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
+			// Skip addresses in 172.21.0.0/16, these are BL internal addresses that are not part of the user's VPC
+			if v4address.Type == "private" && !strings.HasPrefix(v4address.IpAddress, "172.21.") {
+				data.VpcIpv4Address = types.StringValue(v4address.IpAddress)
+				break
+			}
+		}
+	}
+
+	advFeat := serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
 	data.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
 		resources.AdvancedFeaturesValue{}.AttributeTypes(ctx),
 		map[string]attr.Value{

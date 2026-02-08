@@ -186,10 +186,9 @@ func serverSchema(ctx context.Context) schema.Schema {
 	}
 
 	// Additional attributes
-	pwDescription :=
-		"If this is provided the specified or default remote user's account password will be set to this value. " +
-			"Only valid if the server supports password change actions. If omitted and the server supports password " +
-			"change actions a random password will be generated and emailed to the account email address."
+	pwDescription := "If this is provided the specified or default remote user's account password will be set to this value. " +
+		"Only valid if the server supports password change actions. If omitted and the server supports password " +
+		"change actions a random password will be generated and emailed to the account email address."
 	s.Attributes["password"] = schema.StringAttribute{
 		Description:         pwDescription,
 		MarkdownDescription: pwDescription,
@@ -364,11 +363,29 @@ func serverSchema(ctx context.Context) schema.Schema {
 		},
 	}
 
-	s.Attributes["timeouts"] =
-		timeouts.Attributes(ctx, timeouts.Opts{
-			Create: true,
-			Update: true,
-		})
+	s.Attributes["timeouts"] = timeouts.Attributes(ctx, timeouts.Opts{
+		Create: true,
+		Update: true,
+	})
+
+	vpcIpv4Addr := s.Attributes["vpc_ipv4_address"]
+	vpcIpv4AddrDescription := "If provided this will be the IPv4 address for the server's private VPC network adapter." +
+		" If this is unspecified, then an unused IPv4 address will be assigned. This field is only valid when `vpc_id`" +
+		" is provided."
+	s.Attributes["vpc_ipv4_address"] = schema.StringAttribute{
+		Description:         vpcIpv4AddrDescription,
+		MarkdownDescription: vpcIpv4AddrDescription,
+		Optional:            vpcIpv4Addr.IsOptional(),
+		Computed:            vpcIpv4Addr.IsComputed(),
+		Validators: []validator.String{
+			stringvalidator.AlsoRequires(path.Expressions{
+				path.MatchRoot("vpc_id"),
+			}...),
+		},
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		},
+	}
 
 	return s
 }
@@ -401,6 +418,15 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
 	}
 
+	if plan.VpcIpv4Address.IsUnknown() {
+		if plan.VpcId.IsNull() {
+			plan.VpcIpv4Address = types.StringNull()
+		} else {
+			plan.VpcIpv4Address = types.StringUnknown()
+		}
+		resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
+	}
+
 	if req.State.Raw.IsNull() {
 		// Creation plan, no further modification needed
 		return
@@ -412,7 +438,10 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		return
 	}
 
-	if !plan.VpcId.Equal(state.VpcId) {
+	if !plan.VpcId.Equal(state.VpcId) || !plan.VpcIpv4Address.Equal(state.VpcIpv4Address) {
+		if config.VpcIpv4Address.IsNull() {
+			plan.VpcIpv4Address = types.StringUnknown()
+		}
 		plan.PrivateIPv4Addresses = types.ListUnknown(plan.PrivateIPv4Addresses.ElementType(ctx))
 	}
 
@@ -481,7 +510,7 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 			debugAdvFeatResp, _ := json.Marshal(advFeatResp.JSON200)
 			tflog.Debug(ctx, fmt.Sprintf("Recieved response for available advanced features: %s", debugAdvFeatResp))
 
-			availableAdvFeat := *advFeatResp.JSON200.AvailableAdvancedServerFeatures.AdvancedFeatures
+			availableAdvFeat := advFeatResp.JSON200.AvailableAdvancedServerFeatures.AdvancedFeatures
 
 			if plan.AdvancedFeatures.EmulatedHyperv.ValueBool() && !slices.Contains(availableAdvFeat, "emulated-hyperv") {
 				resp.Diagnostics.AddAttributeError(
@@ -580,7 +609,9 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	if !data.Disk.IsNull() && !data.Disk.IsUnknown() {
 		body.Options.Disk = data.Disk.ValueInt32Pointer()
 	}
-
+	if !data.VpcIpv4Address.IsNull() && !data.VpcIpv4Address.IsUnknown() {
+		body.VpcIpv4Address = data.VpcIpv4Address.ValueStringPointer()
+	}
 	if data.Password.IsNull() {
 		data.Password = types.StringNull()
 	} else {
@@ -606,9 +637,9 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// Wait for server to be ready
 	var createActionId int64
-	for _, action := range *serverResp.JSON200.Links.Actions {
-		if *action.Rel == "create" {
-			createActionId = *action.Id
+	for _, action := range serverResp.JSON200.Links.Actions {
+		if action.Rel == "create" {
+			createActionId = action.Id
 			break
 		}
 	}
@@ -618,29 +649,41 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 			fmt.Sprintf("Received %s creating new server: name=%s. Details: %s", serverResp.Status(), data.Name.ValueString(), serverResp.Body))
 		return
 	}
-	err = r.waitForServerAction(ctx, *serverResp.JSON200.Server.Id, createActionId)
+	err = r.waitForServerAction(ctx, serverResp.JSON200.Server.Id, createActionId)
 	if err != nil {
 		resp.Diagnostics.AddError("Error waiting for server to be created", err.Error())
 	}
 
-	data.Id = types.Int64Value(*serverResp.JSON200.Server.Id)
-	data.Name = types.StringValue(*serverResp.JSON200.Server.Name)
+	data.Id = types.Int64Value(serverResp.JSON200.Server.Id)
+	data.Name = types.StringValue(serverResp.JSON200.Server.Name)
 	data.Image = types.StringValue(*serverResp.JSON200.Server.Image.Slug)
-	data.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
-	data.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
+	data.Region = types.StringValue(serverResp.JSON200.Server.Region.Slug)
+	data.Size = types.StringValue(serverResp.JSON200.Server.Size.Slug)
 	data.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
 	data.Ipv6 = types.BoolValue(len(serverResp.JSON200.Server.Networks.V6) > 0)
 	data.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
 	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
-	data.PasswordChangeSupported = types.BoolValue(*serverResp.JSON200.Server.PasswordChangeSupported)
-	data.Memory = types.Int32Value(*serverResp.JSON200.Server.Memory)
-	data.Disk = types.Int32Value(*serverResp.JSON200.Server.Disk)
+	data.PasswordChangeSupported = types.BoolValue(serverResp.JSON200.Server.PasswordChangeSupported)
+	data.Memory = types.Int32Value(serverResp.JSON200.Server.Memory)
+	data.Disk = types.Int32Value(serverResp.JSON200.Server.Disk)
 	plannedSourceDestCheck := data.SourceAndDestinationCheck
 	serverRespSourceDestCheck := types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
 	data.SourceAndDestinationCheck = serverRespSourceDestCheck
 
-	advFeat := *serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
+	if serverResp.JSON200.Server.VpcId == nil {
+		data.VpcIpv4Address = types.StringNull()
+	} else if len(serverResp.JSON200.Server.Networks.V4) > 0 {
+		for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
+			// Skip addresses in 172.21.0.0/16, these are BL internal addresses that are not part of the user's VPC
+			if v4address.Type == "private" && !strings.HasPrefix(v4address.IpAddress, "172.21.") {
+				data.VpcIpv4Address = types.StringValue(v4address.IpAddress)
+				break
+			}
+		}
+	}
+
+	advFeat := serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
 	data.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
 		resources.AdvancedFeaturesValue{}.AttributeTypes(ctx),
 		map[string]attr.Value{
@@ -830,7 +873,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 				fmt.Sprintf("Received %s changing network for server: server_id=%s. Details: %s", networkResp.Status(), state.Id.String(), networkResp.Body))
 			return
 		}
-		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *networkResp.JSON200.Action.Id)
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), networkResp.JSON200.Action.Id)
 		if err != nil {
 			resp.Diagnostics.AddError("Error waiting for server to change network", err.Error())
 			return
@@ -840,6 +883,55 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 		if resp.Diagnostics.HasError() {
 			return
+		}
+	}
+
+	// Change VPC IPv4 address
+	if !plan.VpcIpv4Address.Equal(state.VpcIpv4Address) && !plan.VpcIpv4Address.IsNull() && !plan.VpcIpv4Address.IsUnknown() {
+		// If VPC was just changed, IP address needs to be fetched so it can be sent in the request
+		if refreshNeeded {
+			diag := r.fetchServerResourceState(ctx, &state)
+			resp.Diagnostics.Append(diag...)
+			resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+		}
+
+		// We might have got lucky - the new randomly assigned IP address might be the one we want, so check before making API call
+		if state.VpcIpv4Address.ValueString() != plan.VpcIpv4Address.ValueString() {
+			vpcIpv4Resp, err := r.bc.client.PostServersServerIdActionsChangeVpcIpv4WithResponse(
+				ctx,
+				state.Id.ValueInt64(),
+				binarylane.PostServersServerIdActionsChangeVpcIpv4JSONRequestBody{
+					Type:               "change_vpc_ipv4",
+					CurrentIpv4Address: state.VpcIpv4Address.ValueString(),
+					NewIpv4Address:     plan.VpcIpv4Address.ValueString(),
+				},
+			)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					fmt.Sprintf("Error changing VPC IPv4 address for server: server_id=%s", state.Id.String()),
+					err.Error())
+				return
+			}
+			if vpcIpv4Resp.StatusCode() != http.StatusOK {
+				resp.Diagnostics.AddError(
+					"Unexpected HTTP status code changing VPC IPv4 address for server",
+					fmt.Sprintf("Received %s changing VPC IPv4 address for server: server_id=%s. Details: %s", vpcIpv4Resp.Status(), state.Id.String(), vpcIpv4Resp.Body))
+				return
+			}
+			err = r.waitForServerAction(ctx, state.Id.ValueInt64(), vpcIpv4Resp.JSON200.Action.Id)
+			if err != nil {
+				resp.Diagnostics.AddError("Error waiting for VPC IPv4 address to change", err.Error())
+				return
+			}
+			state.VpcIpv4Address = plan.VpcIpv4Address
+			resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+			refreshNeeded = true // Refresh to populate private_ipv4_addresses
+			if resp.Diagnostics.HasError() {
+				return
+			}
 		}
 	}
 
@@ -919,7 +1011,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
-		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *resizeResp.JSON200.Action.Id)
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), resizeResp.JSON200.Action.Id)
 		if err != nil {
 			resp.Diagnostics.AddError("Error waiting for server to be resized", err.Error())
 			return
@@ -936,7 +1028,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 	}
 
-	// Change ipv6
+	// Change IPv6
 	if !plan.Ipv6.Equal(state.Ipv6) {
 		ipv6Resp, err := r.bc.client.PostServersServerIdActionsChangeIpv6WithResponse(
 			ctx,
@@ -951,7 +1043,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
-		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *ipv6Resp.JSON200.Action.Id)
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), ipv6Resp.JSON200.Action.Id)
 		if err != nil {
 			resp.Diagnostics.AddError("Error waiting for changing IPv6", err.Error())
 			return
@@ -1010,7 +1102,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 				fmt.Sprintf("Received %s rebuilding server: server_id=%s. Details: %s", rebuildResp.Status(), state.Id.String(), rebuildResp.Body))
 			return
 		}
-		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *rebuildResp.JSON200.Action.Id)
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), rebuildResp.JSON200.Action.Id)
 		if err != nil {
 			resp.Diagnostics.AddError("Error waiting for server to be rebuilt", err.Error())
 			return
@@ -1038,7 +1130,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 			resp.Diagnostics.AddError("Error resetting password", err.Error())
 			return
 		}
-		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *passwordResp.JSON200.Action.Id)
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), passwordResp.JSON200.Action.Id)
 		if err != nil {
 			resp.Diagnostics.AddError("Error waiting for password reset", err.Error())
 			return
@@ -1092,7 +1184,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 				resp.Diagnostics.AddError("Error enabling backups", err.Error())
 				return
 			}
-			err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *backupResp.JSON200.Action.Id)
+			err = r.waitForServerAction(ctx, state.Id.ValueInt64(), backupResp.JSON200.Action.Id)
 			if err != nil {
 				resp.Diagnostics.AddError("Error waiting for backups to be enabled", err.Error())
 				return
@@ -1105,7 +1197,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 				resp.Diagnostics.AddError("Error disabling backups", err.Error())
 				return
 			}
-			err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *backupResp.JSON200.Action.Id)
+			err = r.waitForServerAction(ctx, state.Id.ValueInt64(), backupResp.JSON200.Action.Id)
 			if err != nil {
 				resp.Diagnostics.AddError("Error waiting for backups to be disabled", err.Error())
 				return
@@ -1132,7 +1224,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 			resp.Diagnostics.AddError("Error changing \"port_blocking\" attribute", err.Error())
 			return
 		}
-		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), *portBlockingResp.JSON200.Action.Id)
+		err = r.waitForServerAction(ctx, state.Id.ValueInt64(), portBlockingResp.JSON200.Action.Id)
 		if err != nil {
 			resp.Diagnostics.AddError("Error waiting for \"port_blocking\" attribute to change", err.Error())
 			return
@@ -1210,8 +1302,8 @@ func (r *serverResource) ImportState(
 		return
 	}
 
-	servers := *serverResp.JSON200.Servers
-	idx := slices.IndexFunc(servers, func(s binarylane.Server) bool { return *s.Name == name })
+	servers := serverResp.JSON200.Servers
+	idx := slices.IndexFunc(servers, func(s binarylane.Server) bool { return s.Name == name })
 	if idx == -1 {
 		resp.Diagnostics.AddError(
 			"Could not find server by hostname",
@@ -1221,7 +1313,7 @@ func (r *serverResource) ImportState(
 	}
 	server := servers[idx]
 
-	diags := resp.State.SetAttribute(ctx, path.Root("id"), int32(*server.Id))
+	diags := resp.State.SetAttribute(ctx, path.Root("id"), int32(server.Id))
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -1242,7 +1334,7 @@ func (r *serverResource) waitForServerAction(ctx context.Context, serverId int64
 			if err != nil {
 				return fmt.Errorf("unexpected error waiting for server action: server_id=%d, action_id=%d, error: %w", serverId, actionId, err)
 			}
-			if readyResp.StatusCode() == http.StatusOK && *readyResp.JSON200.Action.Status == binarylane.Errored {
+			if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.Status == binarylane.Errored {
 				return fmt.Errorf("server action failed to with error: server_id=%d, action_id=%d, error: %s", serverId, actionId, readyResp.Body)
 			}
 			if readyResp.StatusCode() == http.StatusOK && readyResp.JSON200.Action.CompletedAt != nil {
@@ -1298,7 +1390,7 @@ func (r *serverResource) updateSourceDestCheck(
 		return fmt.Errorf("unexpected HTTP status code changing source and destination check for server: server_id=%d, details: %s", serverId, sourceDestCheckResp.Body)
 	}
 
-	err = r.waitForServerAction(ctx, serverId, *sourceDestCheckResp.JSON200.Action.Id)
+	err = r.waitForServerAction(ctx, serverId, sourceDestCheckResp.JSON200.Action.Id)
 	if err != nil {
 		return fmt.Errorf("error changing source and destination check: %w", err)
 	}
@@ -1327,23 +1419,35 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 		}
 	}
 
-	state.Id = types.Int64Value(*serverResp.JSON200.Server.Id)
-	state.Name = types.StringValue(*serverResp.JSON200.Server.Name)
+	state.Id = types.Int64Value(serverResp.JSON200.Server.Id)
+	state.Name = types.StringValue(serverResp.JSON200.Server.Name)
 	state.Image = types.StringValue(*serverResp.JSON200.Server.Image.Slug)
-	state.Region = types.StringValue(*serverResp.JSON200.Server.Region.Slug)
-	state.Size = types.StringValue(*serverResp.JSON200.Server.Size.Slug)
+	state.Region = types.StringValue(serverResp.JSON200.Server.Region.Slug)
+	state.Size = types.StringValue(serverResp.JSON200.Server.Size.Slug)
 	state.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
 	state.PortBlocking = types.BoolValue(serverResp.JSON200.Server.Networks.PortBlocking)
 	state.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
 	state.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
-	state.PasswordChangeSupported = types.BoolValue(*serverResp.JSON200.Server.PasswordChangeSupported)
+	state.PasswordChangeSupported = types.BoolValue(serverResp.JSON200.Server.PasswordChangeSupported)
 	state.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
-	state.Memory = types.Int32Value(*serverResp.JSON200.Server.Memory)
-	state.Disk = types.Int32Value(*serverResp.JSON200.Server.Disk)
+	state.Memory = types.Int32Value(serverResp.JSON200.Server.Memory)
+	state.Disk = types.Int32Value(serverResp.JSON200.Server.Disk)
 	state.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
 	state.Ipv6 = types.BoolValue(len(serverResp.JSON200.Server.Networks.V6) > 0)
 
-	advFeat := *serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
+	if serverResp.JSON200.Server.VpcId == nil {
+		state.VpcIpv4Address = types.StringNull()
+	} else if len(serverResp.JSON200.Server.Networks.V4) > 0 {
+		for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
+			// Skip addresses in 172.21.0.0/16, these are BL internal addresses that are not part of the user's VPC
+			if v4address.Type == "private" && !strings.HasPrefix(v4address.IpAddress, "172.21.") {
+				state.VpcIpv4Address = types.StringValue(v4address.IpAddress)
+				break
+			}
+		}
+	}
+
+	advFeat := serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
 	state.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
 		resources.AdvancedFeaturesValue{}.AttributeTypes(ctx),
 		map[string]attr.Value{
@@ -1366,9 +1470,10 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 	privateIpv4Addresses := []string{}
 
 	for _, v4address := range serverResp.JSON200.Server.Networks.V4 {
-		if v4address.Type == "public" {
+		switch v4address.Type {
+		case "public":
 			publicIpv4Addresses = append(publicIpv4Addresses, v4address.IpAddress)
-		} else if v4address.Type == "private" {
+		case "private":
 			privateIpv4Addresses = append(privateIpv4Addresses, v4address.IpAddress)
 		}
 	}
@@ -1395,9 +1500,10 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 	privateIpv6Addresses := []string{}
 
 	for _, v6address := range serverResp.JSON200.Server.Networks.V6 {
-		if v6address.Type == "public" {
+		switch v6address.Type {
+		case "public":
 			publicIpv6Addresses = append(publicIpv6Addresses, v6address.IpAddress)
-		} else {
+		case "private":
 			privateIpv6Addresses = append(privateIpv6Addresses, v6address.IpAddress)
 		}
 	}
@@ -1506,7 +1612,7 @@ func (r *serverResource) updateAdvancedFeatures(
 		return fmt.Errorf("unexpected HTTP status code updating advanced features for server: server_id=%d, details: %s", serverId, resp.Body)
 	}
 
-	err = r.waitForServerAction(ctx, serverId, *resp.JSON200.Action.Id)
+	err = r.waitForServerAction(ctx, serverId, resp.JSON200.Action.Id)
 	if err != nil {
 		return fmt.Errorf("failed to confirm advanced features for server was successful: %w", err)
 	}

@@ -413,16 +413,16 @@ const (
 // Account defines model for Account.
 type Account struct {
 	// AdditionalIpv4Limit The maximum additional IPv4 addresses this account may assign across all servers. You may contact support to request this limit be increased.
-	AdditionalIpv4Limit *int32 `json:"additional_ipv4_limit,omitempty"`
+	AdditionalIpv4Limit int32 `json:"additional_ipv4_limit"`
 
 	// ConfiguredPaymentMethods The payment methods that are configured (available) for this account.
-	ConfiguredPaymentMethods *[]PaymentMethod `json:"configured_payment_methods,omitempty"`
+	ConfiguredPaymentMethods []PaymentMethod `json:"configured_payment_methods"`
 
 	// Email The email address registered for this account.
-	Email *string `json:"email,omitempty"`
+	Email string `json:"email"`
 
 	// EmailVerified Whether this account has been verified. Un-verified accounts are subject to some restrictions.
-	EmailVerified *bool `json:"email_verified,omitempty"`
+	EmailVerified bool `json:"email_verified"`
 
 	// Status The status of this account.
 	//
@@ -433,18 +433,18 @@ type Account struct {
 	// | warning | An account that is under review. If you are unsure why your account has this status please urgently contact support. |
 	// | locked | An account that is no longer permitted to access the service. |
 	//
-	Status *AccountStatus `json:"status,omitempty"`
+	Status AccountStatus `json:"status"`
 
 	// TaxCode The tax code that currently applies to transactions for this account.
-	TaxCode *TaxCode `json:"tax_code,omitempty"`
+	TaxCode TaxCode `json:"tax_code"`
 
-	// TwoFactorAuthenticationEnabled Whether this account has enabled two factor authentication.
-	TwoFactorAuthenticationEnabled *bool `json:"two_factor_authentication_enabled,omitempty"`
+	// TwoFactorAuthenticationEnabled Whether this account has enabled app-based two factor authentication.
+	TwoFactorAuthenticationEnabled bool `json:"two_factor_authentication_enabled"`
 }
 
 // AccountResponse defines model for AccountResponse.
 type AccountResponse struct {
-	Account *Account `json:"account,omitempty"`
+	Account Account `json:"account"`
 }
 
 // AccountStatus
@@ -465,10 +465,10 @@ type Action struct {
 	CompletedAt *time.Time `json:"completed_at"`
 
 	// Id The ID of this action.
-	Id *int64 `json:"id,omitempty"`
+	Id int64 `json:"id"`
 
 	// Progress Information about the current progress of the action. Some actions are divided into 'steps' and this may also contain information about the current and completed steps.
-	Progress *ActionProgress `json:"progress,omitempty"`
+	Progress ActionProgress `json:"progress"`
 
 	// Region The region (if any) of the resource associated with this action.
 	Region *Region `json:"region"`
@@ -496,11 +496,11 @@ type Action struct {
 	ResultData *string `json:"result_data"`
 
 	// StartedAt The timestamp in ISO8601 format of when processing of this action started.
-	StartedAt *time.Time    `json:"started_at,omitempty"`
-	Status    *ActionStatus `json:"status,omitempty"`
+	StartedAt time.Time    `json:"started_at"`
+	Status    ActionStatus `json:"status"`
 
 	// Type The type of this action.
-	Type *string `json:"type,omitempty"`
+	Type string `json:"type"`
 
 	// UserInteractionRequired If this is not null the action is waiting on a response from the user.
 	UserInteractionRequired *UserInteractionRequired `json:"user_interaction_required"`
@@ -508,15 +508,15 @@ type Action struct {
 
 // ActionLink defines model for ActionLink.
 type ActionLink struct {
-	Href string  `json:"href"`
-	Id   *int64  `json:"id,omitempty"`
-	Rel  *string `json:"rel,omitempty"`
+	Href string `json:"href"`
+	Id   int64  `json:"id"`
+	Rel  string `json:"rel"`
 }
 
 // ActionProgress defines model for ActionProgress.
 type ActionProgress struct {
 	// CompletedSteps A list of the completed action steps.
-	CompletedSteps *[]string `json:"completed_steps,omitempty"`
+	CompletedSteps []string `json:"completed_steps"`
 
 	// CurrentStep An description of the current action step.
 	CurrentStep *string `json:"current_step"`
@@ -525,12 +525,12 @@ type ActionProgress struct {
 	CurrentStepDetail *string `json:"current_step_detail"`
 
 	// PercentComplete An estimation of the overall completion of the action.
-	PercentComplete *int32 `json:"percent_complete,omitempty"`
+	PercentComplete int32 `json:"percent_complete"`
 }
 
 // ActionResponse defines model for ActionResponse.
 type ActionResponse struct {
-	Action *Action `json:"action,omitempty"`
+	Action Action `json:"action"`
 }
 
 // ActionStatus
@@ -543,13 +543,13 @@ type ActionStatus string
 
 // ActionsLinks defines model for ActionsLinks.
 type ActionsLinks struct {
-	Actions *[]ActionLink `json:"actions,omitempty"`
+	Actions []ActionLink `json:"actions"`
 }
 
 // ActionsResponse defines model for ActionsResponse.
 type ActionsResponse struct {
-	Actions *[]Action `json:"actions,omitempty"`
-	Links   *Links    `json:"links"`
+	Actions []Action `json:"actions"`
+	Links   *Links   `json:"links"`
 
 	// Meta Contains metadata about the response, currently this includes the total number of items.
 	Meta Meta `json:"meta"`
@@ -663,7 +663,7 @@ type AdvancedFirewallRulesResponse struct {
 // AdvancedServerFeatures defines model for AdvancedServerFeatures.
 type AdvancedServerFeatures struct {
 	// EnabledAdvancedFeatures A list of the currently enabled advanced features for this server.
-	EnabledAdvancedFeatures *[]string `json:"enabled_advanced_features,omitempty"`
+	EnabledAdvancedFeatures []string `json:"enabled_advanced_features"`
 
 	// MachineType The machine_type (corresponding to a KVM version) used for this server.
 	// A null value indicates automatic selection of the best KVM machine type supported by the host node.
@@ -695,7 +695,7 @@ type AdvancedServerFeatures struct {
 	// | virtio | Virtio VGA (800x600) |
 	// | virtio-wide | Virtio VGA (1600x900) |
 	//
-	VideoDevice *VideoDevice `json:"video_device,omitempty"`
+	VideoDevice VideoDevice `json:"video_device"`
 }
 
 // AttachBackup Attach a Backup to a Server
@@ -717,27 +717,27 @@ type AttachedBackup struct {
 	AttachmentExpires *time.Time `json:"attachment_expires"`
 
 	// DiskIdentifiers A list of the operating specific disk identifiers for the attached backup disks.
-	DiskIdentifiers *[]string `json:"disk_identifiers,omitempty"`
+	DiskIdentifiers []string `json:"disk_identifiers"`
 
 	// Id The ID of the backup image.
-	Id *int64 `json:"id,omitempty"`
+	Id int64 `json:"id"`
 }
 
 // AvailableAdvancedServerFeatures defines model for AvailableAdvancedServerFeatures.
 type AvailableAdvancedServerFeatures struct {
 	// AdvancedFeatures A list of the advanced features available for this server.
-	AdvancedFeatures *[]string `json:"advanced_features,omitempty"`
+	AdvancedFeatures []string `json:"advanced_features"`
 
 	// MachineTypes A list of the machine types available for this server.
-	MachineTypes *[]VmMachineType `json:"machine_types,omitempty"`
+	MachineTypes []VmMachineType `json:"machine_types"`
 
 	// ProcessorModels A list of the processor models available for this server.
-	ProcessorModels *[]ProcessorModel `json:"processor_models,omitempty"`
+	ProcessorModels []ProcessorModel `json:"processor_models"`
 }
 
 // AvailableAdvancedServerFeaturesResponse defines model for AvailableAdvancedServerFeaturesResponse.
 type AvailableAdvancedServerFeaturesResponse struct {
-	AvailableAdvancedServerFeatures *AvailableAdvancedServerFeatures `json:"available_advanced_server_features,omitempty"`
+	AvailableAdvancedServerFeatures AvailableAdvancedServerFeatures `json:"available_advanced_server_features"`
 }
 
 // BackupDisk defines model for BackupDisk.
@@ -746,32 +746,32 @@ type BackupDisk struct {
 	Description *string `json:"description"`
 
 	// Id The ID of this backup disk.
-	Id *int64 `json:"id,omitempty"`
+	Id int64 `json:"id"`
 
 	// MinDiskSize This is the minimum disk size in GB required to restore this disk image.
-	MinDiskSize *int32 `json:"min_disk_size,omitempty"`
+	MinDiskSize int32 `json:"min_disk_size"`
 
 	// SizeGigabytes This is the compressed size of the disk image in GB.
-	SizeGigabytes *float64 `json:"size_gigabytes,omitempty"`
+	SizeGigabytes float64 `json:"size_gigabytes"`
 }
 
 // BackupInfo defines model for BackupInfo.
 type BackupInfo struct {
 	// BackupDisks A list of the individual disks that make up this backup.
-	BackupDisks *[]BackupDisk `json:"backup_disks,omitempty"`
+	BackupDisks []BackupDisk `json:"backup_disks"`
 
 	// Iso If this is true the backup is an ISO image and cannot be restored or downloaded. ISO images may only be attached for use as a boot disk or an additional disk.
-	Iso *bool `json:"iso,omitempty"`
+	Iso bool `json:"iso"`
 
 	// Locked If this is true the backup is locked and cannot be replaced.
-	Locked *bool `json:"locked,omitempty"`
+	Locked bool `json:"locked"`
 
 	// Offsite If this is true, an attempt to create an offsite copy was made. This does not mean that the offsite copy attempt was successful or that the copy still exists.
-	Offsite *bool `json:"offsite,omitempty"`
+	Offsite bool `json:"offsite"`
 
 	// ServerId The server ID that was used to create this backup.
-	ServerId *int64      `json:"server_id,omitempty"`
-	Type     *BackupSlot `json:"type,omitempty"`
+	ServerId int64      `json:"server_id"`
+	Type     BackupSlot `json:"type"`
 }
 
 // BackupReplacementStrategy
@@ -786,13 +786,13 @@ type BackupReplacementStrategy string
 // BackupSettings defines model for BackupSettings.
 type BackupSettings struct {
 	// BackupDayOfMonth If monthly backups are enabled the day of the month the monthly backup will occur.
-	BackupDayOfMonth *int32 `json:"backup_day_of_month,omitempty"`
+	BackupDayOfMonth int32 `json:"backup_day_of_month"`
 
 	// BackupDayOfWeek If weekly backups are enabled the day of the week that the weekly backup will occur. Sunday is day 0.
-	BackupDayOfWeek *int32 `json:"backup_day_of_week,omitempty"`
+	BackupDayOfWeek int32 `json:"backup_day_of_week"`
 
 	// BackupHourOfDay The hour of the day that backups will be scheduled. This is an approximate value.
-	BackupHourOfDay *int32 `json:"backup_hour_of_day,omitempty"`
+	BackupHourOfDay int32 `json:"backup_hour_of_day"`
 
 	// OffsiteBackupSettings If offsite backups are enabled this details how they are stored and managed.
 	OffsiteBackupSettings *OffsiteBackupSettings `json:"offsite_backup_settings"`
@@ -811,16 +811,16 @@ type BackupSlot string
 type BackupWindow struct {
 	// End The expected latest date and time in ISO8601 format of the next scheduled backup.
 	// This is not a guarantee that the backup will have started or completed by this date and time.
-	End *time.Time `json:"end,omitempty"`
+	End time.Time `json:"end"`
 
 	// Start The approximate earliest start date and time in ISO8601 format of the next scheduled backup.
-	Start *time.Time `json:"start,omitempty"`
+	Start time.Time `json:"start"`
 }
 
 // BackupsResponse defines model for BackupsResponse.
 type BackupsResponse struct {
-	Backups *[]Image `json:"backups,omitempty"`
-	Links   *Links   `json:"links"`
+	Backups []Image `json:"backups"`
+	Links   *Links  `json:"links"`
 
 	// Meta Contains metadata about the response, currently this includes the total number of items.
 	Meta Meta `json:"meta"`
@@ -829,21 +829,21 @@ type BackupsResponse struct {
 // Balance defines model for Balance.
 type Balance struct {
 	// AvailableCredit Available credit in AU$.
-	AvailableCredit *float64 `json:"available_credit,omitempty"`
+	AvailableCredit float64 `json:"available_credit"`
 
 	// Charges A list of all of the individual charges that contribute to the un-billed total.
-	Charges *[]ChargeInformation `json:"charges,omitempty"`
+	Charges []ChargeInformation `json:"charges"`
 
 	// GeneratedAt The timestamp of the most recent charge.
 	GeneratedAt *time.Time `json:"generated_at"`
 
 	// UnbilledTotal The total of any un-billed charges in AU$.
-	UnbilledTotal *float64 `json:"unbilled_total,omitempty"`
+	UnbilledTotal float64 `json:"unbilled_total"`
 }
 
 // BalanceResponse defines model for BalanceResponse.
 type BalanceResponse struct {
-	Balance *Balance `json:"balance,omitempty"`
+	Balance Balance `json:"balance"`
 }
 
 // ChangeAdvancedFeatures Change the Advanced Features of a Server
@@ -1135,16 +1135,16 @@ type ChangeVpcIpv4Type string
 // ChargeInformation defines model for ChargeInformation.
 type ChargeInformation struct {
 	// Created The time when the charge was created.
-	Created *time.Time `json:"created,omitempty"`
+	Created time.Time `json:"created"`
 
 	// Description A summary of the charge.
-	Description *string `json:"description,omitempty"`
+	Description string `json:"description"`
 
 	// Ongoing If this is true the charge is for an ongoing service. If this is false the charge is complete and awaiting invoicing.
-	Ongoing *bool `json:"ongoing,omitempty"`
+	Ongoing bool `json:"ongoing"`
 
 	// Total The cost in AU$.
-	Total *float64 `json:"total,omitempty"`
+	Total float64 `json:"total"`
 }
 
 // CloneUsingBackup Restore a Backup of a Server to a Different Existing Server
@@ -1166,24 +1166,24 @@ type CloneUsingBackupType string
 // Console defines model for Console.
 type Console struct {
 	// Browser The URL for the full screen and full featured version of the console.
-	Browser *string `json:"browser,omitempty"`
+	Browser string `json:"browser"`
 
 	// Expiry The expiry time of the provided URLs.
-	Expiry *time.Time `json:"expiry,omitempty"`
+	Expiry time.Time `json:"expiry"`
 
 	// Height Rescue console native height.
-	Height *int32 `json:"height,omitempty"`
+	Height int32 `json:"height"`
 
 	// Iframe The URL for the embedded version of the console.
-	Iframe *string `json:"iframe,omitempty"`
+	Iframe string `json:"iframe"`
 
 	// Width Rescue console native width.
-	Width *int32 `json:"width,omitempty"`
+	Width int32 `json:"width"`
 }
 
 // ConsoleResponse defines model for ConsoleResponse.
 type ConsoleResponse struct {
-	Console *Console `json:"console,omitempty"`
+	Console Console `json:"console"`
 }
 
 // CreateLoadBalancerRequest defines model for CreateLoadBalancerRequest.
@@ -1206,8 +1206,8 @@ type CreateLoadBalancerRequest struct {
 
 // CreateLoadBalancerResponse defines model for CreateLoadBalancerResponse.
 type CreateLoadBalancerResponse struct {
-	Links        *ActionsLinks `json:"links,omitempty"`
-	LoadBalancer *LoadBalancer `json:"load_balancer,omitempty"`
+	Links        ActionsLinks `json:"links"`
+	LoadBalancer LoadBalancer `json:"load_balancer"`
 }
 
 // CreateServerRequest defines model for CreateServerRequest.
@@ -1250,12 +1250,15 @@ type CreateServerRequest struct {
 
 	// VpcId Leave null to use default (public) network for the selected region.
 	VpcId *int64 `json:"vpc_id"`
+
+	// VpcIpv4Address If provided this will be the Ipv4 address for the server's private VPC network adapter. If this is null an unused Ipv4 address will be assigned. This field is only valid when VpcId is provided.
+	VpcIpv4Address *string `json:"vpc_ipv4_address"`
 }
 
 // CreateServerResponse defines model for CreateServerResponse.
 type CreateServerResponse struct {
-	Links  *ActionsLinks `json:"links,omitempty"`
-	Server *Server       `json:"server,omitempty"`
+	Links  ActionsLinks `json:"links"`
+	Server Server       `json:"server"`
 }
 
 // CreateVpcRequest defines model for CreateVpcRequest.
@@ -1272,7 +1275,7 @@ type CreateVpcRequest struct {
 
 // CurrentServerAlertsResponse defines model for CurrentServerAlertsResponse.
 type CurrentServerAlertsResponse struct {
-	ServerIds *[]int64 `json:"server_ids,omitempty"`
+	ServerIds []int64 `json:"server_ids"`
 }
 
 // DataInterval
@@ -1290,19 +1293,19 @@ type DataInterval string
 type DataUsage struct {
 	// CurrentTransferUsageGigabytes The used data transfer for this server in this period in GB.
 	// If you have more than one server, please see our data pooling policy: this value may include excess data transfer used by other servers or may have 'offloaded' excess data transfer to other servers with spare capacity.
-	CurrentTransferUsageGigabytes *float64 `json:"current_transfer_usage_gigabytes,omitempty"`
+	CurrentTransferUsageGigabytes float64 `json:"current_transfer_usage_gigabytes"`
 
 	// Expires The date and time in ISO8601 format that the current billing period expires.
-	Expires *time.Time `json:"expires,omitempty"`
+	Expires time.Time `json:"expires"`
 
 	// ServerId The ID of the server that this data transfer usage refers to.
-	ServerId *int64 `json:"server_id,omitempty"`
+	ServerId int64 `json:"server_id"`
 
 	// TransferGigabytes The included data transfer for this server in this period in GB.
-	TransferGigabytes *int64 `json:"transfer_gigabytes,omitempty"`
+	TransferGigabytes int64 `json:"transfer_gigabytes"`
 
 	// TransferPeriodEnd The date and time in ISO8601 format that the data transfer limit period ended (if it is completed) or when it will end (if this is the current period).
-	TransferPeriodEnd *time.Time `json:"transfer_period_end,omitempty"`
+	TransferPeriodEnd time.Time `json:"transfer_period_end"`
 }
 
 // DataUsageResponse defines model for DataUsageResponse.
@@ -1312,8 +1315,8 @@ type DataUsageResponse struct {
 
 // DataUsagesResponse defines model for DataUsagesResponse.
 type DataUsagesResponse struct {
-	DataUsages *[]DataUsage `json:"data_usages,omitempty"`
-	Links      *Links       `json:"links"`
+	DataUsages []DataUsage `json:"data_usages"`
+	Links      *Links      `json:"links"`
 
 	// Meta Contains metadata about the response, currently this includes the total number of items.
 	Meta Meta `json:"meta"`
@@ -1359,13 +1362,13 @@ type Disk struct {
 	Description *string `json:"description"`
 
 	// Id The ID of this disk.
-	Id *int64 `json:"id,omitempty"`
+	Id int64 `json:"id"`
 
 	// Primary A primary disk is treated differently from other disks.
-	Primary *bool `json:"primary,omitempty"`
+	Primary bool `json:"primary"`
 
 	// SizeGigabytes The size of the disk in GB.
-	SizeGigabytes *float64 `json:"size_gigabytes,omitempty"`
+	SizeGigabytes float64 `json:"size_gigabytes"`
 }
 
 // DistributionFeature
@@ -1379,10 +1382,10 @@ type DistributionFeature string
 // DistributionInfo defines model for DistributionInfo.
 type DistributionInfo struct {
 	// Features Features supported by this distribution.
-	Features *[]DistributionFeature `json:"features,omitempty" tfsdk:"features"`
+	Features []DistributionFeature `json:"features" tfsdk:"features"`
 
 	// ImageId If this is a backup image, the operating system ID of the server at the time the backup was created.
-	ImageId *int64 `json:"image_id,omitempty" tfsdk:"image_id"`
+	ImageId int64 `json:"image_id" tfsdk:"image_id"`
 
 	// PasswordRecovery Supported methods of password recovery.
 	//
@@ -1393,7 +1396,7 @@ type DistributionInfo struct {
 	// | offline-change | Password can be reset and new credentials sent (Requires restart). |
 	// | online-change | Password may be reset without requiring a reboot via installed QEMU Guest Agent. |
 	//
-	PasswordRecovery *PasswordRecoveryType `json:"password_recovery,omitempty" tfsdk:"password_recovery"`
+	PasswordRecovery PasswordRecoveryType `json:"password_recovery" tfsdk:"password_recovery"`
 
 	// RemoteAccessUser User name to use when connecting via remote access (RDP or SSH).
 	RemoteAccessUser *string `json:"remote_access_user" tfsdk:"remote_access_user"`
@@ -1420,19 +1423,19 @@ type DistributionSurcharges struct {
 // Domain defines model for Domain.
 type Domain struct {
 	// CurrentNameservers The current authoritative name servers for this domain.
-	CurrentNameservers *[]string `json:"current_nameservers,omitempty"`
+	CurrentNameservers []string `json:"current_nameservers"`
 
 	// Id The ID of this domain.
-	Id *int64 `json:"id,omitempty"`
+	Id int64 `json:"id"`
 
 	// Name The name of the domain.
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// Ttl The time to live for records in this domain in seconds. If the DNS records for this domain are not managed locally this will be what the TTL would be if the authority was delegated to us.
 	Ttl *int32 `json:"ttl"`
 
-	// ZoneFile The zone file for the selected domain. If the DNS records for this domain are not managed locally this is what the zone file would be if the authority was delegated to us.
-	ZoneFile *string `json:"zone_file,omitempty"`
+	// ZoneFile The zone file for the selected domain. If the DNS records for this domain are not managed locally this is what the zone file would be if the authority was delegated to us. The serial is will always be 0 rather than the correct value.
+	ZoneFile string `json:"zone_file"`
 }
 
 // DomainRecord defines model for DomainRecord.
@@ -1444,10 +1447,10 @@ type DomainRecord struct {
 	Flags *int32 `json:"flags"`
 
 	// Id The ID of this domain record.
-	Id *int64 `json:"id,omitempty"`
+	Id int64 `json:"id"`
 
 	// Name The subdomain, alias, or service defined by the record.
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// Port A port value that is only relevant for SRV records.
 	Port *int32 `json:"port"`
@@ -1459,7 +1462,7 @@ type DomainRecord struct {
 	Tag *string `json:"tag"`
 
 	// Ttl This value is the time to live for the record in seconds.
-	Ttl *int32 `json:"ttl,omitempty"`
+	Ttl int32 `json:"ttl"`
 
 	// Type A general data field that has different functions depending on the record type.
 	//
@@ -1475,7 +1478,7 @@ type DomainRecord struct {
 	// | SRV | Specify a server by hostname and port to handle a service or services. |
 	// | TXT | Define a string of text that is associated with a hostname. |
 	//
-	Type *DomainRecordType `json:"type,omitempty"`
+	Type DomainRecordType `json:"type"`
 
 	// Weight The weight value that is only relevant for SRV records.
 	Weight *int32 `json:"weight"`
@@ -1526,7 +1529,7 @@ type DomainRecordRequest struct {
 
 // DomainRecordResponse defines model for DomainRecordResponse.
 type DomainRecordResponse struct {
-	DomainRecord *DomainRecord `json:"domain_record,omitempty"`
+	DomainRecord DomainRecord `json:"domain_record"`
 }
 
 // DomainRecordType
@@ -1545,8 +1548,8 @@ type DomainRecordType string
 
 // DomainRecordsResponse defines model for DomainRecordsResponse.
 type DomainRecordsResponse struct {
-	DomainRecords *[]DomainRecord `json:"domain_records,omitempty"`
-	Links         *Links          `json:"links"`
+	DomainRecords []DomainRecord `json:"domain_records"`
+	Links         *Links         `json:"links"`
 
 	// Meta Contains metadata about the response, currently this includes the total number of items.
 	Meta Meta `json:"meta"`
@@ -1569,13 +1572,13 @@ type DomainRequest struct {
 
 // DomainResponse defines model for DomainResponse.
 type DomainResponse struct {
-	Domain *Domain `json:"domain,omitempty"`
+	Domain Domain `json:"domain"`
 }
 
 // DomainsResponse defines model for DomainsResponse.
 type DomainsResponse struct {
-	Domains *[]Domain `json:"domains,omitempty"`
-	Links   *Links    `json:"links"`
+	Domains []Domain `json:"domains"`
+	Links   *Links   `json:"links"`
 
 	// Meta Contains metadata about the response, currently this includes the total number of items.
 	Meta Meta `json:"meta"`
@@ -1664,7 +1667,7 @@ type HealthCheckRequest struct {
 // Host defines model for Host.
 type Host struct {
 	// DisplayName The name for this host. If this is a dedicated host this property will be empty.
-	DisplayName *string `json:"display_name,omitempty"`
+	DisplayName string `json:"display_name"`
 
 	// StatusPage This is the URL of the status page of the host. This will normally only be set if the host is under maintenance.
 	StatusPage *string `json:"status_page"`
@@ -1688,7 +1691,7 @@ type Image struct {
 	Distribution *string `json:"distribution" tfsdk:"distribution"`
 
 	// DistributionInfo This object may provide further information about the distribution.
-	DistributionInfo *DistributionInfo `json:"distribution_info,omitempty" tfsdk:"distribution_info"`
+	DistributionInfo DistributionInfo `json:"distribution_info" tfsdk:"distribution_info"`
 
 	// DistributionSurcharges If this is not null the use of this image may incur surcharges above the base cost of the server. All costs are in AU$.
 	DistributionSurcharges *DistributionSurcharges `json:"distribution_surcharges" tfsdk:"distribution_surcharges"`
@@ -1700,30 +1703,30 @@ type Image struct {
 	FullName *string `json:"full_name" tfsdk:"full_name"`
 
 	// Id The ID of this image.
-	Id *int64 `json:"id,omitempty" tfsdk:"id"`
+	Id int64 `json:"id" tfsdk:"id"`
 
 	// MinDiskSize For a distribution image this is the minimum disk size in GB required to install the operating system. For a backup image this is the minimum total disk size in GB required to restore the backup.
-	MinDiskSize *int32 `json:"min_disk_size,omitempty" tfsdk:"min_disk_size"`
+	MinDiskSize int32 `json:"min_disk_size" tfsdk:"min_disk_size"`
 
 	// MinMemoryMegabytes This is minimum memory in MB necessary to support this operating system (or the base operating system for a backup image).
 	MinMemoryMegabytes *int32 `json:"min_memory_megabytes" tfsdk:"min_memory_megabytes"`
 
 	// Name If this is an operating system image, this is the name of the operating system version. If this is a backup image, this is the label of the backup if it exists, otherwise it is the UTC timestamp of the creation of the image.
-	Name *string `json:"name,omitempty" tfsdk:"name"`
+	Name string `json:"name" tfsdk:"name"`
 
 	// Public A public image is available to all users. A private image is available only to the account that created the image.
-	Public *bool `json:"public,omitempty" tfsdk:"public"`
+	Public bool `json:"public" tfsdk:"public"`
 
 	// Regions The slugs of the regions where the image is available for use.
-	Regions *[]string `json:"regions,omitempty" tfsdk:"regions"`
+	Regions []string `json:"regions" tfsdk:"regions"`
 
 	// SizeGigabytes For a distribution image this is the disk size used in GB by the operating system on initial install. For a backup image this is the size of the compressed backup image in GB.
-	SizeGigabytes *float64 `json:"size_gigabytes,omitempty" tfsdk:"size_gigabytes"`
+	SizeGigabytes float64 `json:"size_gigabytes" tfsdk:"size_gigabytes"`
 
 	// Slug If this is an operating system image this is a slug which may be used as an alternative to the ID as a reference.
-	Slug   *string      `json:"slug" tfsdk:"slug"`
-	Status *ImageStatus `json:"status,omitempty" tfsdk:"status"`
-	Type   *ImageType   `json:"type,omitempty" tfsdk:"type"`
+	Slug   *string     `json:"slug" tfsdk:"slug"`
+	Status ImageStatus `json:"status" tfsdk:"status"`
+	Type   ImageType   `json:"type" tfsdk:"type"`
 }
 
 // ImageDiskDownload defines model for ImageDiskDownload.
@@ -1741,18 +1744,18 @@ type ImageDiskDownload struct {
 // ImageDownload defines model for ImageDownload.
 type ImageDownload struct {
 	// Disks A list of objects containing the download URLs for each disk in the image.
-	Disks *[]ImageDiskDownload `json:"disks,omitempty"`
+	Disks []ImageDiskDownload `json:"disks"`
 
 	// Expiry The date and time in ISO8601 format that this download URL will expire.
-	Expiry *time.Time `json:"expiry,omitempty"`
+	Expiry time.Time `json:"expiry"`
 
 	// Id The ID of the image this download object refers to.
-	Id *int64 `json:"id,omitempty"`
+	Id int64 `json:"id"`
 }
 
 // ImageDownloadResponse defines model for ImageDownloadResponse.
 type ImageDownloadResponse struct {
-	Link *ImageDownload `json:"link,omitempty"`
+	Link ImageDownload `json:"link"`
 }
 
 // ImageOptions defines model for ImageOptions.
@@ -1796,8 +1799,8 @@ type ImageType string
 
 // ImagesResponse defines model for ImagesResponse.
 type ImagesResponse struct {
-	Images *[]Image `json:"images,omitempty"`
-	Links  *Links   `json:"links"`
+	Images []Image `json:"images"`
+	Links  *Links  `json:"links"`
 
 	// Meta Contains metadata about the response, currently this includes the total number of items.
 	Meta Meta `json:"meta"`
@@ -1806,31 +1809,31 @@ type ImagesResponse struct {
 // Invoice defines model for Invoice.
 type Invoice struct {
 	// Amount The amount of the invoice in AU$.
-	Amount *float64 `json:"amount,omitempty"`
+	Amount float64 `json:"amount"`
 
 	// Created The date in ISO8601 format this invoice was created.
-	Created *time.Time `json:"created,omitempty"`
+	Created time.Time `json:"created"`
 
 	// DateDue The date in ISO8601 format this invoice is due for payment.
-	DateDue *time.Time `json:"date_due,omitempty"`
+	DateDue time.Time `json:"date_due"`
 
 	// DateOverdue The date in ISO8601 format this invoice is considered overdue.
-	DateOverdue *time.Time `json:"date_overdue,omitempty"`
+	DateOverdue time.Time `json:"date_overdue"`
 
 	// InvoiceDownloadUrl The download URL for the rendered version of the invoice.
 	InvoiceDownloadUrl *string `json:"invoice_download_url"`
 
 	// InvoiceId The ID of the invoice.
-	InvoiceId *int64 `json:"invoice_id,omitempty"`
+	InvoiceId int64 `json:"invoice_id"`
 
 	// InvoiceItems The individual items that make up invoice.
-	InvoiceItems *[]InvoiceLineItem `json:"invoice_items,omitempty"`
+	InvoiceItems []InvoiceLineItem `json:"invoice_items"`
 
 	// InvoiceNumber The invoice number for this invoice.
-	InvoiceNumber *string `json:"invoice_number,omitempty"`
+	InvoiceNumber string `json:"invoice_number"`
 
 	// Paid If this is true the invoice has been paid.
-	Paid *bool `json:"paid,omitempty"`
+	Paid bool `json:"paid"`
 
 	// PaymentFailureCount If this is included it indicates the number of failed attempts at processing payment for this invoice that have occurred.
 	PaymentFailureCount *int32 `json:"payment_failure_count"`
@@ -1839,37 +1842,37 @@ type Invoice struct {
 	Reference *string `json:"reference"`
 
 	// Refunded If this is true the payment for this invoice has been refunded.
-	Refunded *bool `json:"refunded,omitempty"`
+	Refunded bool `json:"refunded"`
 
 	// Tax The amount of tax (if any) that was charged on the transactions on this invoice.
-	Tax *float64 `json:"tax,omitempty"`
+	Tax float64 `json:"tax"`
 
 	// TaxCode The tax code that was applied to transactions on this invoice.
-	TaxCode *TaxCode `json:"tax_code,omitempty"`
+	TaxCode TaxCode `json:"tax_code"`
 }
 
 // InvoiceLineItem defines model for InvoiceLineItem.
 type InvoiceLineItem struct {
 	// Amount The charge in AU$ for this item. A negative value indicates a discount or credit.
-	Amount *float64 `json:"amount,omitempty"`
+	Amount float64 `json:"amount"`
 
 	// AmountIncludesTax If this is true the line item amount includes (if applicable) whatever tax was applied (see invoice.tax_code for details) and the total of the line items on this invoice will match the invoice.amount.
 	// If this is false the line item amount does not include any applicable tax and the total of the line items on this invoice will be the invoice.amount less invoice.tax.
-	AmountIncludesTax *bool `json:"amount_includes_tax,omitempty"`
+	AmountIncludesTax bool `json:"amount_includes_tax"`
 
 	// Name A description of the item.
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 }
 
 // InvoiceResponse defines model for InvoiceResponse.
 type InvoiceResponse struct {
-	Invoice *Invoice `json:"invoice,omitempty"`
+	Invoice Invoice `json:"invoice"`
 }
 
 // InvoicesResponse defines model for InvoicesResponse.
 type InvoicesResponse struct {
-	Invoices *[]Invoice `json:"invoices,omitempty"`
-	Links    *Links     `json:"links"`
+	Invoices []Invoice `json:"invoices"`
+	Links    *Links    `json:"links"`
 
 	// Meta Contains metadata about the response, currently this includes the total number of items.
 	Meta Meta `json:"meta"`
@@ -1897,8 +1900,8 @@ type Kernel struct {
 
 // KernelsResponse defines model for KernelsResponse.
 type KernelsResponse struct {
-	Kernels *[]Kernel `json:"kernels,omitempty"`
-	Links   *Links    `json:"links"`
+	Kernels []Kernel `json:"kernels"`
+	Links   *Links   `json:"links"`
 
 	// Meta Contains metadata about the response, currently this includes the total number of items.
 	Meta Meta `json:"meta"`
@@ -1939,7 +1942,7 @@ type LicensedSoftwaresResponse struct {
 // Links defines model for Links.
 type Links struct {
 	// Pages Provides links to first, last, next and previous pages if more than a single page of results exists.
-	Pages *Pages `json:"pages,omitempty"`
+	Pages Pages `json:"pages"`
 }
 
 // LoadBalancer defines model for LoadBalancer.
@@ -1982,10 +1985,10 @@ type LoadBalancer struct {
 // LoadBalancerAvailabilityOption defines model for LoadBalancerAvailabilityOption.
 type LoadBalancerAvailabilityOption struct {
 	// Anycast If true this is an Anycast load balancer option.
-	Anycast *bool `json:"anycast,omitempty"`
+	Anycast bool `json:"anycast"`
 
 	// PriceHourly Hourly price in AU$.
-	PriceHourly *float64 `json:"price_hourly,omitempty"`
+	PriceHourly float64 `json:"price_hourly"`
 
 	// PriceMonthly Monthly Price in AU$.
 	PriceMonthly float64 `json:"price_monthly"`
@@ -1996,12 +1999,12 @@ type LoadBalancerAvailabilityOption struct {
 
 // LoadBalancerAvailabilityResponse defines model for LoadBalancerAvailabilityResponse.
 type LoadBalancerAvailabilityResponse struct {
-	LoadBalancerAvailabilityOptions *[]LoadBalancerAvailabilityOption `json:"load_balancer_availability_options,omitempty"`
+	LoadBalancerAvailabilityOptions []LoadBalancerAvailabilityOption `json:"load_balancer_availability_options"`
 }
 
 // LoadBalancerResponse defines model for LoadBalancerResponse.
 type LoadBalancerResponse struct {
-	LoadBalancer *LoadBalancer `json:"load_balancer,omitempty"`
+	LoadBalancer LoadBalancer `json:"load_balancer"`
 }
 
 // LoadBalancerRuleProtocol
@@ -2021,8 +2024,8 @@ type LoadBalancerStatus string
 
 // LoadBalancersResponse defines model for LoadBalancersResponse.
 type LoadBalancersResponse struct {
-	Links         *Links          `json:"links"`
-	LoadBalancers *[]LoadBalancer `json:"load_balancers,omitempty"`
+	Links         *Links         `json:"links"`
+	LoadBalancers []LoadBalancer `json:"load_balancers"`
 
 	// Meta Contains metadata about the response, currently this includes the total number of items.
 	Meta Meta `json:"meta"`
@@ -2030,13 +2033,13 @@ type LoadBalancersResponse struct {
 
 // LocalNameserversResponse defines model for LocalNameserversResponse.
 type LocalNameserversResponse struct {
-	LocalNameservers *[]string `json:"local_nameservers,omitempty"`
+	LocalNameservers []string `json:"local_nameservers"`
 }
 
 // Meta Contains metadata about the response, currently this includes the total number of items.
 type Meta struct {
 	// Total The total number of items available.
-	Total *int32 `json:"total,omitempty"`
+	Total int32 `json:"total"`
 }
 
 // Network defines model for Network.
@@ -2103,13 +2106,13 @@ type Networks struct {
 // OffsiteBackupFrequencyCost All costs are in AU$.
 type OffsiteBackupFrequencyCost struct {
 	// DailyPerGigabyte The additional cost per GB per month for enabling daily offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected.
-	DailyPerGigabyte *float64 `json:"daily_per_gigabyte,omitempty" tfsdk:"daily_per_gigabyte"`
+	DailyPerGigabyte float64 `json:"daily_per_gigabyte" tfsdk:"daily_per_gigabyte"`
 
 	// MonthlyPerGigabyte The additional cost per GB per month for enabling monthly offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected.
-	MonthlyPerGigabyte *float64 `json:"monthly_per_gigabyte,omitempty" tfsdk:"monthly_per_gigabyte"`
+	MonthlyPerGigabyte float64 `json:"monthly_per_gigabyte" tfsdk:"monthly_per_gigabyte"`
 
 	// WeeklyPerGigabyte The additional cost per GB per month for enabling weekly offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected.
-	WeeklyPerGigabyte *float64 `json:"weekly_per_gigabyte,omitempty" tfsdk:"weekly_per_gigabyte"`
+	WeeklyPerGigabyte float64 `json:"weekly_per_gigabyte" tfsdk:"weekly_per_gigabyte"`
 }
 
 // OffsiteBackupSettings defines model for OffsiteBackupSettings.
@@ -2123,7 +2126,7 @@ type OffsiteBackupSettings struct {
 	OffsiteBackupLocation *string `json:"offsite_backup_location"`
 
 	// UseCustomBackupLocation If this is true a custom backup location will be used. If false our internally managed offsite backup location be used.
-	UseCustomBackupLocation *bool `json:"use_custom_backup_location,omitempty"`
+	UseCustomBackupLocation bool `json:"use_custom_backup_location"`
 }
 
 // Pages Provides links to first, last, next and previous pages if more than a single page of results exists.
@@ -2196,13 +2199,13 @@ type Period struct {
 	// | week | 7 Days |
 	// | month | 1 Month |
 	//
-	DataInterval *DataInterval `json:"data_interval,omitempty"`
+	DataInterval DataInterval `json:"data_interval"`
 
 	// End The date and time of the end of the period in ISO8601 format.
-	End *time.Time `json:"end,omitempty"`
+	End time.Time `json:"end"`
 
 	// Start The date and time of the start of the period in ISO8601 format.
-	Start *time.Time `json:"start,omitempty"`
+	Start time.Time `json:"start"`
 }
 
 // Ping Attempt to Ping a Server
@@ -2249,10 +2252,10 @@ type ProcessorModel struct {
 	Description *string `json:"description"`
 
 	// Id The ID of this processor model.
-	Id *int64 `json:"id,omitempty"`
+	Id int64 `json:"id"`
 
 	// Name The name of this processor model.
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 }
 
 // Reboot Request a Server Perform a Reboot
@@ -2279,22 +2282,22 @@ type RebuildType string
 // Region defines model for Region.
 type Region struct {
 	// Available Whether this region is available for the allocation of new resources.
-	Available *bool `json:"available,omitempty" tfsdk:"available"`
+	Available bool `json:"available" tfsdk:"available"`
 
 	// Features A list of features available for resources in this region.
-	Features *[]string `json:"features,omitempty" tfsdk:"features"`
+	Features []string `json:"features" tfsdk:"features"`
 
 	// Name The name of this region.
-	Name *string `json:"name,omitempty" tfsdk:"name"`
+	Name string `json:"name" tfsdk:"name"`
 
 	// NameServers A list of nameservers available for resources in this region.
-	NameServers *[]string `json:"name_servers,omitempty" tfsdk:"name_servers"`
+	NameServers []string `json:"name_servers" tfsdk:"name_servers"`
 
 	// Sizes The slugs of the sizes available in this region.
-	Sizes *[]string `json:"sizes,omitempty" tfsdk:"sizes"`
+	Sizes []string `json:"sizes" tfsdk:"sizes"`
 
 	// Slug The unique slug for this region.
-	Slug *string `json:"slug,omitempty" tfsdk:"slug"`
+	Slug string `json:"slug" tfsdk:"slug"`
 }
 
 // RegionsResponse defines model for RegionsResponse.
@@ -2404,10 +2407,10 @@ type RouteEntry struct {
 	Description *string `json:"description"`
 
 	// Destination The destination address for this route entry. This may be in CIDR format.
-	Destination *string `json:"destination,omitempty"`
+	Destination string `json:"destination"`
 
 	// Router The server that will receive traffic sent to the destination property in this VPC.
-	Router *string `json:"router,omitempty"`
+	Router string `json:"router"`
 }
 
 // RouteEntryRequest defines model for RouteEntryRequest.
@@ -2425,52 +2428,52 @@ type RouteEntryRequest struct {
 // Sample defines model for Sample.
 type Sample struct {
 	// CpuUsageDetailed The usage percentage of each virtual CPU.
-	CpuUsageDetailed *[]float64 `json:"cpu_usage_detailed,omitempty"`
+	CpuUsageDetailed []float64 `json:"cpu_usage_detailed"`
 
 	// CpuUsagePercent The usage percentage of all CPU; 100% is the maximum possible even with multiple processors.
-	CpuUsagePercent *float64 `json:"cpu_usage_percent,omitempty"`
+	CpuUsagePercent float64 `json:"cpu_usage_percent"`
 
 	// MemoryUsageBytes The virtual memory used in bytes.
-	MemoryUsageBytes *float64 `json:"memory_usage_bytes,omitempty"`
+	MemoryUsageBytes float64 `json:"memory_usage_bytes"`
 
 	// NetworkIncomingKbps The incoming network data rate in Kb per second.
-	NetworkIncomingKbps *float64 `json:"network_incoming_kbps,omitempty"`
+	NetworkIncomingKbps float64 `json:"network_incoming_kbps"`
 
 	// NetworkOutgoingKbps The outgoing network data rate in Kb per second.
-	NetworkOutgoingKbps *float64 `json:"network_outgoing_kbps,omitempty"`
+	NetworkOutgoingKbps float64 `json:"network_outgoing_kbps"`
 
 	// StorageReadKbps The storage read rate in Kb per second.
-	StorageReadKbps *float64 `json:"storage_read_kbps,omitempty"`
+	StorageReadKbps float64 `json:"storage_read_kbps"`
 
 	// StorageReadRequestsPerSecond The storage read requests per second.
-	StorageReadRequestsPerSecond *float64 `json:"storage_read_requests_per_second,omitempty"`
+	StorageReadRequestsPerSecond float64 `json:"storage_read_requests_per_second"`
 
 	// StorageUsageMegabytes The total storage used in MB.
-	StorageUsageMegabytes *float64 `json:"storage_usage_megabytes,omitempty"`
+	StorageUsageMegabytes float64 `json:"storage_usage_megabytes"`
 
 	// StorageWriteKbps The storage write rate in Kb per second.
-	StorageWriteKbps *float64 `json:"storage_write_kbps,omitempty"`
+	StorageWriteKbps float64 `json:"storage_write_kbps"`
 
 	// StorageWriteRequestsPerSecond The storage write requests per second.
-	StorageWriteRequestsPerSecond *float64 `json:"storage_write_requests_per_second,omitempty"`
+	StorageWriteRequestsPerSecond float64 `json:"storage_write_requests_per_second"`
 }
 
 // SampleSet defines model for SampleSet.
 type SampleSet struct {
 	// Average The average values of the samples collected during this period.
-	Average *Sample `json:"average,omitempty"`
+	Average Sample `json:"average"`
 
 	// MaximumMemoryMegabytes The maximum memory used in MB at any point during this collection period.
-	MaximumMemoryMegabytes *float64 `json:"maximum_memory_megabytes,omitempty"`
+	MaximumMemoryMegabytes float64 `json:"maximum_memory_megabytes"`
 
 	// MaximumStorageGigabytes The maximum storage used in GB at any point during this collection period.
-	MaximumStorageGigabytes *float64 `json:"maximum_storage_gigabytes,omitempty"`
+	MaximumStorageGigabytes float64 `json:"maximum_storage_gigabytes"`
 
 	// Period The period when this sample set was collected.
-	Period *Period `json:"period,omitempty"`
+	Period Period `json:"period"`
 
 	// ServerId The ID of the server that this sample set refers to.
-	ServerId *int64 `json:"server_id,omitempty"`
+	ServerId int64 `json:"server_id"`
 }
 
 // SampleSetResponse defines model for SampleSetResponse.
@@ -2517,55 +2520,55 @@ type SelectedSizeOptions struct {
 // Server defines model for Server.
 type Server struct {
 	// AdvancedFeatures The currently enabled advanced features, machine type and processor flags.
-	AdvancedFeatures *AdvancedServerFeatures `json:"advanced_features,omitempty"`
+	AdvancedFeatures AdvancedServerFeatures `json:"advanced_features"`
 
 	// AttachedBackup An object that provides details of any backup image currently attached to the server..
 	AttachedBackup *AttachedBackup `json:"attached_backup"`
 
 	// BackupIds A list of the currently existing backup image IDs for this server (if any).
-	BackupIds *[]int64 `json:"backup_ids,omitempty"`
+	BackupIds []int64 `json:"backup_ids"`
 
 	// BackupSettings Detailed backup settings for the server.
-	BackupSettings *BackupSettings `json:"backup_settings,omitempty"`
+	BackupSettings BackupSettings `json:"backup_settings"`
 
 	// CancelledAt If the server has been cancelled, this is the date and time in ISO8601 format of that cancellation.
 	CancelledAt *time.Time `json:"cancelled_at"`
 
 	// CreatedAt The date and time in ISO8601 format of this server's initial creation.
-	CreatedAt *time.Time `json:"created_at,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
 
 	// Disk The total disk in GB of this server.
-	Disk *int32 `json:"disk,omitempty"`
+	Disk int32 `json:"disk"`
 
 	// Disks A list of the disks that are currently attached to the server.
-	Disks *[]Disk `json:"disks,omitempty"`
+	Disks []Disk `json:"disks"`
 
 	// FailoverIps A list of any assigned failover IP addresses for this server.
-	FailoverIps *[]string `json:"failover_ips,omitempty"`
+	FailoverIps []string `json:"failover_ips"`
 
 	// Features A list of the currently enabled features on this server.
-	Features *[]string `json:"features,omitempty"`
+	Features []string `json:"features"`
 
 	// Host Summary information about the host of this server.
-	Host *Host `json:"host,omitempty"`
+	Host Host `json:"host"`
 
 	// Id The ID of this server.
-	Id *int64 `json:"id,omitempty"`
+	Id int64 `json:"id"`
 
 	// Image The base image used to create this server.
-	Image *Image `json:"image,omitempty"`
+	Image Image `json:"image"`
 
 	// Kernel The currently selected kernel for the server.
 	Kernel *Kernel `json:"kernel"`
 
 	// Memory The memory in MB of this server.
-	Memory *int32 `json:"memory,omitempty"`
+	Memory int32 `json:"memory"`
 
 	// Name The hostname of this server.
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// Networks A list of the networks of the server.
-	Networks *Networks `json:"networks,omitempty"`
+	Networks Networks `json:"networks"`
 
 	// NextBackupWindow The details of the next scheduled backup, if any.
 	NextBackupWindow *BackupWindow `json:"next_backup_window"`
@@ -2574,26 +2577,26 @@ type Server struct {
 	PartnerId *int64 `json:"partner_id"`
 
 	// PasswordChangeSupported If this is true the password_reset server action can be called to change a user's password. If this is false the password_reset server action will merely clear the root/administrator password allowing the password to be changed via the web console.
-	PasswordChangeSupported *bool `json:"password_change_supported,omitempty"`
+	PasswordChangeSupported bool `json:"password_change_supported"`
 
 	// Permalink A randomly generated two-word identifier assigned to servers in regions that support this feature.
 	Permalink *string `json:"permalink"`
 
 	// Region The region this server is allocated to.
-	Region *Region `json:"region,omitempty"`
+	Region Region `json:"region"`
 
 	// SelectedSizeOptions An object that details the selected options for the current size.
 	SelectedSizeOptions *SelectedSizeOptions `json:"selected_size_options"`
 
 	// Size The currently selected size for this server.
-	Size *Size `json:"size,omitempty"`
+	Size Size `json:"size"`
 
 	// SizeSlug The slug of the currently selected size for this server.
-	SizeSlug *string       `json:"size_slug,omitempty"`
-	Status   *ServerStatus `json:"status,omitempty"`
+	SizeSlug string       `json:"size_slug"`
+	Status   ServerStatus `json:"status"`
 
 	// Vcpus The number of virtual CPUs of this server.
-	Vcpus *int32 `json:"vcpus,omitempty"`
+	Vcpus int32 `json:"vcpus"`
 
 	// VpcId The VPC ID that this server is allocated to. If this value is null the server is in the default (public) network for the region.
 	VpcId *int64 `json:"vpc_id"`
@@ -2630,8 +2633,8 @@ type ServersResponse struct {
 	Links *Links `json:"links"`
 
 	// Meta Contains metadata about the response, currently this includes the total number of items.
-	Meta    Meta      `json:"meta"`
-	Servers *[]Server `json:"servers,omitempty"`
+	Meta    Meta     `json:"meta"`
+	Servers []Server `json:"servers"`
 }
 
 // Shutdown Request a Server Perform a Shutdown
@@ -2645,7 +2648,7 @@ type ShutdownType string
 // Size defines model for Size.
 type Size struct {
 	// Available If this is false the size is not available for new servers.
-	Available *bool `json:"available,omitempty" tfsdk:"available"`
+	Available bool `json:"available" tfsdk:"available"`
 
 	// CpuDescription A description of the CPU provided in this size.
 	CpuDescription *string `json:"cpu_description" tfsdk:"cpu_description"`
@@ -2654,102 +2657,102 @@ type Size struct {
 	Description *string `json:"description" tfsdk:"description"`
 
 	// Disk The included storage for this size in GB.
-	Disk *int32 `json:"disk,omitempty" tfsdk:"disk"`
+	Disk int32 `json:"disk" tfsdk:"disk"`
 
 	// ExcessTransferCostPerGigabyte The excess charged for any transfer above the included data transfer in AU$ per GB.
-	ExcessTransferCostPerGigabyte *float64 `json:"excess_transfer_cost_per_gigabyte,omitempty" tfsdk:"excess_transfer_cost_per_gigabyte"`
+	ExcessTransferCostPerGigabyte float64 `json:"excess_transfer_cost_per_gigabyte" tfsdk:"excess_transfer_cost_per_gigabyte"`
 
 	// Memory The included memory for this size in MB.
-	Memory *int32 `json:"memory,omitempty" tfsdk:"memory"`
+	Memory int32 `json:"memory" tfsdk:"memory"`
 
 	// Options Available add-ons (optional features not included in the base price) for the size. All costs are in AU$ per month (pro-rated).
 	Options SizeOptions `json:"options" tfsdk:"options"`
 
 	// PriceHourly Hourly price in AU$.
-	PriceHourly *float64 `json:"price_hourly,omitempty" tfsdk:"price_hourly"`
+	PriceHourly float64 `json:"price_hourly" tfsdk:"price_hourly"`
 
 	// PriceMonthly Monthly Price in AU$.
-	PriceMonthly *float64 `json:"price_monthly,omitempty" tfsdk:"price_monthly"`
+	PriceMonthly float64 `json:"price_monthly" tfsdk:"price_monthly"`
 
 	// Regions A list of region slugs where this size is available regardless of stock.
 	// If this a response to a query that included a selected operating system this response will only include regions where that operating system is available on this size,
 	// otherwise not all regions listed will support all operating systems on this size.
-	Regions *[]string `json:"regions,omitempty" tfsdk:"regions"`
+	Regions []string `json:"regions" tfsdk:"regions"`
 
 	// RegionsOutOfStock A list of region slugs where the size is normally available but is currently not available due to lack of stock.
 	RegionsOutOfStock *[]string `json:"regions_out_of_stock" tfsdk:"regions_out_of_stock"`
 
 	// SizeType The type of this size, generally used to differentiate sizes optimized for different usages.
-	SizeType *SizeType `json:"size_type,omitempty" tfsdk:"size_type"`
+	SizeType SizeType `json:"size_type" tfsdk:"size_type"`
 
 	// Slug The slug of this size.
-	Slug *string `json:"slug,omitempty" tfsdk:"slug"`
+	Slug string `json:"slug" tfsdk:"slug"`
 
 	// StorageDescription A description of the storage provided in this size.
 	StorageDescription *string `json:"storage_description" tfsdk:"storage_description"`
 
 	// Transfer The included data transfer for this size in TB.
-	Transfer *float64 `json:"transfer,omitempty" tfsdk:"transfer"`
+	Transfer float64 `json:"transfer" tfsdk:"transfer"`
 
 	// VcpuUnits This is the unit that the vcpus field counts, e.g. "core" or "thread".
-	VcpuUnits *string `json:"vcpu_units,omitempty" tfsdk:"vcpu_units"`
+	VcpuUnits string `json:"vcpu_units" tfsdk:"vcpu_units"`
 
 	// Vcpus The count of virtual CPUs for this size. See vcpu_units for a description of how each virtual CPU maps to the underlying hardware.
-	Vcpus *int32 `json:"vcpus,omitempty" tfsdk:"vcpus"`
+	Vcpus int32 `json:"vcpus" tfsdk:"vcpus"`
 }
 
 // SizeOptions Available add-ons (optional features not included in the base price) for the size. All costs are per month (pro-rated).
 type SizeOptions struct {
 	// BackupsCostPerBackupPerGigabyte The cost per GB of storage of each selected backup. See the API support document for how to calculate the final cost of backups based on the options selected.
-	BackupsCostPerBackupPerGigabyte *float64 `json:"backups_cost_per_backup_per_gigabyte,omitempty" tfsdk:"backups_cost_per_backup_per_gigabyte"`
+	BackupsCostPerBackupPerGigabyte float64 `json:"backups_cost_per_backup_per_gigabyte" tfsdk:"backups_cost_per_backup_per_gigabyte"`
 
 	// DailyBackups The number of daily backups included in the base size cost.
-	DailyBackups *int32 `json:"daily_backups,omitempty" tfsdk:"daily_backups"`
+	DailyBackups int32 `json:"daily_backups" tfsdk:"daily_backups"`
 
 	// DiscountForNoPublicIpv4 This is the discount (if any) that is applied if no public IPv4 addresses are selected.
-	DiscountForNoPublicIpv4 *float64 `json:"discount_for_no_public_ipv4,omitempty" tfsdk:"discount_for_no_public_ipv4"`
+	DiscountForNoPublicIpv4 float64 `json:"discount_for_no_public_ipv4" tfsdk:"discount_for_no_public_ipv4"`
 
 	// DiskCostPerAdditionalGigabyte The additional cost per GB per month for additional storage space.
-	DiskCostPerAdditionalGigabyte *float64 `json:"disk_cost_per_additional_gigabyte,omitempty" tfsdk:"disk_cost_per_additional_gigabyte"`
+	DiskCostPerAdditionalGigabyte float64 `json:"disk_cost_per_additional_gigabyte" tfsdk:"disk_cost_per_additional_gigabyte"`
 
 	// DiskMax The maximum storage in GB permitted on this size.
-	DiskMax *int32 `json:"disk_max,omitempty" tfsdk:"disk_max"`
+	DiskMax int32 `json:"disk_max" tfsdk:"disk_max"`
 
 	// DiskMin The minimum storage in GB permitted on this size.
-	DiskMin *int32 `json:"disk_min,omitempty" tfsdk:"disk_min"`
+	DiskMin int32 `json:"disk_min" tfsdk:"disk_min"`
 
 	// Ipv4AddressesCostPerAddress The additional cost per public IPv4 address per month for additional IPv4 addresses.
-	Ipv4AddressesCostPerAddress *float64 `json:"ipv4_addresses_cost_per_address,omitempty" tfsdk:"ipv4_addresses_cost_per_address"`
+	Ipv4AddressesCostPerAddress float64 `json:"ipv4_addresses_cost_per_address" tfsdk:"ipv4_addresses_cost_per_address"`
 
 	// Ipv4AddressesMax The maximum number of IPv4 addresses permitted on this size.
-	Ipv4AddressesMax *int32 `json:"ipv4_addresses_max,omitempty" tfsdk:"ipv4_addresses_max"`
+	Ipv4AddressesMax int32 `json:"ipv4_addresses_max" tfsdk:"ipv4_addresses_max"`
 
 	// MemoryCostPerAdditionalMegabyte The additional cost per MB per month for additional memory.
-	MemoryCostPerAdditionalMegabyte *float64 `json:"memory_cost_per_additional_megabyte,omitempty" tfsdk:"memory_cost_per_additional_megabyte"`
+	MemoryCostPerAdditionalMegabyte float64 `json:"memory_cost_per_additional_megabyte" tfsdk:"memory_cost_per_additional_megabyte"`
 
 	// MemoryMax The maximum memory in MB permitted on this size.
-	MemoryMax *int32 `json:"memory_max,omitempty" tfsdk:"memory_max"`
+	MemoryMax int32 `json:"memory_max" tfsdk:"memory_max"`
 
 	// MonthlyBackups The number of monthly backups included in the base size cost.
-	MonthlyBackups *int32 `json:"monthly_backups,omitempty" tfsdk:"monthly_backups"`
+	MonthlyBackups int32 `json:"monthly_backups" tfsdk:"monthly_backups"`
 
 	// OffsiteBackupFrequencyCost The additional cost per GB of storage for enabling offsite backups based on highest frequency of backups currently enabled. All costs are in AU$.
-	OffsiteBackupFrequencyCost *OffsiteBackupFrequencyCost `json:"offsite_backup_frequency_cost,omitempty" tfsdk:"offsite_backup_frequency_cost"`
+	OffsiteBackupFrequencyCost OffsiteBackupFrequencyCost `json:"offsite_backup_frequency_cost" tfsdk:"offsite_backup_frequency_cost"`
 
 	// OffsiteBackupsCostPerGigabyte The additional cost per GB of storage for enabling offsite backups. See the API support document for how to calculate the final cost of backups based on the options selected.
-	OffsiteBackupsCostPerGigabyte *float64 `json:"offsite_backups_cost_per_gigabyte,omitempty" tfsdk:"offsite_backups_cost_per_gigabyte"`
+	OffsiteBackupsCostPerGigabyte float64 `json:"offsite_backups_cost_per_gigabyte" tfsdk:"offsite_backups_cost_per_gigabyte"`
 
 	// RestrictedDiskValues If this is null the normal valid values in the documentation for SizeOptionsRequest are used, otherwise only these values (in GB) are permitted.
 	RestrictedDiskValues *[]int32 `json:"restricted_disk_values" tfsdk:"restricted_disk_values"`
 
 	// TransferCostPerAdditionalGigabyte The additional cost per GB per month for additional included transfer.
-	TransferCostPerAdditionalGigabyte *float64 `json:"transfer_cost_per_additional_gigabyte,omitempty" tfsdk:"transfer_cost_per_additional_gigabyte"`
+	TransferCostPerAdditionalGigabyte float64 `json:"transfer_cost_per_additional_gigabyte" tfsdk:"transfer_cost_per_additional_gigabyte"`
 
 	// TransferMax The maximum transfer in TB permitted for this size.
-	TransferMax *float64 `json:"transfer_max,omitempty" tfsdk:"transfer_max"`
+	TransferMax float64 `json:"transfer_max" tfsdk:"transfer_max"`
 
 	// WeeklyBackups The number of weekly backups included in the base size cost.
-	WeeklyBackups *int32 `json:"weekly_backups,omitempty" tfsdk:"weekly_backups"`
+	WeeklyBackups int32 `json:"weekly_backups" tfsdk:"weekly_backups"`
 }
 
 // SizeOptionsRequest defines model for SizeOptionsRequest.
@@ -2808,10 +2811,10 @@ type SizeType struct {
 	Description *string `json:"description" tfsdk:"description"`
 
 	// Name The name of this size type.
-	Name *string `json:"name,omitempty" tfsdk:"name"`
+	Name string `json:"name" tfsdk:"name"`
 
 	// Slug The slug of this size type.
-	Slug *string `json:"slug,omitempty" tfsdk:"slug"`
+	Slug string `json:"slug" tfsdk:"slug"`
 }
 
 // SizesResponse defines model for SizesResponse.
@@ -2828,41 +2831,41 @@ type SnapshotsResponse struct {
 	Links *Links `json:"links"`
 
 	// Meta Contains metadata about the response, currently this includes the total number of items.
-	Meta      Meta     `json:"meta"`
-	Snapshots *[]Image `json:"snapshots,omitempty"`
+	Meta      Meta    `json:"meta"`
+	Snapshots []Image `json:"snapshots"`
 }
 
 // Software defines model for Software.
 type Software struct {
 	// CostPerLicencePerMonth The cost for each licence of this software per month in AU$.
-	CostPerLicencePerMonth *float64 `json:"cost_per_licence_per_month,omitempty"`
+	CostPerLicencePerMonth float64 `json:"cost_per_licence_per_month"`
 
 	// Description The description of this software.
-	Description *string `json:"description,omitempty"`
+	Description string `json:"description"`
 
 	// Enabled Software that is not enabled is not available to be added to servers but may be retained by servers that currently use it.
-	Enabled *bool `json:"enabled,omitempty"`
+	Enabled bool `json:"enabled"`
 
 	// Group Software in the same group may not be licensed together.
 	Group *string `json:"group"`
 
 	// Id The ID of this software.
-	Id *int64 `json:"id,omitempty"`
+	Id int64 `json:"id"`
 
 	// LicenceStepCount Licences must be purchased in multiples of this value.
-	LicenceStepCount *int32 `json:"licence_step_count,omitempty"`
+	LicenceStepCount int32 `json:"licence_step_count"`
 
 	// MaximumLicenceCount The maximum licences permitted for this software.
-	MaximumLicenceCount *int32 `json:"maximum_licence_count,omitempty"`
+	MaximumLicenceCount int32 `json:"maximum_licence_count"`
 
 	// MinimumLicenceCount The minimum licences permitted for this software.
-	MinimumLicenceCount *int32 `json:"minimum_licence_count,omitempty"`
+	MinimumLicenceCount int32 `json:"minimum_licence_count"`
 
 	// Name The name of this software.
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// SupportedOperatingSystems A list of slugs of operating system images that support this software.
-	SupportedOperatingSystems *[]string `json:"supported_operating_systems,omitempty"`
+	SupportedOperatingSystems []string `json:"supported_operating_systems"`
 }
 
 // SoftwareResponse defines model for SoftwareResponse.
@@ -2882,19 +2885,19 @@ type SoftwaresResponse struct {
 // SshKey defines model for SshKey.
 type SshKey struct {
 	// Default If an SSH key is marked as default it will be deployed to all newly created servers that support SSH keys unless expressly overridden in the creation request.
-	Default *bool `json:"default,omitempty"`
+	Default bool `json:"default"`
 
 	// Fingerprint The fingerprint of this SSH key.
-	Fingerprint *string `json:"fingerprint,omitempty"`
+	Fingerprint string `json:"fingerprint"`
 
 	// Id The ID of this SSH key.
-	Id *int64 `json:"id,omitempty"`
+	Id int64 `json:"id"`
 
 	// Name The name of this SSH key. This is used only to aid in identification.
 	Name *string `json:"name"`
 
 	// PublicKey The public key of this SSH key.
-	PublicKey *string `json:"public_key,omitempty"`
+	PublicKey string `json:"public_key"`
 }
 
 // SshKeyRequest defines model for SshKeyRequest.
@@ -2964,7 +2967,7 @@ type TaxCode struct {
 	FixedPercent *float64 `json:"fixed_percent"`
 
 	// Name The name of this tax code.
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// Type The type of tax code.
 	//
@@ -2973,7 +2976,7 @@ type TaxCode struct {
 	// | none | No tax is applied to any transaction. |
 	// | scalar | A fixed fraction of the value of all transactions is added as tax. |
 	//
-	Type *TaxCodeType `json:"type,omitempty"`
+	Type TaxCodeType `json:"type"`
 }
 
 // TaxCodeType
@@ -2985,13 +2988,13 @@ type TaxCodeType string
 
 // ThresholdAlert defines model for ThresholdAlert.
 type ThresholdAlert struct {
-	AlertType *ThresholdAlertType `json:"alert_type,omitempty"`
+	AlertType ThresholdAlertType `json:"alert_type"`
 
 	// CurrentValue The last measured value for this alert type over the threshold alert period. Refer to the documentation for each threshold alert type for what this value measures in the context of the alert type. If there is no measured value in the threshold alert period this will be null.
 	CurrentValue *int32 `json:"current_value"`
 
 	// Enabled If a threshold alert is not enabled it will not generate warnings for the user.
-	Enabled *bool `json:"enabled,omitempty"`
+	Enabled bool `json:"enabled"`
 
 	// LastCleared The date and time (if any) in ISO8601 format of the last time this alert was cleared. An alert may not be raised again until a minimum duration has passed since it was last cleared.
 	LastCleared *time.Time `json:"last_cleared"`
@@ -3000,7 +3003,7 @@ type ThresholdAlert struct {
 	LastRaised *time.Time `json:"last_raised"`
 
 	// Value The threshold value of the alert. Refer to the documentation for each threshold alert type for what this value measures in the context of the alert type.
-	Value *int32 `json:"value,omitempty"`
+	Value int32 `json:"value"`
 }
 
 // ThresholdAlertRequest defines model for ThresholdAlertRequest.
@@ -3028,7 +3031,7 @@ type ThresholdAlertType string
 
 // ThresholdAlertsResponse defines model for ThresholdAlertsResponse.
 type ThresholdAlertsResponse struct {
-	ThresholdAlerts *[]ThresholdAlert `json:"threshold_alerts,omitempty"`
+	ThresholdAlerts []ThresholdAlert `json:"threshold_alerts"`
 }
 
 // Uncancel Revert the Cancellation of a Server
@@ -3041,7 +3044,7 @@ type UncancelType string
 
 // UnpaidFailedInvoicesResponse defines model for UnpaidFailedInvoicesResponse.
 type UnpaidFailedInvoicesResponse struct {
-	Invoices *[]Invoice `json:"invoices,omitempty"`
+	Invoices []Invoice `json:"invoices"`
 }
 
 // UpdateDomainRecordRequest Any values not provided will be retained. Provide empty strings to clear existing string values, nulls to retain the existing values.
@@ -3105,7 +3108,7 @@ type UpdateLoadBalancerRequest struct {
 // UpdateLoadBalancerResponse defines model for UpdateLoadBalancerResponse.
 type UpdateLoadBalancerResponse struct {
 	Links        *ActionsLinks `json:"links"`
-	LoadBalancer *LoadBalancer `json:"load_balancer,omitempty"`
+	LoadBalancer LoadBalancer  `json:"load_balancer"`
 }
 
 // UpdateSshKeyRequest defines model for UpdateSshKeyRequest.
@@ -3177,7 +3180,7 @@ type UserData struct {
 
 // UserInteractionRequired defines model for UserInteractionRequired.
 type UserInteractionRequired struct {
-	InteractionType *UserInteractionType `json:"interaction_type,omitempty"`
+	InteractionType UserInteractionType `json:"interaction_type"`
 }
 
 // UserInteractionType
@@ -3212,16 +3215,16 @@ type VmMachineType string
 // Vpc defines model for Vpc.
 type Vpc struct {
 	// Id The ID of this VPC.
-	Id *int64 `json:"id,omitempty"`
+	Id int64 `json:"id"`
 
 	// IpRange The IPv4 range for this VPC in CIDR format.
-	IpRange *string `json:"ip_range,omitempty"`
+	IpRange string `json:"ip_range"`
 
 	// Name The name of this VPC.
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// RouteEntries The route entries that control how network traffic is directed through the VPC environment.
-	RouteEntries *[]RouteEntry `json:"route_entries,omitempty"`
+	RouteEntries []RouteEntry `json:"route_entries"`
 }
 
 // VpcMember defines model for VpcMember.
@@ -3230,17 +3233,17 @@ type VpcMember struct {
 	CreatedAt *time.Time `json:"created_at"`
 
 	// Name The name of this VPC member.
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// ResourceId The resource ID of this VPC member.
-	ResourceId   *string       `json:"resource_id,omitempty"`
-	ResourceType *ResourceType `json:"resource_type,omitempty"`
+	ResourceId   string       `json:"resource_id"`
+	ResourceType ResourceType `json:"resource_type"`
 }
 
 // VpcMembersResponse defines model for VpcMembersResponse.
 type VpcMembersResponse struct {
-	Links   *Links       `json:"links"`
-	Members *[]VpcMember `json:"members,omitempty"`
+	Links   *Links      `json:"links"`
+	Members []VpcMember `json:"members"`
 
 	// Meta Contains metadata about the response, currently this includes the total number of items.
 	Meta Meta `json:"meta"`
@@ -3248,7 +3251,7 @@ type VpcMembersResponse struct {
 
 // VpcResponse defines model for VpcResponse.
 type VpcResponse struct {
-	Vpc *Vpc `json:"vpc,omitempty"`
+	Vpc Vpc `json:"vpc"`
 }
 
 // VpcsResponse defines model for VpcsResponse.
@@ -3256,8 +3259,8 @@ type VpcsResponse struct {
 	Links *Links `json:"links"`
 
 	// Meta Contains metadata about the response, currently this includes the total number of items.
-	Meta Meta   `json:"meta"`
-	Vpcs *[]Vpc `json:"vpcs,omitempty"`
+	Meta Meta  `json:"meta"`
+	Vpcs []Vpc `json:"vpcs"`
 }
 
 // GetAccountKeysParams defines parameters for GetAccountKeys.

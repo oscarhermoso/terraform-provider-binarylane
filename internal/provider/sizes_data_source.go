@@ -83,7 +83,7 @@ func (d *sizesDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		}
 		regResults = append(regResults, listResp.JSON200.Sizes...)
 
-		if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages == nil || listResp.JSON200.Links.Pages.Next == nil {
+		if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages.Next == nil {
 			nextPage = false
 			break
 		}

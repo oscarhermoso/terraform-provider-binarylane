@@ -2,13 +2,13 @@
   "openapi": "3.0.4",
   "info": {
     "title": "BinaryLane API",
-    "description": "\n\n# Introduction\n\nThis API is used by BinaryLane's 'mPanel' website, so you'll find everything you need here to automate your use of BinaryLane or develop tools for others. You could even build your own version of 'mPanel' if you wanted!\n\n\n## Getting Started Guide\n\nWe are working on a complete 'Getting Started' guide as well as this introductory section.\n\n\n# Developer Preview Notes\n\n**Warning: this specification is currently in active development.** Until this warning is removed breaking changes are possible without the version changing.\nHowever, this API is relatively mature and we are actively developing a new website and other tools against this API so breaking changes should be rare at this point.\n\nWe currently have a CLI (command line interface) tool in development and are in the early stage of planning other tools.\n\nWe welcome all feedback from API users at the support email address above.\n\n\n## Active Development Status\n\nThis is the list of BinaryLane features that are not yet available through the API but are currently under active development.\nIf you need an ETA on when these will be available please contact support.\n\n- Domains\n\n\n## Future Development Status\n\nThis is the list of BinaryLane features that are not yet available through the API and are not currently in active development. This list is in a rough order of priority.\nIf you need an ETA or want to ask for increased priority on any of these please contact support, we are happy to hear any feedback on this.\n\n- Account Updates\n- Payments\n\n\n\n# API Tools\n\nThis section will include links to tools to assist with consuming this API. We have a CLI tool and a GO library in active development, and are planning libraries for other languages.\n\n\n# Version Information\n\nThis section will contain a link to our changelog once the developer preview period is complete.\n\n",
+    "description": "# Introduction\n\nThis API is used by BinaryLane's 'mPanel' website, so you'll find everything you need here to automate your use of BinaryLane or develop tools for others. You could even build your own version of 'mPanel' if you wanted!\n\n\n## Getting Started Guide\n\nYou can find a detailed guide to using the API to manage your servers <a href='https://support.binarylane.com.au/support/solutions/articles/11000125203-getting-started-with-binarylane-api' target='_blank' rel='noopener noreferrer'>here</a>.\n\n\n# API Tools\n\nWe have created a CLI tool to interact with the API. You can find the repository <a href='https://github.com/binarylane/binarylane-cli' target='_blank' rel='noopener noreferrer'>here</a>.\n\n\n# Developer Preview Notes\n\n**Warning: this specification is currently in active development.** Until this warning is removed breaking changes are possible without the version changing.\nHowever, this API is mature and we have a fully functioning new version of mPanel that uses it, so breaking changes will be very limited.\n\nWe welcome all feedback from API users at the support email address above.\n\n\n# Version Information\n\nThis section will contain a link to our changelog once the developer preview period is complete.",
     "contact": {
       "name": "BinaryLane Support",
-      "url": "https://support.binarylane.com.au",
+      "url": "https://support.binarylane.com.au/support/home",
       "email": "support@binarylane.com.au"
     },
-    "version": "0.33.0",
+    "version": "0.34.0",
     "x-logo": {
       "url": "https://www.binarylane.com.au/res/images/binarylane/logo.png",
       "backgroundColor": "#000000",
@@ -5920,20 +5920,16 @@
         "type": "object",
         "properties": {
           "email": {
-            "minLength": 1,
             "type": "string",
-            "description": "The email address registered for this account.",
-            "readOnly": true
+            "description": "The email address registered for this account."
           },
           "email_verified": {
             "type": "boolean",
-            "description": "Whether this account has been verified. Un-verified accounts are subject to some restrictions.",
-            "readOnly": true
+            "description": "Whether this account has been verified. Un-verified accounts are subject to some restrictions."
           },
           "two_factor_authentication_enabled": {
             "type": "boolean",
-            "description": "Whether this account has enabled two factor authentication.",
-            "readOnly": true
+            "description": "Whether this account has enabled app-based two factor authentication."
           },
           "status": {
             "allOf": [
@@ -5941,8 +5937,7 @@
                 "$ref": "#/components/schemas/AccountStatus"
               }
             ],
-            "description": "The status of this account.\n\n| Value | Description |\n| ----- | ----------- |\n| incomplete | An account that exists but is not ready for use. The most common reason for this is a lack of payment information. |\n| active | An account in the normal state. |\n| warning | An account that is under review. If you are unsure why your account has this status please urgently contact support. |\n| locked | An account that is no longer permitted to access the service. |\n\n",
-            "readOnly": true
+            "description": "The status of this account.\n\n| Value | Description |\n| ----- | ----------- |\n| incomplete | An account that exists but is not ready for use. The most common reason for this is a lack of payment information. |\n| active | An account in the normal state. |\n| warning | An account that is under review. If you are unsure why your account has this status please urgently contact support. |\n| locked | An account that is no longer permitted to access the service. |\n\n"
           },
           "tax_code": {
             "allOf": [
@@ -5950,22 +5945,19 @@
                 "$ref": "#/components/schemas/TaxCode"
               }
             ],
-            "description": "The tax code that currently applies to transactions for this account.",
-            "readOnly": true
+            "description": "The tax code that currently applies to transactions for this account."
           },
           "configured_payment_methods": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PaymentMethod"
             },
-            "description": "The payment methods that are configured (available) for this account.",
-            "readOnly": true
+            "description": "The payment methods that are configured (available) for this account."
           },
           "additional_ipv4_limit": {
             "type": "integer",
             "description": "The maximum additional IPv4 addresses this account may assign across all servers. You may contact support to request this limit be increased.",
-            "format": "int32",
-            "readOnly": true
+            "format": "int32"
           }
         }
       },
@@ -5980,8 +5972,7 @@
               {
                 "$ref": "#/components/schemas/Account"
               }
-            ],
-            "readOnly": true
+            ]
           }
         }
       },
@@ -6015,7 +6006,6 @@
             "type": "integer",
             "description": "The ID of this action.",
             "format": "int64",
-            "readOnly": true,
             "x-cli-format": 1
           },
           "status": {
@@ -6024,21 +6014,17 @@
                 "$ref": "#/components/schemas/ActionStatus"
               }
             ],
-            "readOnly": true,
             "x-cli-format": 6
           },
           "type": {
-            "minLength": 1,
             "type": "string",
             "description": "The type of this action.",
-            "readOnly": true,
             "x-cli-format": 2
           },
           "started_at": {
             "type": "string",
             "description": "The timestamp in ISO8601 format of when processing of this action started.",
             "format": "date-time",
-            "readOnly": true,
             "x-cli-format": 3
           },
           "completed_at": {
@@ -6046,7 +6032,6 @@
             "description": "The timestamp in ISO8601 format of when processing of this action completed. If this value is null the action is currently in progress.",
             "format": "date-time",
             "nullable": true,
-            "readOnly": true,
             "x-cli-format": 4
           },
           "resource_type": {
@@ -6056,15 +6041,13 @@
               }
             ],
             "description": "The resource type (if any) associated with this action.\n\n| Value | Description |\n| ----- | ----------- |\n| server | Server |\n| load-balancer | Load Balancer |\n| ssh-key | SSH Key |\n| vpc | Virtual Private Network |\n| image | Backup or Operating System Image |\n| registered-domain-name | Registered Domain Name |\n\n",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "resource_id": {
             "type": "integer",
             "description": "The resource id of the resource (if any) associated with this action.",
             "format": "int64",
             "nullable": true,
-            "readOnly": true,
             "x-cli-format": 5
           },
           "region": {
@@ -6074,14 +6057,12 @@
               }
             ],
             "description": "The region (if any) of the resource associated with this action.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "region_slug": {
             "type": "string",
             "description": "The region slug (if any) of the resource associated with this action.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "progress": {
             "allOf": [
@@ -6089,14 +6070,12 @@
                 "$ref": "#/components/schemas/ActionProgress"
               }
             ],
-            "description": "Information about the current progress of the action. Some actions are divided into 'steps' and this may also contain information about the current and completed steps.",
-            "readOnly": true
+            "description": "Information about the current progress of the action. Some actions are divided into 'steps' and this may also contain information about the current and completed steps."
           },
           "result_data": {
             "type": "string",
             "description": "Returned information from a completed action. For example: a successful completed 'uptime' action will have the uptime value in this field.",
             "nullable": true,
-            "readOnly": true,
             "x-cli-format": 7
           },
           "blocking_invoice_id": {
@@ -6112,8 +6091,7 @@
               }
             ],
             "description": "If this is not null the action is waiting on a response from the user.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         }
       },
@@ -6127,16 +6105,12 @@
         "properties": {
           "id": {
             "type": "integer",
-            "format": "int64",
-            "readOnly": true
+            "format": "int64"
           },
           "rel": {
-            "minLength": 1,
-            "type": "string",
-            "readOnly": true
+            "type": "string"
           },
           "href": {
-            "minLength": 1,
             "type": "string"
           }
         }
@@ -6151,28 +6125,24 @@
           "current_step_detail": {
             "type": "string",
             "description": "Detail about the progress of the current step of the action. For example, when creating an offsite backup this may be populated with the current upload speed and completion ETA of the upload step.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "percent_complete": {
             "type": "integer",
             "description": "An estimation of the overall completion of the action.",
-            "format": "int32",
-            "readOnly": true
+            "format": "int32"
           },
           "current_step": {
             "type": "string",
             "description": "An description of the current action step.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "completed_steps": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "A list of the completed action steps.",
-            "readOnly": true
+            "description": "A list of the completed action steps."
           }
         }
       },
@@ -6187,8 +6157,7 @@
               {
                 "$ref": "#/components/schemas/Action"
               }
-            ],
-            "readOnly": true
+            ]
           }
         }
       },
@@ -6216,8 +6185,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ActionLink"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -6248,8 +6216,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Action"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -6508,8 +6475,7 @@
             "type": "integer",
             "description": "The ID of the processor model (and therefore CPU flags) available for this server.\nA null value indicates automatic selection of the best processor model supported by the host node.\nThis does not change the physical CPU, only the CPU flags available to the operating system.",
             "format": "int64",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "machine_type": {
             "allOf": [
@@ -6518,8 +6484,7 @@
               }
             ],
             "description": "The machine_type (corresponding to a KVM version) used for this server.\nA null value indicates automatic selection of the best KVM machine type supported by the host node.\n\n| Value | Description |\n| ----- | ----------- |\n| pc_i440fx_1point5 | PC i440FX 1.5 |\n| pc_i440fx_2point11 | PC i440FX 2.11 |\n| pc_i440fx_4point1 | PC i440FX 4.1 |\n| pc_i440fx_4point2 | PC i440FX 4.2 |\n| pc_i440fx_5point0 | PC i440FX 5.0 |\n| pc_i440fx_5point1 | PC i440FX 5.1 |\n| pc_i440fx_7point2 | PC i440FX 7.2 |\n| pc_i440fx_8point2 | PC i440FX 8.2 |\n\n",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "video_device": {
             "allOf": [
@@ -6527,16 +6492,14 @@
                 "$ref": "#/components/schemas/VideoDevice"
               }
             ],
-            "description": "Video Device\n\n| Value | Description |\n| ----- | ----------- |\n| cirrus-logic | Cirrus Logic GD5446 |\n| standard | Standard VGA with VESA 2.0 extensions |\n| virtio | Virtio VGA (800x600) |\n| virtio-wide | Virtio VGA (1600x900) |\n\n",
-            "readOnly": true
+            "description": "Video Device\n\n| Value | Description |\n| ----- | ----------- |\n| cirrus-logic | Cirrus Logic GD5446 |\n| standard | Standard VGA with VESA 2.0 extensions |\n| virtio | Virtio VGA (800x600) |\n| virtio-wide | Virtio VGA (1600x900) |\n\n"
           },
           "enabled_advanced_features": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "A list of the currently enabled advanced features for this server.",
-            "readOnly": true
+            "description": "A list of the currently enabled advanced features for this server."
           }
         }
       },
@@ -6572,30 +6535,26 @@
           "id": {
             "type": "integer",
             "description": "The ID of the backup image.",
-            "format": "int64",
-            "readOnly": true
+            "format": "int64"
           },
           "disk_identifiers": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "A list of the operating specific disk identifiers for the attached backup disks.",
-            "readOnly": true
+            "description": "A list of the operating specific disk identifiers for the attached backup disks."
           },
           "attached_at": {
             "type": "string",
             "description": "The date and time in ISO8601 format when this image was attached to the server.",
             "format": "date-time",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "attachment_expires": {
             "type": "string",
             "description": "The date and time in ISO8601 format when the backup will be automatically detached unless it is manually detached earlier.",
             "format": "date-time",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         }
       },
@@ -6612,24 +6571,21 @@
             "items": {
               "$ref": "#/components/schemas/ProcessorModel"
             },
-            "description": "A list of the processor models available for this server.",
-            "readOnly": true
+            "description": "A list of the processor models available for this server."
           },
           "machine_types": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/VmMachineType"
             },
-            "description": "A list of the machine types available for this server.",
-            "readOnly": true
+            "description": "A list of the machine types available for this server."
           },
           "advanced_features": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "A list of the advanced features available for this server.",
-            "readOnly": true
+            "description": "A list of the advanced features available for this server."
           }
         }
       },
@@ -6644,8 +6600,7 @@
               {
                 "$ref": "#/components/schemas/AvailableAdvancedServerFeatures"
               }
-            ],
-            "readOnly": true
+            ]
           }
         }
       },
@@ -6660,26 +6615,22 @@
           "id": {
             "type": "integer",
             "description": "The ID of this backup disk.",
-            "format": "int64",
-            "readOnly": true
+            "format": "int64"
           },
           "size_gigabytes": {
             "type": "number",
             "description": "This is the compressed size of the disk image in GB.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "min_disk_size": {
             "type": "integer",
             "description": "This is the minimum disk size in GB required to restore this disk image.",
-            "format": "int32",
-            "readOnly": true
+            "format": "int32"
           },
           "description": {
             "type": "string",
             "description": "A description of this disk.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         }
       },
@@ -6699,37 +6650,31 @@
               {
                 "$ref": "#/components/schemas/BackupSlot"
               }
-            ],
-            "readOnly": true
+            ]
           },
           "server_id": {
             "type": "integer",
             "description": "The server ID that was used to create this backup.",
-            "format": "int64",
-            "readOnly": true
+            "format": "int64"
           },
           "offsite": {
             "type": "boolean",
-            "description": "If this is true, an attempt to create an offsite copy was made. This does not mean that the offsite copy attempt was successful or that the copy still exists.",
-            "readOnly": true
+            "description": "If this is true, an attempt to create an offsite copy was made. This does not mean that the offsite copy attempt was successful or that the copy still exists."
           },
           "locked": {
             "type": "boolean",
-            "description": "If this is true the backup is locked and cannot be replaced.",
-            "readOnly": true
+            "description": "If this is true the backup is locked and cannot be replaced."
           },
           "iso": {
             "type": "boolean",
-            "description": "If this is true the backup is an ISO image and cannot be restored or downloaded. ISO images may only be attached for use as a boot disk or an additional disk.",
-            "readOnly": true
+            "description": "If this is true the backup is an ISO image and cannot be restored or downloaded. ISO images may only be attached for use as a boot disk or an additional disk."
           },
           "backup_disks": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/BackupDisk"
             },
-            "description": "A list of the individual disks that make up this backup.",
-            "readOnly": true
+            "description": "A list of the individual disks that make up this backup."
           }
         }
       },
@@ -6760,20 +6705,17 @@
           "backup_hour_of_day": {
             "type": "integer",
             "description": "The hour of the day that backups will be scheduled. This is an approximate value.",
-            "format": "int32",
-            "readOnly": true
+            "format": "int32"
           },
           "backup_day_of_week": {
             "type": "integer",
             "description": "If weekly backups are enabled the day of the week that the weekly backup will occur. Sunday is day 0.",
-            "format": "int32",
-            "readOnly": true
+            "format": "int32"
           },
           "backup_day_of_month": {
             "type": "integer",
             "description": "If monthly backups are enabled the day of the month the monthly backup will occur.",
-            "format": "int32",
-            "readOnly": true
+            "format": "int32"
           },
           "offsite_backup_settings": {
             "allOf": [
@@ -6782,8 +6724,7 @@
               }
             ],
             "description": "If offsite backups are enabled this details how they are stored and managed.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         }
       },
@@ -6813,14 +6754,12 @@
           "start": {
             "type": "string",
             "description": "The approximate earliest start date and time in ISO8601 format of the next scheduled backup.",
-            "format": "date-time",
-            "readOnly": true
+            "format": "date-time"
           },
           "end": {
             "type": "string",
             "description": "The expected latest date and time in ISO8601 format of the next scheduled backup.\nThis is not a guarantee that the backup will have started or completed by this date and time.",
-            "format": "date-time",
-            "readOnly": true
+            "format": "date-time"
           }
         }
       },
@@ -6851,8 +6790,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Image"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -6867,29 +6805,25 @@
           "unbilled_total": {
             "type": "number",
             "description": "The total of any un-billed charges in AU$.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "available_credit": {
             "type": "number",
             "description": "Available credit in AU$.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "charges": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ChargeInformation"
             },
-            "description": "A list of all of the individual charges that contribute to the un-billed total.",
-            "readOnly": true
+            "description": "A list of all of the individual charges that contribute to the un-billed total."
           },
           "generated_at": {
             "type": "string",
             "description": "The timestamp of the most recent charge.",
             "format": "date-time",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         }
       },
@@ -6904,8 +6838,7 @@
               {
                 "$ref": "#/components/schemas/Balance"
               }
-            ],
-            "readOnly": true
+            ]
           }
         }
       },
@@ -7463,25 +7396,20 @@
           "created": {
             "type": "string",
             "description": "The time when the charge was created.",
-            "format": "date-time",
-            "readOnly": true
+            "format": "date-time"
           },
           "description": {
-            "minLength": 1,
             "type": "string",
-            "description": "A summary of the charge.",
-            "readOnly": true
+            "description": "A summary of the charge."
           },
           "total": {
             "type": "number",
             "description": "The cost in AU$.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "ongoing": {
             "type": "boolean",
-            "description": "If this is true the charge is for an ongoing service. If this is false the charge is complete and awaiting invoicing.",
-            "readOnly": true
+            "description": "If this is true the charge is for an ongoing service. If this is false the charge is complete and awaiting invoicing."
           }
         }
       },
@@ -7529,34 +7457,27 @@
         "type": "object",
         "properties": {
           "iframe": {
-            "minLength": 1,
             "type": "string",
-            "description": "The URL for the embedded version of the console.",
-            "readOnly": true
+            "description": "The URL for the embedded version of the console."
           },
           "browser": {
-            "minLength": 1,
             "type": "string",
-            "description": "The URL for the full screen and full featured version of the console.",
-            "readOnly": true
+            "description": "The URL for the full screen and full featured version of the console."
           },
           "width": {
             "type": "integer",
             "description": "Rescue console native width.",
-            "format": "int32",
-            "readOnly": true
+            "format": "int32"
           },
           "height": {
             "type": "integer",
             "description": "Rescue console native height.",
-            "format": "int32",
-            "readOnly": true
+            "format": "int32"
           },
           "expiry": {
             "type": "string",
             "description": "The expiry time of the provided URLs.",
-            "format": "date-time",
-            "readOnly": true
+            "format": "date-time"
           }
         }
       },
@@ -7571,8 +7492,7 @@
               {
                 "$ref": "#/components/schemas/Console"
               }
-            ],
-            "readOnly": true
+            ]
           }
         }
       },
@@ -7635,16 +7555,14 @@
               {
                 "$ref": "#/components/schemas/LoadBalancer"
               }
-            ],
-            "readOnly": true
+            ]
           },
           "links": {
             "allOf": [
               {
                 "$ref": "#/components/schemas/ActionsLinks"
               }
-            ],
-            "readOnly": true
+            ]
           }
         }
       },
@@ -7690,6 +7608,11 @@
             "type": "integer",
             "description": "Leave null to use default (public) network for the selected region.",
             "format": "int64",
+            "nullable": true
+          },
+          "vpc_ipv4_address": {
+            "type": "string",
+            "description": "If provided this will be the Ipv4 address for the server's private VPC network adapter. If this is null an unused Ipv4 address will be assigned. This field is only valid when VpcId is provided.",
             "nullable": true
           },
           "ssh_keys": {
@@ -7748,16 +7671,14 @@
               {
                 "$ref": "#/components/schemas/Server"
               }
-            ],
-            "readOnly": true
+            ]
           },
           "links": {
             "allOf": [
               {
                 "$ref": "#/components/schemas/ActionsLinks"
               }
-            ],
-            "readOnly": true
+            ]
           }
         }
       },
@@ -7799,8 +7720,7 @@
             "items": {
               "type": "integer",
               "format": "int64"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -7837,32 +7757,27 @@
           "server_id": {
             "type": "integer",
             "description": "The ID of the server that this data transfer usage refers to.",
-            "format": "int64",
-            "readOnly": true
+            "format": "int64"
           },
           "expires": {
             "type": "string",
             "description": "The date and time in ISO8601 format that the current billing period expires.",
-            "format": "date-time",
-            "readOnly": true
+            "format": "date-time"
           },
           "transfer_gigabytes": {
             "type": "integer",
             "description": "The included data transfer for this server in this period in GB.",
-            "format": "int64",
-            "readOnly": true
+            "format": "int64"
           },
           "current_transfer_usage_gigabytes": {
             "type": "number",
             "description": "The used data transfer for this server in this period in GB.\nIf you have more than one server, please see our data pooling policy: this value may include excess data transfer used by other servers or may have 'offloaded' excess data transfer to other servers with spare capacity.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "transfer_period_end": {
             "type": "string",
             "description": "The date and time in ISO8601 format that the data transfer limit period ended (if it is completed) or when it will end (if this is the current period).",
-            "format": "date-time",
-            "readOnly": true
+            "format": "date-time"
           }
         }
       },
@@ -7908,8 +7823,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DataUsage"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -7994,25 +7908,21 @@
           "id": {
             "type": "integer",
             "description": "The ID of this disk.",
-            "format": "int64",
-            "readOnly": true
+            "format": "int64"
           },
           "size_gigabytes": {
             "type": "number",
             "description": "The size of the disk in GB.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "description": {
             "type": "string",
             "description": "A description of this disk.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "primary": {
             "type": "boolean",
-            "description": "A primary disk is treated differently from other disks.",
-            "readOnly": true
+            "description": "A primary disk is treated differently from other disks."
           }
         }
       },
@@ -8042,7 +7952,6 @@
             "type": "integer",
             "description": "If this is a backup image, the operating system ID of the server at the time the backup was created.",
             "format": "int64",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "image_id"
             }
@@ -8054,7 +7963,6 @@
               }
             ],
             "description": "Supported methods of password recovery.\n\n| Value | Description |\n| ----- | ----------- |\n| manual | Password must be reset manually using the recovery console and rescue disk. |\n| offline-clear | Password can be cleared for the admin/root user only. New password needs to be provided on login via the console (Requires restart). |\n| offline-change | Password can be reset and new credentials sent (Requires restart). |\n| online-change | Password may be reset without requiring a reboot via installed QEMU Guest Agent. |\n\n",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "password_recovery"
             }
@@ -8063,7 +7971,6 @@
             "type": "string",
             "description": "User name to use when connecting via remote access (RDP or SSH).",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "remote_access_user"
             }
@@ -8074,7 +7981,6 @@
               "$ref": "#/components/schemas/DistributionFeature"
             },
             "description": "Features supported by this distribution.",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "features"
             }
@@ -8089,7 +7995,6 @@
             "description": "The additional cost for using this operating system as the base image for a size.",
             "format": "double",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "surcharge_base_cost"
             }
@@ -8099,7 +8004,6 @@
             "description": "The additional cost per MB for using this operating system as the base image for a size.",
             "format": "double",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "surcharge_per_memory_megabyte"
             }
@@ -8109,7 +8013,6 @@
             "description": "The maximum memory in MB that counts towards the surcharge_per_memory_mb. Any memory above this cap does not attract the surcharge.",
             "format": "int32",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "surcharge_per_memory_max_megabytes"
             }
@@ -8119,7 +8022,6 @@
             "description": "The additional cost per vcpu for using this operating system as the base image for a size.",
             "format": "double",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "surcharge_per_vcpu"
             }
@@ -8129,7 +8031,6 @@
             "description": "The minimum vcpu count for surcharge calculations.",
             "format": "int32",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "surcharge_min_vcpu"
             }
@@ -8148,35 +8049,28 @@
           "id": {
             "type": "integer",
             "description": "The ID of this domain.",
-            "format": "int64",
-            "readOnly": true
+            "format": "int64"
           },
           "name": {
-            "minLength": 1,
             "type": "string",
-            "description": "The name of the domain.",
-            "readOnly": true
+            "description": "The name of the domain."
           },
           "current_nameservers": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "The current authoritative name servers for this domain.",
-            "readOnly": true
+            "description": "The current authoritative name servers for this domain."
           },
           "ttl": {
             "type": "integer",
             "description": "The time to live for records in this domain in seconds. If the DNS records for this domain are not managed locally this will be what the TTL would be if the authority was delegated to us.",
             "format": "int32",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "zone_file": {
-            "minLength": 1,
             "type": "string",
-            "description": "The zone file for the selected domain. If the DNS records for this domain are not managed locally this is what the zone file would be if the authority was delegated to us.",
-            "readOnly": true
+            "description": "The zone file for the selected domain. If the DNS records for this domain are not managed locally this is what the zone file would be if the authority was delegated to us. The serial is will always be 0 rather than the correct value."
           }
         }
       },
@@ -8193,7 +8087,6 @@
             "type": "integer",
             "description": "The ID of this domain record.",
             "format": "int64",
-            "readOnly": true,
             "x-cli-format": 1
           },
           "type": {
@@ -8203,62 +8096,52 @@
               }
             ],
             "description": "A general data field that has different functions depending on the record type.\n\n| Value | Description |\n| ----- | ----------- |\n| A | Map an IPv4 address to a hostname. |\n| AAAA | Map an IPv6 address to a hostname. |\n| CAA | Restrict which certificate authorities are permitted to issue certificates for a domain. |\n| CNAME | Define an alias for your canonical hostname. |\n| MX | Define the mail exchanges that handle mail for the domain. |\n| NS | Define the nameservers that manage the domain. |\n| SOA | The Start of Authority record for the zone. |\n| SRV | Specify a server by hostname and port to handle a service or services. |\n| TXT | Define a string of text that is associated with a hostname. |\n\n",
-            "readOnly": true,
             "x-cli-format": 3
           },
           "name": {
-            "minLength": 1,
             "type": "string",
             "description": "The subdomain, alias, or service defined by the record.",
-            "readOnly": true,
             "x-cli-format": 2
           },
           "data": {
             "type": "string",
             "description": "Variable data depending on record type.",
             "nullable": true,
-            "readOnly": true,
             "x-cli-format": 4
           },
           "priority": {
             "type": "integer",
             "description": "A priority value that is only relevant for SRV and MX records.",
             "format": "int32",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "port": {
             "type": "integer",
             "description": "A port value that is only relevant for SRV records.",
             "format": "int32",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "ttl": {
             "type": "integer",
             "description": "This value is the time to live for the record in seconds.",
-            "format": "int32",
-            "readOnly": true
+            "format": "int32"
           },
           "weight": {
             "type": "integer",
             "description": "The weight value that is only relevant for SRV records.",
             "format": "int32",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "flags": {
             "type": "integer",
             "description": "An unsigned integer between 0-255 that is only relevant for CAA records.",
             "format": "int32",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "tag": {
             "type": "string",
             "description": "A parameter tag that is only relevant for CAA records.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         }
       },
@@ -8347,8 +8230,7 @@
               {
                 "$ref": "#/components/schemas/DomainRecord"
               }
-            ],
-            "readOnly": true
+            ]
           }
         }
       },
@@ -8405,8 +8287,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DomainRecord"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -8454,8 +8335,7 @@
               {
                 "$ref": "#/components/schemas/Domain"
               }
-            ],
-            "readOnly": true
+            ]
           }
         }
       },
@@ -8486,8 +8366,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Domain"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -8592,7 +8471,6 @@
             "description": "The protocol used for the health check.\n\n| Value | Description |\n| ----- | ----------- |\n| http | The health check will be performed via HTTP. |\n| https | The health check will be performed via HTTPS. |\n| both | The health check will be performed via both HTTP and HTTPS. Failing a health check on one protocol will remove the server from the pool of servers only for that protocol. |\n\n"
           },
           "path": {
-            "minLength": 1,
             "type": "string",
             "description": "The path to the health check endpoint."
           }
@@ -8634,23 +8512,19 @@
         "type": "object",
         "properties": {
           "display_name": {
-            "minLength": 1,
             "type": "string",
-            "description": "The name for this host. If this is a dedicated host this property will be empty.",
-            "readOnly": true
+            "description": "The name for this host. If this is a dedicated host this property will be empty."
           },
           "uptime_ms": {
             "type": "integer",
             "description": "The current uptime in milliseconds of this host.",
             "format": "int64",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "status_page": {
             "type": "string",
             "description": "This is the URL of the status page of the host. This will normally only be set if the host is under maintenance.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         }
       },
@@ -8672,17 +8546,14 @@
             "type": "integer",
             "description": "The ID of this image.",
             "format": "int64",
-            "readOnly": true,
             "x-cli-format": 1,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "id"
             }
           },
           "name": {
-            "minLength": 1,
             "type": "string",
             "description": "If this is an operating system image, this is the name of the operating system version. If this is a backup image, this is the label of the backup if it exists, otherwise it is the UTC timestamp of the creation of the image.",
-            "readOnly": true,
             "x-cli-format": 4,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "name"
@@ -8694,7 +8565,6 @@
                 "$ref": "#/components/schemas/ImageType"
               }
             ],
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "type"
             }
@@ -8703,7 +8573,6 @@
             "type": "string",
             "description": "If this is an operating system image, this is the name of the distribution. If this is a backup image, this is the name of the distribution the server is using.",
             "nullable": true,
-            "readOnly": true,
             "x-cli-format": 3,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "distribution"
@@ -8713,7 +8582,6 @@
             "type": "string",
             "description": "If this is an operating system image, this is the name and version of the distribution. If this is a backup image, this is the server hostname and label of the backup if it exists, otherwise it is the server hostname and UTC timestamp of the creation of the image.",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "full_name"
             }
@@ -8722,7 +8590,6 @@
             "type": "string",
             "description": "If this is an operating system image this is a slug which may be used as an alternative to the ID as a reference.",
             "nullable": true,
-            "readOnly": true,
             "x-cli-format": 2,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "slug"
@@ -8731,7 +8598,6 @@
           "public": {
             "type": "boolean",
             "description": "A public image is available to all users. A private image is available only to the account that created the image.",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "public"
             }
@@ -8742,7 +8608,6 @@
               "type": "string"
             },
             "description": "The slugs of the regions where the image is available for use.",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "regions"
             }
@@ -8752,7 +8617,6 @@
             "description": "If this is a backup image this is the date and time in ISO8601 format when the image was created.",
             "format": "date-time",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "created_at"
             }
@@ -8761,7 +8625,6 @@
             "type": "integer",
             "description": "For a distribution image this is the minimum disk size in GB required to install the operating system. For a backup image this is the minimum total disk size in GB required to restore the backup.",
             "format": "int32",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "min_disk_size"
             }
@@ -8770,7 +8633,6 @@
             "type": "number",
             "description": "For a distribution image this is the disk size used in GB by the operating system on initial install. For a backup image this is the size of the compressed backup image in GB.",
             "format": "double",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "size_gigabytes"
             }
@@ -8779,7 +8641,6 @@
             "type": "string",
             "description": "A description that may provide further details or warnings about the image.",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "description"
             }
@@ -8790,7 +8651,6 @@
                 "$ref": "#/components/schemas/ImageStatus"
               }
             ],
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "status"
             }
@@ -8799,7 +8659,6 @@
             "type": "string",
             "description": "If the image creation failed this may provide further information.",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "error_message"
             }
@@ -8821,7 +8680,6 @@
             ],
             "description": "If this is not null the use of this image may incur surcharges above the base cost of the server. All costs are in AU$.",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "distribution_surcharges"
             }
@@ -8833,7 +8691,6 @@
               }
             ],
             "description": "This object may provide further information about the distribution.",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "distribution_info"
             }
@@ -8846,7 +8703,6 @@
             ],
             "description": "If this image is a backup, this object will provide further information.",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "backup_info"
             }
@@ -8867,12 +8723,10 @@
             "format": "int64"
           },
           "compressed_url": {
-            "minLength": 1,
             "type": "string",
             "description": "The URL of the compressed disk image. It is always preferable to download the compressed disk image if at all possible."
           },
           "raw_url": {
-            "minLength": 1,
             "type": "string",
             "description": "The URL of the raw (uncompressed) disk image."
           }
@@ -8889,22 +8743,19 @@
           "id": {
             "type": "integer",
             "description": "The ID of the image this download object refers to.",
-            "format": "int64",
-            "readOnly": true
+            "format": "int64"
           },
           "expiry": {
             "type": "string",
             "description": "The date and time in ISO8601 format that this download URL will expire.",
-            "format": "date-time",
-            "readOnly": true
+            "format": "date-time"
           },
           "disks": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ImageDiskDownload"
             },
-            "description": "A list of objects containing the download URLs for each disk in the image.",
-            "readOnly": true
+            "description": "A list of objects containing the download URLs for each disk in the image."
           }
         }
       },
@@ -8919,8 +8770,7 @@
               {
                 "$ref": "#/components/schemas/ImageDownload"
               }
-            ],
-            "readOnly": true
+            ]
           }
         }
       },
@@ -9055,8 +8905,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Image"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -9079,26 +8928,21 @@
           "invoice_id": {
             "type": "integer",
             "description": "The ID of the invoice.",
-            "format": "int64",
-            "readOnly": true
+            "format": "int64"
           },
           "reference": {
             "type": "string",
             "description": "The reference for this invoice. If this invoice is for a single service this may identify the service, otherwise it will be the account reference.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "invoice_number": {
-            "minLength": 1,
             "type": "string",
-            "description": "The invoice number for this invoice.",
-            "readOnly": true
+            "description": "The invoice number for this invoice."
           },
           "amount": {
             "type": "number",
             "description": "The amount of the invoice in AU$.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "tax_code": {
             "allOf": [
@@ -9106,63 +8950,53 @@
                 "$ref": "#/components/schemas/TaxCode"
               }
             ],
-            "description": "The tax code that was applied to transactions on this invoice.",
-            "readOnly": true
+            "description": "The tax code that was applied to transactions on this invoice."
           },
           "tax": {
             "type": "number",
             "description": "The amount of tax (if any) that was charged on the transactions on this invoice.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "created": {
             "type": "string",
             "description": "The date in ISO8601 format this invoice was created.",
-            "format": "date-time",
-            "readOnly": true
+            "format": "date-time"
           },
           "date_due": {
             "type": "string",
             "description": "The date in ISO8601 format this invoice is due for payment.",
-            "format": "date-time",
-            "readOnly": true
+            "format": "date-time"
           },
           "date_overdue": {
             "type": "string",
             "description": "The date in ISO8601 format this invoice is considered overdue.",
-            "format": "date-time",
-            "readOnly": true
+            "format": "date-time"
           },
           "paid": {
             "type": "boolean",
-            "description": "If this is true the invoice has been paid.",
-            "readOnly": true
+            "description": "If this is true the invoice has been paid."
           },
           "refunded": {
             "type": "boolean",
-            "description": "If this is true the payment for this invoice has been refunded.",
-            "readOnly": true
+            "description": "If this is true the payment for this invoice has been refunded."
           },
           "payment_failure_count": {
             "type": "integer",
             "description": "If this is included it indicates the number of failed attempts at processing payment for this invoice that have occurred.",
             "format": "int32",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "invoice_items": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/InvoiceLineItem"
             },
-            "description": "The individual items that make up invoice.",
-            "readOnly": true
+            "description": "The individual items that make up invoice."
           },
           "invoice_download_url": {
             "type": "string",
             "description": "The download URL for the rendered version of the invoice.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         }
       },
@@ -9175,21 +9009,17 @@
         "type": "object",
         "properties": {
           "name": {
-            "minLength": 1,
             "type": "string",
-            "description": "A description of the item.",
-            "readOnly": true
+            "description": "A description of the item."
           },
           "amount": {
             "type": "number",
             "description": "The charge in AU$ for this item. A negative value indicates a discount or credit.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "amount_includes_tax": {
             "type": "boolean",
-            "description": "If this is true the line item amount includes (if applicable) whatever tax was applied (see invoice.tax_code for details) and the total of the line items on this invoice will match the invoice.amount.\nIf this is false the line item amount does not include any applicable tax and the total of the line items on this invoice will be the invoice.amount less invoice.tax.",
-            "readOnly": true
+            "description": "If this is true the line item amount includes (if applicable) whatever tax was applied (see invoice.tax_code for details) and the total of the line items on this invoice will match the invoice.amount.\nIf this is false the line item amount does not include any applicable tax and the total of the line items on this invoice will be the invoice.amount less invoice.tax."
           }
         }
       },
@@ -9204,8 +9034,7 @@
               {
                 "$ref": "#/components/schemas/Invoice"
               }
-            ],
-            "readOnly": true
+            ]
           }
         }
       },
@@ -9236,8 +9065,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Invoice"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -9310,8 +9138,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Kernel"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -9404,8 +9231,7 @@
                 "$ref": "#/components/schemas/Pages"
               }
             ],
-            "description": "Provides links to first, last, next and previous pages if more than a single page of results exists.",
-            "readOnly": true
+            "description": "Provides links to first, last, next and previous pages if more than a single page of results exists."
           }
         }
       },
@@ -9429,13 +9255,11 @@
             "x-cli-format": 1
           },
           "name": {
-            "minLength": 1,
             "type": "string",
             "description": "The hostname of the load balancer.",
             "x-cli-format": 2
           },
           "ip": {
-            "minLength": 1,
             "type": "string",
             "description": "The IPv4 address of the load balancer.",
             "x-cli-format": 4
@@ -9509,8 +9333,7 @@
           },
           "anycast": {
             "type": "boolean",
-            "description": "If true this is an Anycast load balancer option.",
-            "readOnly": true
+            "description": "If true this is an Anycast load balancer option."
           },
           "price_monthly": {
             "type": "number",
@@ -9520,8 +9343,7 @@
           "price_hourly": {
             "type": "number",
             "description": "Hourly price in AU$.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           }
         }
       },
@@ -9535,8 +9357,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/LoadBalancerAvailabilityOption"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -9551,8 +9372,7 @@
               {
                 "$ref": "#/components/schemas/LoadBalancer"
               }
-            ],
-            "readOnly": true
+            ]
           }
         }
       },
@@ -9609,8 +9429,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/LoadBalancer"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -9624,8 +9443,7 @@
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -9638,8 +9456,7 @@
           "total": {
             "type": "integer",
             "description": "The total number of items available.",
-            "format": "int32",
-            "readOnly": true
+            "format": "int32"
           }
         },
         "description": "Contains metadata about the response, currently this includes the total number of items."
@@ -9652,7 +9469,6 @@
         "type": "object",
         "properties": {
           "ip_address": {
-            "minLength": 1,
             "type": "string",
             "description": "The IP address for this network."
           },
@@ -9768,7 +9584,6 @@
             "type": "number",
             "description": "The additional cost per GB per month for enabling daily offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected.",
             "format": "double",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "daily_per_gigabyte"
             }
@@ -9777,7 +9592,6 @@
             "type": "number",
             "description": "The additional cost per GB per month for enabling weekly offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected.",
             "format": "double",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "weekly_per_gigabyte"
             }
@@ -9786,7 +9600,6 @@
             "type": "number",
             "description": "The additional cost per GB per month for enabling monthly offsite backups. Only the highest value of the daily, weekly and monthly is applied. See the API support document for how to calculate the final cost of backups based on the options selected.",
             "format": "double",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "monthly_per_gigabyte"
             }
@@ -9802,20 +9615,17 @@
         "properties": {
           "use_custom_backup_location": {
             "type": "boolean",
-            "description": "If this is true a custom backup location will be used. If false our internally managed offsite backup location be used.",
-            "readOnly": true
+            "description": "If this is true a custom backup location will be used. If false our internally managed offsite backup location be used."
           },
           "offsite_backup_location": {
             "type": "string",
             "description": "If a custom backup location is used, this is the provided location.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "manage_offsite_copies": {
             "type": "boolean",
             "description": "This only has effect if a custom offsite location is being used: the internal offsite backup location always manages copies.\nIf this is true old offsite backups will be removed once the replacement upload is complete.\nIf this is false backups must be removed from the Amazon S3 bucket manually. Amazon will charge your S3 account at their standard rate for every backup stored.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         }
       },
@@ -9825,26 +9635,22 @@
           "last": {
             "type": "string",
             "description": "A link to the last page of items if this is not the last page.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "next": {
             "type": "string",
             "description": "A link to the next page of items if this is not the last page.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "prev": {
             "type": "string",
             "description": "A link to the previous page of items if this is not the first page.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "first": {
             "type": "string",
             "description": "A link to the first page of items if this is not the first page.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         },
         "description": "Provides links to first, last, next and previous pages if more than a single page of results exists."
@@ -9934,14 +9740,12 @@
           "start": {
             "type": "string",
             "description": "The date and time of the start of the period in ISO8601 format.",
-            "format": "date-time",
-            "readOnly": true
+            "format": "date-time"
           },
           "end": {
             "type": "string",
             "description": "The date and time of the end of the period in ISO8601 format.",
-            "format": "date-time",
-            "readOnly": true
+            "format": "date-time"
           },
           "data_interval": {
             "allOf": [
@@ -9949,8 +9753,7 @@
                 "$ref": "#/components/schemas/DataInterval"
               }
             ],
-            "description": "The duration between data points. This is not the collection interval.\n\n| Value | Description |\n| ----- | ----------- |\n| five-minute | 5 Minutes |\n| half-hour | 30 Minutes |\n| four-hour | 4 Hours |\n| day | 1 Day |\n| week | 7 Days |\n| month | 1 Month |\n\n",
-            "readOnly": true
+            "description": "The duration between data points. This is not the collection interval.\n\n| Value | Description |\n| ----- | ----------- |\n| five-minute | 5 Minutes |\n| half-hour | 30 Minutes |\n| four-hour | 4 Hours |\n| day | 1 Day |\n| week | 7 Days |\n| month | 1 Month |\n\n"
           }
         }
       },
@@ -10040,20 +9843,16 @@
           "id": {
             "type": "integer",
             "description": "The ID of this processor model.",
-            "format": "int64",
-            "readOnly": true
+            "format": "int64"
           },
           "name": {
-            "minLength": 1,
             "type": "string",
-            "description": "The name of this processor model.",
-            "readOnly": true
+            "description": "The name of this processor model."
           },
           "description": {
             "type": "string",
             "description": "A description of this processor model.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         }
       },
@@ -10116,20 +9915,16 @@
         "type": "object",
         "properties": {
           "slug": {
-            "minLength": 1,
             "type": "string",
             "description": "The unique slug for this region.",
-            "readOnly": true,
             "x-cli-format": 1,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "slug"
             }
           },
           "name": {
-            "minLength": 1,
             "type": "string",
             "description": "The name of this region.",
-            "readOnly": true,
             "x-cli-format": 2,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "name"
@@ -10141,7 +9936,6 @@
               "type": "string"
             },
             "description": "The slugs of the sizes available in this region.",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "sizes"
             }
@@ -10149,7 +9943,6 @@
           "available": {
             "type": "boolean",
             "description": "Whether this region is available for the allocation of new resources.",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "available"
             }
@@ -10160,7 +9953,6 @@
               "type": "string"
             },
             "description": "A list of features available for resources in this region.",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "features"
             }
@@ -10171,7 +9963,6 @@
               "type": "string"
             },
             "description": "A list of nameservers available for resources in this region.",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "name_servers"
             }
@@ -10421,22 +10212,17 @@
         "type": "object",
         "properties": {
           "router": {
-            "minLength": 1,
             "type": "string",
-            "description": "The server that will receive traffic sent to the destination property in this VPC.",
-            "readOnly": true
+            "description": "The server that will receive traffic sent to the destination property in this VPC."
           },
           "destination": {
-            "minLength": 1,
             "type": "string",
-            "description": "The destination address for this route entry. This may be in CIDR format.",
-            "readOnly": true
+            "description": "The destination address for this route entry. This may be in CIDR format."
           },
           "description": {
             "type": "string",
             "description": "An optional description for the route.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         }
       },
@@ -10492,8 +10278,7 @@
           "cpu_usage_percent": {
             "type": "number",
             "description": "The usage percentage of all CPU; 100% is the maximum possible even with multiple processors.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "cpu_usage_detailed": {
             "type": "array",
@@ -10501,56 +10286,47 @@
               "type": "number",
               "format": "double"
             },
-            "description": "The usage percentage of each virtual CPU.",
-            "readOnly": true
+            "description": "The usage percentage of each virtual CPU."
           },
           "memory_usage_bytes": {
             "type": "number",
             "description": "The virtual memory used in bytes.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "network_incoming_kbps": {
             "type": "number",
             "description": "The incoming network data rate in Kb per second.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "network_outgoing_kbps": {
             "type": "number",
             "description": "The outgoing network data rate in Kb per second.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "storage_usage_megabytes": {
             "type": "number",
             "description": "The total storage used in MB.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "storage_read_kbps": {
             "type": "number",
             "description": "The storage read rate in Kb per second.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "storage_write_kbps": {
             "type": "number",
             "description": "The storage write rate in Kb per second.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "storage_read_requests_per_second": {
             "type": "number",
             "description": "The storage read requests per second.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "storage_write_requests_per_second": {
             "type": "number",
             "description": "The storage write requests per second.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           }
         }
       },
@@ -10567,8 +10343,7 @@
           "server_id": {
             "type": "integer",
             "description": "The ID of the server that this sample set refers to.",
-            "format": "int64",
-            "readOnly": true
+            "format": "int64"
           },
           "period": {
             "allOf": [
@@ -10576,8 +10351,7 @@
                 "$ref": "#/components/schemas/Period"
               }
             ],
-            "description": "The period when this sample set was collected.",
-            "readOnly": true
+            "description": "The period when this sample set was collected."
           },
           "average": {
             "allOf": [
@@ -10585,20 +10359,17 @@
                 "$ref": "#/components/schemas/Sample"
               }
             ],
-            "description": "The average values of the samples collected during this period.",
-            "readOnly": true
+            "description": "The average values of the samples collected during this period."
           },
           "maximum_memory_megabytes": {
             "type": "number",
             "description": "The maximum memory used in MB at any point during this collection period.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           },
           "maximum_storage_gigabytes": {
             "type": "number",
             "description": "The maximum storage used in GB at any point during this collection period.",
-            "format": "double",
-            "readOnly": true
+            "format": "double"
           }
         }
       },
@@ -10729,57 +10500,48 @@
             "type": "integer",
             "description": "The ID of this server.",
             "format": "int64",
-            "readOnly": true,
             "x-cli-format": 1
           },
           "name": {
-            "minLength": 1,
             "type": "string",
             "description": "The hostname of this server.",
-            "readOnly": true,
             "x-cli-format": 2
           },
           "memory": {
             "type": "integer",
             "description": "The memory in MB of this server.",
             "format": "int32",
-            "readOnly": true,
             "x-cli-format": 5
           },
           "vcpus": {
             "type": "integer",
             "description": "The number of virtual CPUs of this server.",
             "format": "int32",
-            "readOnly": true,
             "x-cli-format": 4
           },
           "disk": {
             "type": "integer",
             "description": "The total disk in GB of this server.",
             "format": "int32",
-            "readOnly": true,
             "x-cli-format": 6
           },
           "vpc_id": {
             "type": "integer",
             "description": "The VPC ID that this server is allocated to. If this value is null the server is in the default (public) network for the region.",
             "format": "int64",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "created_at": {
             "type": "string",
             "description": "The date and time in ISO8601 format of this server's initial creation.",
-            "format": "date-time",
-            "readOnly": true
+            "format": "date-time"
           },
           "status": {
             "allOf": [
               {
                 "$ref": "#/components/schemas/ServerStatus"
               }
-            ],
-            "readOnly": true
+            ]
           },
           "backup_ids": {
             "type": "array",
@@ -10787,16 +10549,14 @@
               "type": "integer",
               "format": "int64"
             },
-            "description": "A list of the currently existing backup image IDs for this server (if any).",
-            "readOnly": true
+            "description": "A list of the currently existing backup image IDs for this server (if any)."
           },
           "features": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "A list of the currently enabled features on this server.",
-            "readOnly": true
+            "description": "A list of the currently enabled features on this server."
           },
           "region": {
             "allOf": [
@@ -10805,7 +10565,6 @@
               }
             ],
             "description": "The region this server is allocated to.",
-            "readOnly": true,
             "x-cli-format": 7
           },
           "image": {
@@ -10815,7 +10574,6 @@
               }
             ],
             "description": "The base image used to create this server.",
-            "readOnly": true,
             "x-cli-format": 3
           },
           "size": {
@@ -10824,14 +10582,11 @@
                 "$ref": "#/components/schemas/Size"
               }
             ],
-            "description": "The currently selected size for this server.",
-            "readOnly": true
+            "description": "The currently selected size for this server."
           },
           "size_slug": {
-            "minLength": 1,
             "type": "string",
-            "description": "The slug of the currently selected size for this server.",
-            "readOnly": true
+            "description": "The slug of the currently selected size for this server."
           },
           "selected_size_options": {
             "allOf": [
@@ -10840,8 +10595,7 @@
               }
             ],
             "description": "An object that details the selected options for the current size.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "networks": {
             "allOf": [
@@ -10850,7 +10604,6 @@
               }
             ],
             "description": "A list of the networks of the server.",
-            "readOnly": true,
             "x-cli-format": 8
           },
           "kernel": {
@@ -10860,8 +10613,7 @@
               }
             ],
             "description": "The currently selected kernel for the server.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "next_backup_window": {
             "allOf": [
@@ -10870,16 +10622,14 @@
               }
             ],
             "description": "The details of the next scheduled backup, if any.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "disks": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Disk"
             },
-            "description": "A list of the disks that are currently attached to the server.",
-            "readOnly": true
+            "description": "A list of the disks that are currently attached to the server."
           },
           "backup_settings": {
             "allOf": [
@@ -10887,23 +10637,20 @@
                 "$ref": "#/components/schemas/BackupSettings"
               }
             ],
-            "description": "Detailed backup settings for the server.",
-            "readOnly": true
+            "description": "Detailed backup settings for the server."
           },
           "cancelled_at": {
             "type": "string",
             "description": "If the server has been cancelled, this is the date and time in ISO8601 format of that cancellation.",
             "format": "date-time",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "failover_ips": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "A list of any assigned failover IP addresses for this server.",
-            "readOnly": true
+            "description": "A list of any assigned failover IP addresses for this server."
           },
           "host": {
             "allOf": [
@@ -10911,26 +10658,22 @@
                 "$ref": "#/components/schemas/Host"
               }
             ],
-            "description": "Summary information about the host of this server.",
-            "readOnly": true
+            "description": "Summary information about the host of this server."
           },
           "partner_id": {
             "type": "integer",
             "description": "The server ID of the partner of this server, if one has been assigned.",
             "format": "int64",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "password_change_supported": {
             "type": "boolean",
-            "description": "If this is true the password_reset server action can be called to change a user's password. If this is false the password_reset server action will merely clear the root/administrator password allowing the password to be changed via the web console.",
-            "readOnly": true
+            "description": "If this is true the password_reset server action can be called to change a user's password. If this is false the password_reset server action will merely clear the root/administrator password allowing the password to be changed via the web console."
           },
           "permalink": {
             "type": "string",
             "description": "A randomly generated two-word identifier assigned to servers in regions that support this feature.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "attached_backup": {
             "allOf": [
@@ -10939,8 +10682,7 @@
               }
             ],
             "description": "An object that provides details of any backup image currently attached to the server..",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "advanced_features": {
             "allOf": [
@@ -10948,8 +10690,7 @@
                 "$ref": "#/components/schemas/AdvancedServerFeatures"
               }
             ],
-            "description": "The currently enabled advanced features, machine type and processor flags.",
-            "readOnly": true
+            "description": "The currently enabled advanced features, machine type and processor flags."
           }
         }
       },
@@ -11214,8 +10955,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Server"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -11254,10 +10994,8 @@
         "type": "object",
         "properties": {
           "slug": {
-            "minLength": 1,
             "type": "string",
             "description": "The slug of this size.",
-            "readOnly": true,
             "x-cli-format": 1,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "slug"
@@ -11267,7 +11005,6 @@
             "type": "string",
             "description": "A description of this size.",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "description"
             }
@@ -11276,7 +11013,6 @@
             "type": "string",
             "description": "A description of the CPU provided in this size.",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "cpu_description"
             }
@@ -11285,7 +11021,6 @@
             "type": "string",
             "description": "A description of the storage provided in this size.",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "storage_description"
             }
@@ -11297,7 +11032,6 @@
               }
             ],
             "description": "The type of this size, generally used to differentiate sizes optimized for different usages.",
-            "readOnly": true,
             "x-cli-format": 2,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "size_type"
@@ -11306,7 +11040,6 @@
           "available": {
             "type": "boolean",
             "description": "If this is false the size is not available for new servers.",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "available"
             }
@@ -11317,7 +11050,6 @@
               "type": "string"
             },
             "description": "A list of region slugs where this size is available regardless of stock.\nIf this a response to a query that included a selected operating system this response will only include regions where that operating system is available on this size,\notherwise not all regions listed will support all operating systems on this size.",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "regions"
             }
@@ -11329,7 +11061,6 @@
             },
             "description": "A list of region slugs where the size is normally available but is currently not available due to lack of stock.",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "regions_out_of_stock"
             }
@@ -11338,7 +11069,6 @@
             "type": "number",
             "description": "Monthly Price in AU$.",
             "format": "double",
-            "readOnly": true,
             "x-cli-format": 8,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "price_monthly"
@@ -11348,7 +11078,6 @@
             "type": "number",
             "description": "Hourly price in AU$.",
             "format": "double",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "price_hourly"
             }
@@ -11357,7 +11086,6 @@
             "type": "integer",
             "description": "The included storage for this size in GB.",
             "format": "int32",
-            "readOnly": true,
             "x-cli-format": 6,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "disk"
@@ -11367,7 +11095,6 @@
             "type": "integer",
             "description": "The included memory for this size in MB.",
             "format": "int32",
-            "readOnly": true,
             "x-cli-format": 5,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "memory"
@@ -11377,7 +11104,6 @@
             "type": "number",
             "description": "The included data transfer for this size in TB.",
             "format": "double",
-            "readOnly": true,
             "x-cli-format": 7,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "transfer"
@@ -11387,7 +11113,6 @@
             "type": "number",
             "description": "The excess charged for any transfer above the included data transfer in AU$ per GB.",
             "format": "double",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "excess_transfer_cost_per_gigabyte"
             }
@@ -11396,17 +11121,14 @@
             "type": "integer",
             "description": "The count of virtual CPUs for this size. See vcpu_units for a description of how each virtual CPU maps to the underlying hardware.",
             "format": "int32",
-            "readOnly": true,
             "x-cli-format": 3,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "vcpus"
             }
           },
           "vcpu_units": {
-            "minLength": 1,
             "type": "string",
             "description": "This is the unit that the vcpus field counts, e.g. \"core\" or \"thread\".",
-            "readOnly": true,
             "x-cli-format": 4,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "vcpu_units"
@@ -11450,7 +11172,6 @@
             "type": "integer",
             "description": "The minimum storage in GB permitted on this size.",
             "format": "int32",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "disk_min"
             }
@@ -11459,7 +11180,6 @@
             "type": "integer",
             "description": "The maximum storage in GB permitted on this size.",
             "format": "int32",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "disk_max"
             }
@@ -11468,7 +11188,6 @@
             "type": "number",
             "description": "The additional cost per GB per month for additional storage space.",
             "format": "double",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "disk_cost_per_additional_gigabyte"
             }
@@ -11481,7 +11200,6 @@
             },
             "description": "If this is null the normal valid values in the documentation for SizeOptionsRequest are used, otherwise only these values (in GB) are permitted.",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "restricted_disk_values"
             }
@@ -11490,7 +11208,6 @@
             "type": "integer",
             "description": "The maximum memory in MB permitted on this size.",
             "format": "int32",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "memory_max"
             }
@@ -11499,7 +11216,6 @@
             "type": "number",
             "description": "The additional cost per MB per month for additional memory.",
             "format": "double",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "memory_cost_per_additional_megabyte"
             }
@@ -11508,7 +11224,6 @@
             "type": "number",
             "description": "The maximum transfer in TB permitted for this size.",
             "format": "double",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "transfer_max"
             }
@@ -11517,7 +11232,6 @@
             "type": "number",
             "description": "The additional cost per GB per month for additional included transfer.",
             "format": "double",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "transfer_cost_per_additional_gigabyte"
             }
@@ -11526,7 +11240,6 @@
             "type": "integer",
             "description": "The maximum number of IPv4 addresses permitted on this size.",
             "format": "int32",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "ipv4_addresses_max"
             }
@@ -11535,7 +11248,6 @@
             "type": "number",
             "description": "The additional cost per public IPv4 address per month for additional IPv4 addresses.",
             "format": "double",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "ipv4_addresses_cost_per_address"
             }
@@ -11544,7 +11256,6 @@
             "type": "number",
             "description": "This is the discount (if any) that is applied if no public IPv4 addresses are selected.",
             "format": "double",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "discount_for_no_public_ipv4"
             }
@@ -11553,7 +11264,6 @@
             "type": "integer",
             "description": "The number of daily backups included in the base size cost.",
             "format": "int32",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "daily_backups"
             }
@@ -11562,7 +11272,6 @@
             "type": "integer",
             "description": "The number of weekly backups included in the base size cost.",
             "format": "int32",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "weekly_backups"
             }
@@ -11571,7 +11280,6 @@
             "type": "integer",
             "description": "The number of monthly backups included in the base size cost.",
             "format": "int32",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "monthly_backups"
             }
@@ -11580,7 +11288,6 @@
             "type": "number",
             "description": "The cost per GB of storage of each selected backup. See the API support document for how to calculate the final cost of backups based on the options selected.",
             "format": "double",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "backups_cost_per_backup_per_gigabyte"
             }
@@ -11589,7 +11296,6 @@
             "type": "number",
             "description": "The additional cost per GB of storage for enabling offsite backups. See the API support document for how to calculate the final cost of backups based on the options selected.",
             "format": "double",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "offsite_backups_cost_per_gigabyte"
             }
@@ -11601,7 +11307,6 @@
               }
             ],
             "description": "The additional cost per GB of storage for enabling offsite backups based on highest frequency of backups currently enabled. All costs are in AU$.",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "offsite_backup_frequency_cost"
             }
@@ -11677,19 +11382,15 @@
         "type": "object",
         "properties": {
           "slug": {
-            "minLength": 1,
             "type": "string",
             "description": "The slug of this size type.",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "slug"
             }
           },
           "name": {
-            "minLength": 1,
             "type": "string",
             "description": "The name of this size type.",
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "name"
             }
@@ -11698,7 +11399,6 @@
             "type": "string",
             "description": "The description of this size type, generally used to indicate the intended use case for sizes of this type.",
             "nullable": true,
-            "readOnly": true,
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "description"
             }
@@ -11763,8 +11463,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Image"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -11786,66 +11485,54 @@
             "type": "integer",
             "description": "The ID of this software.",
             "format": "int64",
-            "readOnly": true,
             "x-cli-format": 1
           },
           "enabled": {
             "type": "boolean",
-            "description": "Software that is not enabled is not available to be added to servers but may be retained by servers that currently use it.",
-            "readOnly": true
+            "description": "Software that is not enabled is not available to be added to servers but may be retained by servers that currently use it."
           },
           "name": {
-            "minLength": 1,
             "type": "string",
             "description": "The name of this software.",
-            "readOnly": true,
             "x-cli-format": 2
           },
           "description": {
-            "minLength": 1,
             "type": "string",
             "description": "The description of this software.",
-            "readOnly": true,
             "x-cli-format": 3
           },
           "cost_per_licence_per_month": {
             "type": "number",
             "description": "The cost for each licence of this software per month in AU$.",
             "format": "double",
-            "readOnly": true,
             "x-cli-format": 4
           },
           "minimum_licence_count": {
             "type": "integer",
             "description": "The minimum licences permitted for this software.",
-            "format": "int32",
-            "readOnly": true
+            "format": "int32"
           },
           "maximum_licence_count": {
             "type": "integer",
             "description": "The maximum licences permitted for this software.",
-            "format": "int32",
-            "readOnly": true
+            "format": "int32"
           },
           "licence_step_count": {
             "type": "integer",
             "description": "Licences must be purchased in multiples of this value.",
-            "format": "int32",
-            "readOnly": true
+            "format": "int32"
           },
           "group": {
             "type": "string",
             "description": "Software in the same group may not be licensed together.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "supported_operating_systems": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "A list of slugs of operating system images that support this software.",
-            "readOnly": true
+            "description": "A list of slugs of operating system images that support this software."
           }
         }
       },
@@ -11908,33 +11595,26 @@
             "type": "integer",
             "description": "The ID of this SSH key.",
             "format": "int64",
-            "readOnly": true,
             "x-cli-format": 1
           },
           "fingerprint": {
-            "minLength": 1,
             "type": "string",
             "description": "The fingerprint of this SSH key.",
-            "readOnly": true,
             "x-cli-format": 4
           },
           "public_key": {
-            "minLength": 1,
             "type": "string",
-            "description": "The public key of this SSH key.",
-            "readOnly": true
+            "description": "The public key of this SSH key."
           },
           "name": {
             "type": "string",
             "description": "The name of this SSH key. This is used only to aid in identification.",
             "nullable": true,
-            "readOnly": true,
             "x-cli-format": 2
           },
           "default": {
             "type": "boolean",
             "description": "If an SSH key is marked as default it will be deployed to all newly created servers that support SSH keys unless expressly overridden in the creation request.",
-            "readOnly": true,
             "x-cli-format": 3
           }
         }
@@ -12063,10 +11743,8 @@
         "type": "object",
         "properties": {
           "name": {
-            "minLength": 1,
             "type": "string",
-            "description": "The name of this tax code.",
-            "readOnly": true
+            "description": "The name of this tax code."
           },
           "type": {
             "allOf": [
@@ -12074,15 +11752,13 @@
                 "$ref": "#/components/schemas/TaxCodeType"
               }
             ],
-            "description": "The type of tax code.\n\n| Value | Description |\n| ----- | ----------- |\n| none | No tax is applied to any transaction. |\n| scalar | A fixed fraction of the value of all transactions is added as tax. |\n\n",
-            "readOnly": true
+            "description": "The type of tax code.\n\n| Value | Description |\n| ----- | ----------- |\n| none | No tax is applied to any transaction. |\n| scalar | A fixed fraction of the value of all transactions is added as tax. |\n\n"
           },
           "fixed_percent": {
             "type": "number",
             "description": "If this is set then this tax is added to all applicable transactions. This is a percentage value where 100 = 100%. For example: if the type is 'scalar' and the value of this is '10' then 10% of the value of all transactions will be added as tax.",
             "format": "double",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         }
       },
@@ -12111,19 +11787,16 @@
               {
                 "$ref": "#/components/schemas/ThresholdAlertType"
               }
-            ],
-            "readOnly": true
+            ]
           },
           "enabled": {
             "type": "boolean",
-            "description": "If a threshold alert is not enabled it will not generate warnings for the user.",
-            "readOnly": true
+            "description": "If a threshold alert is not enabled it will not generate warnings for the user."
           },
           "value": {
             "type": "integer",
             "description": "The threshold value of the alert. Refer to the documentation for each threshold alert type for what this value measures in the context of the alert type.",
-            "format": "int32",
-            "readOnly": true
+            "format": "int32"
           },
           "current_value": {
             "type": "integer",
@@ -12135,15 +11808,13 @@
             "type": "string",
             "description": "The date and time (if any) in ISO8601 format of the last time this alert was raised. An alert may not be raised again until it has been cleared.",
             "format": "date-time",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "last_cleared": {
             "type": "string",
             "description": "The date and time (if any) in ISO8601 format of the last time this alert was cleared. An alert may not be raised again until a minimum duration has passed since it was last cleared.",
             "format": "date-time",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         }
       },
@@ -12205,8 +11876,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ThresholdAlert"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -12236,8 +11906,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Invoice"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -12362,8 +12031,7 @@
               {
                 "$ref": "#/components/schemas/LoadBalancer"
               }
-            ],
-            "readOnly": true
+            ]
           },
           "links": {
             "allOf": [
@@ -12371,8 +12039,7 @@
                 "$ref": "#/components/schemas/ActionsLinks"
               }
             ],
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         }
       },
@@ -12483,8 +12150,7 @@
           "user_data": {
             "type": "string",
             "description": "The UserData that was last used to initialise the server.",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         }
       },
@@ -12499,8 +12165,7 @@
               {
                 "$ref": "#/components/schemas/UserInteractionType"
               }
-            ],
-            "readOnly": true
+            ]
           }
         }
       },
@@ -12569,21 +12234,16 @@
             "type": "integer",
             "description": "The ID of this VPC.",
             "format": "int64",
-            "readOnly": true,
             "x-cli-format": 1
           },
           "name": {
-            "minLength": 1,
             "type": "string",
             "description": "The name of this VPC.",
-            "readOnly": true,
             "x-cli-format": 2
           },
           "ip_range": {
-            "minLength": 1,
             "type": "string",
             "description": "The IPv4 range for this VPC in CIDR format.",
-            "readOnly": true,
             "x-cli-format": 3
           },
           "route_entries": {
@@ -12591,8 +12251,7 @@
             "items": {
               "$ref": "#/components/schemas/RouteEntry"
             },
-            "description": "The route entries that control how network traffic is directed through the VPC environment.",
-            "readOnly": true
+            "description": "The route entries that control how network traffic is directed through the VPC environment."
           }
         }
       },
@@ -12605,24 +12264,19 @@
         "type": "object",
         "properties": {
           "name": {
-            "minLength": 1,
             "type": "string",
-            "description": "The name of this VPC member.",
-            "readOnly": true
+            "description": "The name of this VPC member."
           },
           "resource_type": {
             "allOf": [
               {
                 "$ref": "#/components/schemas/ResourceType"
               }
-            ],
-            "readOnly": true
+            ]
           },
           "resource_id": {
-            "minLength": 1,
             "type": "string",
-            "description": "The resource ID of this VPC member.",
-            "readOnly": true
+            "description": "The resource ID of this VPC member."
           },
           "created_at": {
             "type": "string",
@@ -12659,8 +12313,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/VpcMember"
-            },
-            "readOnly": true
+            }
           }
         }
       },
@@ -12675,8 +12328,7 @@
               {
                 "$ref": "#/components/schemas/Vpc"
               }
-            ],
-            "readOnly": true
+            ]
           }
         }
       },
@@ -12707,8 +12359,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Vpc"
-            },
-            "readOnly": true
+            }
           }
         }
       }

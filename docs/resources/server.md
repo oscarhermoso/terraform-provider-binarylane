@@ -58,6 +58,7 @@ resource "binarylane_server" "example" {
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 - `user_data` (String) A script or cloud-config YAML file to configure the server. Can only be specified if the OS image supports UserData (i.e. not Windows). See more: https://cloudinit.readthedocs.io/en/latest/explanation/format.html#user-data-script
 - `vpc_id` (Number) Leave null to use default (public) network for the selected region.
+- `vpc_ipv4_address` (String) If provided this will be the IPv4 address for the server's private VPC network adapter. If this is unspecified, then an unused IPv4 address will be assigned. This field is only valid when `vpc_id` is provided.
 
 ### Read-Only
 

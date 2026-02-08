@@ -153,8 +153,8 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	// Set data values
-	data.Id = types.Int64Value(*sshResp.JSON200.SshKey.Id)
-	data.Fingerprint = types.StringValue(*sshResp.JSON200.SshKey.Fingerprint)
+	data.Id = types.Int64Value(sshResp.JSON200.SshKey.Id)
+	data.Fingerprint = types.StringValue(sshResp.JSON200.SshKey.Fingerprint)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -191,13 +191,13 @@ func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	// Set data values
-	data.Id = types.Int64Value(*sshResp.JSON200.SshKey.Id)
-	data.Default = types.BoolValue(*sshResp.JSON200.SshKey.Default)
+	data.Id = types.Int64Value(sshResp.JSON200.SshKey.Id)
+	data.Default = types.BoolValue(sshResp.JSON200.SshKey.Default)
 	data.Name = types.StringValue(*sshResp.JSON200.SshKey.Name)
 	data.PublicKey = TrimmedStringValue{
-		StringValue: types.StringValue(*sshResp.JSON200.SshKey.PublicKey),
+		StringValue: types.StringValue(sshResp.JSON200.SshKey.PublicKey),
 	}
-	data.Fingerprint = types.StringValue(*sshResp.JSON200.SshKey.Fingerprint)
+	data.Fingerprint = types.StringValue(sshResp.JSON200.SshKey.Fingerprint)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -312,13 +312,13 @@ func (r *sshKeyResource) ImportState(
 
 		sshKeys := sshResp.JSON200.SshKeys
 		for _, key := range sshKeys {
-			if *key.Fingerprint == req.ID {
+			if key.Fingerprint == req.ID {
 				sshKey = key
 				nextPage = false
 				break
 			}
 		}
-		if sshResp.JSON200.Links == nil || sshResp.JSON200.Links.Pages == nil || sshResp.JSON200.Links.Pages.Next == nil {
+		if sshResp.JSON200.Links == nil || sshResp.JSON200.Links.Pages.Next == nil {
 			nextPage = false
 			break
 		}
@@ -326,7 +326,7 @@ func (r *sshKeyResource) ImportState(
 		page++
 	}
 
-	if sshKey.Id == nil {
+	if sshKey.Id == 0 {
 		resp.Diagnostics.AddError(
 			"Could not find SSH key by fingerprint",
 			fmt.Sprintf("Error finding SSH key: fingerprint=%s", req.ID),
@@ -334,6 +334,6 @@ func (r *sshKeyResource) ImportState(
 		return
 	}
 
-	diags := resp.State.SetAttribute(ctx, path.Root("id"), *sshKey.Id)
+	diags := resp.State.SetAttribute(ctx, path.Root("id"), sshKey.Id)
 	resp.Diagnostics.Append(diags...)
 }

@@ -161,6 +161,12 @@ func ServerResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Leave null to use default (public) network for the selected region.",
 				MarkdownDescription: "Leave null to use default (public) network for the selected region.",
 			},
+			"vpc_ipv4_address": schema.StringAttribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         "If provided this will be the Ipv4 address for the server's private VPC network adapter. If this is null an unused Ipv4 address will be assigned. This field is only valid when VpcId is provided.",
+				MarkdownDescription: "If provided this will be the Ipv4 address for the server's private VPC network adapter. If this is null an unused Ipv4 address will be assigned. This field is only valid when VpcId is provided.",
+			},
 		},
 	}
 }
@@ -178,6 +184,7 @@ type ServerModel struct {
 	SshKeys          types.List            `tfsdk:"ssh_keys"`
 	UserData         types.String          `tfsdk:"user_data"`
 	VpcId            types.Int64           `tfsdk:"vpc_id"`
+	VpcIpv4Address   types.String          `tfsdk:"vpc_ipv4_address"`
 }
 
 var _ basetypes.ObjectTypable = AdvancedFeaturesType{}
