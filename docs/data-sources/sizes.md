@@ -74,7 +74,7 @@ Read-Only:
 - `offsite_backups_cost_per_gigabyte` (Number) The additional cost per GB of storage for enabling offsite backups. See the API support document for how to calculate the final cost of backups based on the options selected.
 - `restricted_disk_values` (List of Number) If this is null the normal valid values in the documentation for SizeOptionsRequest are used, otherwise only these values (in GB) are permitted.
 - `transfer_cost_per_additional_gigabyte` (Number) The additional cost per GB per month for additional included transfer.
-- `transfer_max` (Number) The maximum transfer in TB permitted for this size.
+- `transfer_max` (Number) The maximum transfer in TB permitted for this size. If this is the same as `transfer` no additional transfer is supported.
 - `weekly_backups` (Number) The number of weekly backups included in the base size cost.
 
 <a id="nestedatt--sizes--options--offsite_backup_frequency_cost"></a>

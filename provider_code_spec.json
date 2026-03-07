@@ -573,7 +573,7 @@
 													"name": "transfer_max",
 													"float64": {
 														"computed_optional_required": "computed",
-														"description": "The maximum transfer in TB permitted for this size."
+														"description": "The maximum transfer in TB permitted for this size. If this is the same as `transfer` no additional transfer is supported."
 													}
 												},
 												{

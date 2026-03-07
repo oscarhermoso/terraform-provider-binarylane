@@ -165,8 +165,8 @@ func SizesDataSourceSchema(ctx context.Context) schema.Schema {
 								},
 								"transfer_max": schema.Float64Attribute{
 									Computed:            true,
-									Description:         "The maximum transfer in TB permitted for this size.",
-									MarkdownDescription: "The maximum transfer in TB permitted for this size.",
+									Description:         "The maximum transfer in TB permitted for this size. If this is the same as `transfer` no additional transfer is supported.",
+									MarkdownDescription: "The maximum transfer in TB permitted for this size. If this is the same as `transfer` no additional transfer is supported.",
 								},
 								"weekly_backups": schema.Int64Attribute{
 									Computed:            true,
