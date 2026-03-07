@@ -8,7 +8,7 @@
       "url": "https://support.binarylane.com.au/support/home",
       "email": "support@binarylane.com.au"
     },
-    "version": "0.34.0",
+    "version": "0.34.4",
     "x-logo": {
       "url": "https://www.binarylane.com.au/res/images/binarylane/logo.png",
       "backgroundColor": "#000000",
@@ -353,7 +353,8 @@
               "type": "integer",
               "description": "The target server id.",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "responses": {
@@ -1376,7 +1377,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "load-balancer list"
           }
         ],
         "responses": {
@@ -1414,7 +1416,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "load-balancer list"
           }
         ],
         "requestBody": {
@@ -1464,7 +1467,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "load-balancer list"
           }
         ],
         "responses": {
@@ -1616,7 +1620,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "load-balancer list"
           }
         ],
         "requestBody": {
@@ -1659,7 +1664,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "load-balancer list"
           }
         ],
         "requestBody": {
@@ -1683,7 +1689,7 @@
         "x-codeSamples": [
           {
             "lang": "Curl",
-            "source": "curl -X DELETE \"https://api.binarylane.com.au/v2/load_balancers/${load_balancer_id}/servers\"  \\\n-H \"Authorization: Bearer ${APITOKEN}\""
+            "source": "curl -X DELETE \"https://api.binarylane.com.au/v2/load_balancers/${load_balancer_id}/servers\"  \\\n-H \"Authorization: Bearer ${APITOKEN}\"  \\\n-H \"Content-Type: application/json\" -d \"${PAYLOAD}\""
           }
         ],
         "x-cli-command": "load-balancer server delete"
@@ -1704,7 +1710,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "load-balancer list"
           }
         ],
         "requestBody": {
@@ -1747,7 +1754,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "load-balancer list"
           }
         ],
         "requestBody": {
@@ -1771,7 +1779,7 @@
         "x-codeSamples": [
           {
             "lang": "Curl",
-            "source": "curl -X DELETE \"https://api.binarylane.com.au/v2/load_balancers/${load_balancer_id}/forwarding_rules\"  \\\n-H \"Authorization: Bearer ${APITOKEN}\""
+            "source": "curl -X DELETE \"https://api.binarylane.com.au/v2/load_balancers/${load_balancer_id}/forwarding_rules\"  \\\n-H \"Authorization: Bearer ${APITOKEN}\"  \\\n-H \"Content-Type: application/json\" -d \"${PAYLOAD}\""
           }
         ],
         "x-cli-command": "load-balancer rule delete"
@@ -1915,6 +1923,9 @@
                 }
               }
             }
+          },
+          "204": {
+            "description": "No Content"
           }
         },
         "x-codeSamples": [
@@ -1943,7 +1954,8 @@
               "type": "integer",
               "description": "The target server id.",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           },
           {
             "name": "data_interval",
@@ -1995,7 +2007,8 @@
               "type": "integer",
               "description": "The target server id.",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           },
           {
             "name": "data_interval",
@@ -2090,7 +2103,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           },
           {
             "name": "page",
@@ -2154,7 +2168,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -2383,7 +2398,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "responses": {
@@ -2420,7 +2436,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           },
           {
             "name": "reason",
@@ -2563,7 +2580,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           },
           {
             "name": "action_id",
@@ -2612,7 +2630,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "responses": {
@@ -2651,7 +2670,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "responses": {
@@ -2690,7 +2710,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           },
           {
             "name": "page",
@@ -2753,7 +2774,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -2806,7 +2828,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           },
           {
             "name": "page",
@@ -2872,7 +2895,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           },
           {
             "name": "page",
@@ -2938,7 +2962,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "responses": {
@@ -3004,7 +3029,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           },
           {
             "name": "page",
@@ -3069,7 +3095,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "responses": {
@@ -3108,7 +3135,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "responses": {
@@ -3388,7 +3416,8 @@
               "type": "integer",
               "description": "The target vpc id.",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "vpc list"
           }
         ],
         "responses": {
@@ -3427,7 +3456,8 @@
               "type": "integer",
               "description": "The target vpc id.",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "vpc list"
           }
         ],
         "requestBody": {
@@ -3480,7 +3510,8 @@
               "type": "integer",
               "description": "The target vpc id.",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "vpc list"
           }
         ],
         "requestBody": {
@@ -3531,7 +3562,8 @@
               "type": "integer",
               "description": "The target vpc id.",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "vpc list"
           }
         ],
         "responses": {
@@ -3658,7 +3690,8 @@
               "type": "integer",
               "description": "The target vpc id.",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "vpc list"
           },
           {
             "name": "resource_type",
@@ -3736,7 +3769,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -3788,7 +3822,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -3840,7 +3875,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -3892,7 +3928,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -3944,7 +3981,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -3996,7 +4034,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4048,7 +4087,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4100,7 +4140,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4152,7 +4193,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4204,7 +4246,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4256,7 +4299,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4308,7 +4352,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4360,7 +4405,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4412,7 +4458,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4464,7 +4511,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4516,7 +4564,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4568,7 +4617,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4620,7 +4670,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4672,7 +4723,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4724,7 +4776,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4776,7 +4829,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4828,7 +4882,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4880,7 +4935,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4932,7 +4988,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -4984,7 +5041,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5036,7 +5094,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5088,7 +5147,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5140,7 +5200,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5192,7 +5253,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5234,7 +5296,7 @@
           "ServerActions"
         ],
         "summary": "Create an Additional Disk for a Server",
-        "description": "This is used to add an additional disk in unallocated storage space.  \nThis does not alter the total disk space available to your server: to add additional disk space for your server use the 'Resize' action.  \n  \n",
+        "description": "This is used to add an additional disk in unallocated storage space.  \nThis does not alter the total disk space available to your server: to add additional disk space for your server use the 'Resize' action.  \n**This action may require the server to be rebooted.**  \n  \n",
         "parameters": [
           {
             "name": "server_id",
@@ -5244,7 +5306,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5296,7 +5359,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5338,7 +5402,7 @@
           "ServerActions"
         ],
         "summary": "Delete an Additional Disk for a Server",
-        "description": "This is used to delete a disk added using the 'AddDisk' action.  \n**NB: This is a destructive operation and no further confirmation will be requested.**  \n  \n",
+        "description": "This is used to delete a disk added using the 'AddDisk' action.  \n**NB: This is a destructive operation and no further confirmation will be requested.**  \n**This action may require the server to be rebooted.**  \n  \n",
         "parameters": [
           {
             "name": "server_id",
@@ -5348,7 +5412,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5400,7 +5465,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5452,7 +5518,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5504,7 +5571,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5556,7 +5624,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5608,7 +5677,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5660,7 +5730,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5712,7 +5783,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5764,7 +5836,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5816,7 +5889,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -5868,7 +5942,8 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "x-cli-entity-lookup": "server list"
           }
         ],
         "requestBody": {
@@ -7297,7 +7372,7 @@
           },
           "transfer": {
             "type": "number",
-            "description": "The total transfer per month in TB for this server.\nIf specified this is the absolute value, not just the additional transfer above what is included in the size.\nLeave null to accept the default for the size if this is a new server or a resize to a different base size, or to keep the current value if this a resize with the same base size but different options.\n            \nValid values (when converted to GB by multiplying the value provided by 1024):\n- must be a multiple of 5GB\n- &gt; 30GB must be a multiple of 10\n- &gt; 200GB must be a multiple of 100\n- &gt; 2000GB must be a multiple of 1000",
+            "description": "The total transfer per month in TB for this server.\nIf specified this is the absolute value, not just the additional transfer above what is included in the size.\nLeave null to accept the default for the size if this is a new server or a resize to a different base size, or to keep the current value if this a resize with the same base size but different options.\n            \nValid values (when converted to GB by multiplying the value provided by 1000):\n- must be a multiple of 5GB\n- &gt; 30GB must be a multiple of 10\n- &gt; 200GB must be a multiple of 100\n- &gt; 2000GB must be a multiple of 1000",
             "format": "double",
             "nullable": true
           },
@@ -9313,7 +9388,8 @@
             },
             "description": "The server IDs of the servers that are currently in the load balancer pool (regardless of their current 'health')."
           }
-        }
+        },
+        "x-cli-entity-ref": "name"
       },
       "LoadBalancerAvailabilityOption": {
         "required": [
@@ -9431,7 +9507,8 @@
               "$ref": "#/components/schemas/LoadBalancer"
             }
           }
-        }
+        },
+        "x-cli-entity-list": "load_balancers"
       },
       "LocalNameserversResponse": {
         "required": [
@@ -10692,7 +10769,8 @@
             ],
             "description": "The currently enabled advanced features, machine type and processor flags."
           }
-        }
+        },
+        "x-cli-entity-ref": "name"
       },
       "ServerAction": {
         "required": [
@@ -10957,7 +11035,8 @@
               "$ref": "#/components/schemas/Server"
             }
           }
-        }
+        },
+        "x-cli-entity-list": "servers"
       },
       "Shutdown": {
         "required": [
@@ -11222,7 +11301,7 @@
           },
           "transfer_max": {
             "type": "number",
-            "description": "The maximum transfer in TB permitted for this size.",
+            "description": "The maximum transfer in TB permitted for this size. If this is the same as `transfer` no additional transfer is supported.",
             "format": "double",
             "x-oapi-codegen-extra-tags": {
               "tfsdk": "transfer_max"
@@ -11368,7 +11447,7 @@
           },
           "transfer": {
             "type": "number",
-            "description": "The total transfer per month in TB for this server.\nIf specified this is the absolute value, not just the additional transfer above what is included in the size.\nLeave null to accept the default for the size if this is a new server or a resize to a different base size, or to keep the current value if this a resize with the same base size but different options.\n            \nValid values (when converted to GB by multiplying the value provided by 1024):\n- must be a multiple of 5GB\n- &gt; 30GB must be a multiple of 10\n- &gt; 200GB must be a multiple of 100\n- &gt; 2000GB must be a multiple of 1000",
+            "description": "The total transfer per month in TB for this server.\nIf specified this is the absolute value, not just the additional transfer above what is included in the size.\nLeave null to accept the default for the size if this is a new server or a resize to a different base size, or to keep the current value if this a resize with the same base size but different options.\n            \nValid values (when converted to GB by multiplying the value provided by 1000):\n- must be a multiple of 5GB\n- &gt; 30GB must be a multiple of 10\n- &gt; 200GB must be a multiple of 100\n- &gt; 2000GB must be a multiple of 1000",
             "format": "double",
             "nullable": true
           }
@@ -12253,7 +12332,8 @@
             },
             "description": "The route entries that control how network traffic is directed through the VPC environment."
           }
-        }
+        },
+        "x-cli-entity-ref": "name"
       },
       "VpcMember": {
         "required": [
@@ -12361,7 +12441,8 @@
               "$ref": "#/components/schemas/Vpc"
             }
           }
-        }
+        },
+        "x-cli-entity-list": "vpcs"
       }
     },
     "securitySchemes": {

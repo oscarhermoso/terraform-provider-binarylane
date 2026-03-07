@@ -144,3 +144,4 @@ cat <<<$(jq '.components.schemas.SizeType.properties.description += {"x-oapi-cod
 
 # Edit description here because it's hard to override nested schema properties
 cat <<<$(jq '.components.schemas.ForwardingRule.properties.entry_protocol.description = "The protocol that traffic must match for the load balancer to forward it. Valid values are \"http\" and \"https\"."' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.SizeOptions.properties.transfer_max.description = "The maximum transfer in TB permitted for this size. If this is the same as `transfer` no additional transfer is supported."' $OPENAPI_FILE) >$OPENAPI_FILE
