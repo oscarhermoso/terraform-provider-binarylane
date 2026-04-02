@@ -127,6 +127,7 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "disk", "20"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "backups", "true"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "port_blocking", "false"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "source_and_destination_check", "false"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "separate_private_network_interface", "true"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "advanced_features.emulated_hyperv", "false"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "advanced_features.emulated_devices", "false"),
