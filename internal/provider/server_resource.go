@@ -435,6 +435,15 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
 	}
 
+	if plan.SeparatePrivateNetworkInterface.IsUnknown() {
+		if plan.VpcId.IsNull() {
+			plan.SeparatePrivateNetworkInterface = types.BoolNull()
+		} else {
+			plan.SeparatePrivateNetworkInterface = types.BoolPointerValue(Pointer(false))
+		}
+		resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
+	}
+
 	if plan.VpcIpv4Address.IsUnknown() {
 		if plan.VpcId.IsNull() {
 			plan.VpcIpv4Address = types.StringNull()
@@ -1206,7 +1215,9 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	// Check separate_private_network_interface
 	if !plan.SeparatePrivateNetworkInterface.Equal(state.SeparatePrivateNetworkInterface) {
-		if !plan.SeparatePrivateNetworkInterface.IsNull() {
+		// IsUnknown guard is defensive: ModifyPlan resolves unknown values, but unknown should
+		// not reach the API call (the server rejects it if there is no private network).
+		if !plan.SeparatePrivateNetworkInterface.IsNull() && !plan.SeparatePrivateNetworkInterface.IsUnknown() {
 			err := r.updateSeparatePrivateNetworkInterface(ctx, state.Id.ValueInt64(), plan.SeparatePrivateNetworkInterface.ValueBool())
 			if err != nil {
 				resp.Diagnostics.AddError("Error updating separate private network interface", err.Error())
