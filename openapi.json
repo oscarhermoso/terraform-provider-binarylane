@@ -8,7 +8,7 @@
       "url": "https://support.binarylane.com.au/support/home",
       "email": "support@binarylane.com.au"
     },
-    "version": "0.34.4",
+    "version": "0.35.1",
     "x-logo": {
       "url": "https://www.binarylane.com.au/res/images/binarylane/logo.png",
       "backgroundColor": "#000000",
@@ -1834,7 +1834,7 @@
         "x-codeSamples": [
           {
             "lang": "Curl",
-            "source": "curl -X GET \"https://api.binarylane.com.au/v2/regions?page=${page}&per_page=${per_page}\"  \\"
+            "source": "curl -X GET \"https://api.binarylane.com.au/v2/regions?page=${page}&per_page=${per_page}\""
           }
         ],
         "x-cli-command": "region list"
@@ -5773,7 +5773,7 @@
           "ServerActions"
         ],
         "summary": "Move a Server to an Existing Network",
-        "description": "This is used to move a server either to an already defined virtual private cloud, or the default public network in the server's region.",
+        "description": "This is used to move a server either to an already defined virtual private cloud, or the public network for the server's region.",
         "parameters": [
           {
             "name": "server_id",
@@ -6071,8 +6071,10 @@
         "required": [
           "id",
           "progress",
+          "reason",
           "started_at",
           "status",
+          "title",
           "type"
         ],
         "type": "object",
@@ -6138,6 +6140,14 @@
             "type": "string",
             "description": "The region slug (if any) of the resource associated with this action.",
             "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "description": "A short display name for the action."
+          },
+          "reason": {
+            "type": "string",
+            "description": "A user-friendly explanation of what is happening."
           },
           "progress": {
             "allOf": [
@@ -7177,7 +7187,7 @@
           },
           "vpc_id": {
             "type": "integer",
-            "description": "If this is null the server will be moved into the default public network for the server's region.",
+            "description": "If this is null the server will be moved into the public network for the server's region.",
             "format": "int64",
             "nullable": true
           }
@@ -9070,7 +9080,12 @@
           },
           "invoice_download_url": {
             "type": "string",
-            "description": "The download URL for the rendered version of the invoice.",
+            "description": "The download URL for the PDF version of the invoice. This URL expires 24 hours after it is generated.",
+            "nullable": true
+          },
+          "invoice_view_url": {
+            "type": "string",
+            "description": "The URL for the HTML rendered version of the invoice. This URL expires 24 hours after it is generated.",
             "nullable": true
           }
         }
