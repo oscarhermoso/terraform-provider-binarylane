@@ -1258,6 +1258,9 @@ type Action struct {
 	// Progress Information about the current progress of the action. Some actions are divided into 'steps' and this may also contain information about the current and completed steps.
 	Progress ActionProgress `json:"progress"`
 
+	// Reason A user-friendly explanation of what is happening.
+	Reason string `json:"reason"`
+
 	// Region The region (if any) of the resource associated with this action.
 	Region *Region `json:"region,omitempty"`
 
@@ -1286,6 +1289,9 @@ type Action struct {
 	// StartedAt The timestamp in ISO8601 format of when processing of this action started.
 	StartedAt time.Time    `json:"started_at"`
 	Status    ActionStatus `json:"status"`
+
+	// Title A short display name for the action.
+	Title string `json:"title"`
 
 	// Type The type of this action.
 	Type string `json:"type"`
@@ -1764,7 +1770,7 @@ type ChangeManageOffsiteBackupCopiesType string
 type ChangeNetwork struct {
 	Type ChangeNetworkType `json:"type"`
 
-	// VpcId If this is null the server will be moved into the default public network for the server's region.
+	// VpcId If this is null the server will be moved into the public network for the server's region.
 	VpcId *int64 `json:"vpc_id,omitempty"`
 }
 
@@ -2608,7 +2614,7 @@ type Invoice struct {
 	// DateOverdue The date in ISO8601 format this invoice is considered overdue.
 	DateOverdue time.Time `json:"date_overdue"`
 
-	// InvoiceDownloadUrl The download URL for the rendered version of the invoice.
+	// InvoiceDownloadUrl The download URL for the PDF version of the invoice. This URL expires 24 hours after it is generated.
 	InvoiceDownloadUrl *string `json:"invoice_download_url,omitempty"`
 
 	// InvoiceId The ID of the invoice.
@@ -2619,6 +2625,9 @@ type Invoice struct {
 
 	// InvoiceNumber The invoice number for this invoice.
 	InvoiceNumber string `json:"invoice_number"`
+
+	// InvoiceViewUrl The URL for the HTML rendered version of the invoice. This URL expires 24 hours after it is generated.
+	InvoiceViewUrl *string `json:"invoice_view_url,omitempty"`
 
 	// Paid If this is true the invoice has been paid.
 	Paid bool `json:"paid"`
