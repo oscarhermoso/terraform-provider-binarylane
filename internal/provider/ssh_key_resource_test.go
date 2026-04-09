@@ -151,14 +151,14 @@ func init() {
 				for _, k := range keys {
 					if strings.HasPrefix(*k.Name, "tf-test-") {
 
-					deleteResp, err := client.DeleteAccountKeysKeyIdWithResponse(ctx, int(k.Id))
-					if err != nil {
-						return fmt.Errorf("Error deleting SSH key %d for test sweep: %w", k.Id, err)
-					}
-					if deleteResp.StatusCode() != http.StatusNoContent {
-						return fmt.Errorf("Unexpected status %d deleting SSH key %d for test sweep: %s", deleteResp.StatusCode(), k.Id, deleteResp.Body)
-					}
-					log.Println("Deleted SSH key for test sweep:", k.Id)
+						deleteResp, err := client.DeleteAccountKeysKeyIdWithResponse(ctx, int(k.Id))
+						if err != nil {
+							return fmt.Errorf("Error deleting SSH key %d for test sweep: %w", k.Id, err)
+						}
+						if deleteResp.StatusCode() != http.StatusNoContent {
+							return fmt.Errorf("Unexpected status %d deleting SSH key %d for test sweep: %s", deleteResp.StatusCode(), k.Id, deleteResp.Body)
+						}
+						log.Println("Deleted SSH key for test sweep:", k.Id)
 					}
 				}
 				if listResp.JSON200.Links == nil || listResp.JSON200.Links.Pages.Next == nil {
