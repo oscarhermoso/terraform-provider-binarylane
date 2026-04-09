@@ -48,6 +48,7 @@ data "binarylane_server" "example" {
 - `public_ipv4_addresses` (List of String) The public IPv4 addresses assigned to the server.
 - `public_ipv6_addresses` (List of String) The public IPv6 addresses assigned to the server.
 - `region` (String) The slug of the selected region.
+- `separate_private_network_interface` (Boolean) This attribute can only be set if your server also has a `vpc_id` attribute set. When enabled, a separate private network interface is provided for the server's VPC traffic.
 - `size` (String) The slug of the selected size.
 - `source_and_destination_check` (Boolean) This attribute can only be set if your server also has a `vpc_id` attribute set. When enabled (which is `true` by default), your server will only be able to send or receive packets that are directly addressed to one of the IP addresses associated with the Cloud Server. Generally, this is desirable behaviour because it prevents IP conflicts and other hard-to-diagnose networking faults due to incorrect network configuration. When `source_and_destination_check` is `false`, your Cloud Server will be able to send and receive packets addressed to any server. This is typically used when you want to use your Cloud Server as a VPN endpoint, a NAT server to provide internet access, or IP forwarding.
 - `ssh_keys` (List of Number) This is a list of SSH key ids. If this is null or not provided, any SSH keys that have been marked as default will be deployed (assuming the operating system supports SSH Keys). Submit an empty list to disable deployment of default keys.

@@ -30,14 +30,15 @@ type serverDataSource struct {
 
 type serverDataModel struct {
 	resources.ServerModel
-	PublicIpv4Addresses       types.List   `tfsdk:"public_ipv4_addresses"`
-	PrivateIPv4Addresses      types.List   `tfsdk:"private_ipv4_addresses"`
-	PublicIpv6Addresses       types.List   `tfsdk:"public_ipv6_addresses"`
-	PrivateIpv6Addresses      types.List   `tfsdk:"private_ipv6_addresses"`
-	Permalink                 types.String `tfsdk:"permalink"`
-	Memory                    types.Int32  `tfsdk:"memory"`
-	Disk                      types.Int32  `tfsdk:"disk"`
-	SourceAndDestinationCheck types.Bool   `tfsdk:"source_and_destination_check"`
+	PublicIpv4Addresses             types.List   `tfsdk:"public_ipv4_addresses"`
+	PrivateIPv4Addresses            types.List   `tfsdk:"private_ipv4_addresses"`
+	PublicIpv6Addresses             types.List   `tfsdk:"public_ipv6_addresses"`
+	PrivateIpv6Addresses            types.List   `tfsdk:"private_ipv6_addresses"`
+	Permalink                       types.String `tfsdk:"permalink"`
+	Memory                          types.Int32  `tfsdk:"memory"`
+	Disk                            types.Int32  `tfsdk:"disk"`
+	SourceAndDestinationCheck       types.Bool   `tfsdk:"source_and_destination_check"`
+	SeparatePrivateNetworkInterface types.Bool   `tfsdk:"separate_private_network_interface"`
 }
 
 func (d *serverDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -119,6 +120,7 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.Memory = types.Int32Value(serverResp.JSON200.Server.Memory)
 	data.Disk = types.Int32Value(serverResp.JSON200.Server.Disk)
 	data.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
+	data.SeparatePrivateNetworkInterface = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SeparatePrivateNetworkInterface)
 
 	if serverResp.JSON200.Server.VpcId == nil {
 		data.VpcIpv4Address = types.StringNull()

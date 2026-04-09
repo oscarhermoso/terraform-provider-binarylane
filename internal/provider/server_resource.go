@@ -241,6 +241,20 @@ func serverSchema(ctx context.Context) schema.Schema {
 		},
 	}
 
+	separatePrivateNicDescription := "This attribute can only be set if your server also has a `vpc_id` attribute set. " +
+		"When enabled, a separate private network interface is provided for the server's VPC traffic."
+	s.Attributes["separate_private_network_interface"] = schema.BoolAttribute{
+		Description:         separatePrivateNicDescription,
+		MarkdownDescription: separatePrivateNicDescription,
+		Optional:            true,
+		Computed:            true,
+		Validators: []validator.Bool{
+			boolvalidator.AlsoRequires(path.Expressions{
+				path.MatchRoot("vpc_id"),
+			}...),
+		},
+	}
+
 	privateIpv4AddressesDescription := "The private IPv4 addresses assigned to the server."
 	s.Attributes["private_ipv4_addresses"] = schema.ListAttribute{
 		Description:         privateIpv4AddressesDescription,
@@ -414,6 +428,15 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 			plan.SourceAndDestinationCheck = types.BoolNull()
 		} else {
 			plan.SourceAndDestinationCheck = types.BoolPointerValue(Pointer(true))
+		}
+		resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
+	}
+
+	if plan.SeparatePrivateNetworkInterface.IsUnknown() {
+		if plan.VpcId.IsNull() {
+			plan.SeparatePrivateNetworkInterface = types.BoolNull()
+		} else {
+			plan.SeparatePrivateNetworkInterface = types.BoolPointerValue(Pointer(false))
 		}
 		resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
 	}
@@ -670,6 +693,9 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	plannedSourceDestCheck := data.SourceAndDestinationCheck
 	serverRespSourceDestCheck := types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
 	data.SourceAndDestinationCheck = serverRespSourceDestCheck
+	plannedSeparatePrivateNic := data.SeparatePrivateNetworkInterface
+	serverRespSeparatePrivateNic := types.BoolPointerValue(serverResp.JSON200.Server.Networks.SeparatePrivateNetworkInterface)
+	data.SeparatePrivateNetworkInterface = serverRespSeparatePrivateNic
 
 	if serverResp.JSON200.Server.VpcId == nil {
 		data.VpcIpv4Address = types.StringNull()
@@ -743,6 +769,16 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 			return
 		}
 		data.SourceAndDestinationCheck = plannedSourceDestCheck
+	}
+
+	// Update separate_private_network_interface if needed
+	if plannedSeparatePrivateNic.Equal(types.BoolPointerValue(Pointer(true))) {
+		err := r.updateSeparatePrivateNetworkInterface(ctx, data.Id.ValueInt64(), true)
+		if err != nil {
+			resp.Diagnostics.AddError("Error updating separate private network interface", err.Error())
+			return
+		}
+		data.SeparatePrivateNetworkInterface = plannedSeparatePrivateNic
 	}
 
 	// One extra read to check the final state of enabled_advanced_features, needed because
@@ -1174,6 +1210,25 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 	}
 
+	// Check separate_private_network_interface
+	if !plan.SeparatePrivateNetworkInterface.Equal(state.SeparatePrivateNetworkInterface) {
+		if !plan.SeparatePrivateNetworkInterface.IsNull() {
+			err := r.updateSeparatePrivateNetworkInterface(ctx, state.Id.ValueInt64(), plan.SeparatePrivateNetworkInterface.ValueBool())
+			if err != nil {
+				resp.Diagnostics.AddError("Error updating separate private network interface", err.Error())
+				return
+			}
+		}
+
+		state.SeparatePrivateNetworkInterface = plan.SeparatePrivateNetworkInterface
+
+		// Save updated data into Terraform state
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	// Enable or disable backups
 	if !plan.Backups.Equal(state.Backups) {
 		if plan.Backups.ValueBool() {
@@ -1398,6 +1453,37 @@ func (r *serverResource) updateSourceDestCheck(
 	return nil
 }
 
+func (r *serverResource) updateSeparatePrivateNetworkInterface(
+	ctx context.Context,
+	serverId int64,
+	enabled bool,
+) error {
+	tflog.Info(ctx, fmt.Sprintf("Changing separate private network interface for server: server_id=%d, enabled=%t",
+		serverId, enabled))
+
+	separatePrivateNicResp, err := r.bc.client.PostServersServerIdActionsChangeSeparatePrivateNetworkInterfaceWithResponse(
+		ctx,
+		serverId,
+		binarylane.PostServersServerIdActionsChangeSeparatePrivateNetworkInterfaceJSONRequestBody{
+			Type:    "change_separate_private_network_interface",
+			Enabled: enabled,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("error changing separate private network interface for server: server_id=%d, error: %w", serverId, err)
+	}
+	if separatePrivateNicResp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("unexpected HTTP status code changing separate private network interface for server: server_id=%d, details: %s", serverId, separatePrivateNicResp.Body)
+	}
+
+	err = r.waitForServerAction(ctx, serverId, separatePrivateNicResp.JSON200.Action.Id)
+	if err != nil {
+		return fmt.Errorf("error changing separate private network interface: %w", err)
+	}
+
+	return nil
+}
+
 func (r *serverResource) fetchServerResourceState(ctx context.Context, state *serverResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -1430,6 +1516,7 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 	state.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
 	state.PasswordChangeSupported = types.BoolValue(serverResp.JSON200.Server.PasswordChangeSupported)
 	state.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
+	state.SeparatePrivateNetworkInterface = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SeparatePrivateNetworkInterface)
 	state.Memory = types.Int32Value(serverResp.JSON200.Server.Memory)
 	state.Disk = types.Int32Value(serverResp.JSON200.Server.Disk)
 	state.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)

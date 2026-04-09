@@ -58,6 +58,7 @@ resource "binarylane_server" "test" {
   public_ipv4_count = 1
   ssh_keys          = [binarylane_ssh_key.initial.id]
 	source_and_destination_check = false
+	separate_private_network_interface = true
 	backups						= true
 	port_blocking			= false
   user_data         = <<EOT
@@ -95,6 +96,7 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttrPair("binarylane_server.test", "ssh_keys.0", "binarylane_ssh_key.initial", "id"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "permalink"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "source_and_destination_check", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "separate_private_network_interface", "true"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "backups", "true"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "advanced_features.emulated_hyperv", "false"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "advanced_features.emulated_devices", "false"),
@@ -125,6 +127,8 @@ echo "Hello World" > /var/tmp/output.txt
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "disk", "20"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "backups", "true"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "port_blocking", "false"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "source_and_destination_check", "false"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "separate_private_network_interface", "true"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "advanced_features.emulated_hyperv", "false"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "advanced_features.emulated_devices", "false"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "advanced_features.nested_virt", "false"),
@@ -214,6 +218,7 @@ EOT
 					resource.TestCheckResourceAttrPair("binarylane_server.test", "ssh_keys.0", "binarylane_ssh_key.updated", "id"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "advanced_features.emulated_hyperv", "true"),
 					resource.TestCheckNoResourceAttr("binarylane_server.test", "source_and_destination_check"),
+					resource.TestCheckNoResourceAttr("binarylane_server.test", "separate_private_network_interface"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "backups", "false"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "port_blocking", "true"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "user_data", // test extra whitespace

@@ -182,7 +182,7 @@ func init() {
 					return fmt.Errorf("Unexpected status code getting load balancers for test sweep: %s", listResp.Body)
 				}
 
-			loadBalancers := listResp.JSON200.LoadBalancers
+				loadBalancers := listResp.JSON200.LoadBalancers
 				for _, lb := range loadBalancers {
 					if strings.HasPrefix(lb.Name, "tf-test-") {
 						deleteResp, err := client.DeleteLoadBalancersLoadBalancerIdWithResponse(ctx, lb.Id)
