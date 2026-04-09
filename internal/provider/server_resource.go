@@ -242,10 +242,7 @@ func serverSchema(ctx context.Context) schema.Schema {
 	}
 
 	separatePrivateNicDescription := "This attribute can only be set if your server also has a `vpc_id` attribute set. " +
-		"When enabled, the server will use a separate network interface for private (VPC) traffic, " +
-		"allowing the server to have both a public IPv6 address and private VPC connectivity on separate NICs. " +
-		"This is useful when you want to use a VPC and also have a public IPv6 address, or when you want " +
-		"public and private traffic on different network interfaces."
+		"When enabled, a separate private network interface is provided for the server's VPC traffic."
 	s.Attributes["separate_private_network_interface"] = schema.BoolAttribute{
 		Description:         separatePrivateNicDescription,
 		MarkdownDescription: separatePrivateNicDescription,
@@ -1215,9 +1212,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	// Check separate_private_network_interface
 	if !plan.SeparatePrivateNetworkInterface.Equal(state.SeparatePrivateNetworkInterface) {
-		// IsUnknown guard is defensive: ModifyPlan resolves unknown values, but unknown should
-		// not reach the API call (the server rejects it if there is no private network).
-		if !plan.SeparatePrivateNetworkInterface.IsNull() && !plan.SeparatePrivateNetworkInterface.IsUnknown() {
+		if !plan.SeparatePrivateNetworkInterface.IsNull() {
 			err := r.updateSeparatePrivateNetworkInterface(ctx, state.Id.ValueInt64(), plan.SeparatePrivateNetworkInterface.ValueBool())
 			if err != nil {
 				resp.Diagnostics.AddError("Error updating separate private network interface", err.Error())
