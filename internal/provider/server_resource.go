@@ -542,6 +542,17 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 	}
 
 	if req.State.Raw.IsNull() {
+		if !plan.UserData.IsNull() && !plan.UserData.IsUnknown() && plan.UserData.ValueString() != "" &&
+			!plan.Disks.IsNull() && !plan.Disks.IsUnknown() && len(plan.Disks.Elements()) > 0 {
+			resp.Diagnostics.AddAttributeWarning(
+				path.Root("disks"),
+				"Additional disks may race with user_data on first boot",
+				"Additional disks are attached after the server is created, which can interrupt "+
+					"`user_data` (cloud-init) while it is still running on first boot. cloud-init only "+
+					"runs user_data once per instance, so any scripts that did not complete before the "+
+					"disk operations will not re-run on the next boot.",
+			)
+		}
 		// Creation plan, no further modification needed
 		return
 	}
