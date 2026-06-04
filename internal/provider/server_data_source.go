@@ -37,7 +37,26 @@ type serverDataModel struct {
 	Permalink                 types.String `tfsdk:"permalink"`
 	Memory                    types.Int32  `tfsdk:"memory"`
 	Disk                      types.Int32  `tfsdk:"disk"`
+	Disks                     types.List   `tfsdk:"disks"`
 	SourceAndDestinationCheck types.Bool   `tfsdk:"source_and_destination_check"`
+}
+
+type serverDiskModel struct {
+	Id            types.Int64  `tfsdk:"id"`
+	Name          types.String `tfsdk:"name"`
+	SizeGigabytes types.Int32  `tfsdk:"size_gigabytes"`
+}
+
+func serverDiskAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"id":             types.Int64Type,
+		"name":           types.StringType,
+		"size_gigabytes": types.Int32Type,
+	}
+}
+
+func serverDiskObjectType() types.ObjectType {
+	return types.ObjectType{AttrTypes: serverDiskAttrTypes()}
 }
 
 func (d *serverDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -117,7 +136,7 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.VpcId = types.Int64PointerValue(serverResp.JSON200.Server.VpcId)
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
 	data.Memory = types.Int32Value(serverResp.JSON200.Server.Memory)
-	data.Disk = types.Int32Value(serverResp.JSON200.Server.Disk)
+	data.Disk, data.Disks = readServerDisks(ctx, serverResp.JSON200.Server.Disks, data.Disks, &resp.Diagnostics)
 	data.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
 	data.SeparatePrivateNetworkInterface = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SeparatePrivateNetworkInterface)
 
