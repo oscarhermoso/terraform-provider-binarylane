@@ -371,7 +371,14 @@ func serverSchema(ctx context.Context) schema.Schema {
 		Optional:            true,
 		Computed:            true,
 		Validators: []validator.Int32{
-			int32validator.AtLeast(20),
+			totalDiskRulesValidator{
+				Minimum: 20,
+				Rules: []MultipleOfValidator{
+					{Multiple: 5},
+					{Multiple: 10, RangeFrom: 60, RangeTo: 200},
+					{Multiple: 100, RangeFrom: 200},
+				},
+			},
 			MultipleOfValidator{Multiple: 5},
 			MultipleOfValidator{Multiple: 10, RangeFrom: 60, RangeTo: 200},
 			MultipleOfValidator{Multiple: 100, RangeFrom: 200},
@@ -414,11 +421,6 @@ func serverSchema(ctx context.Context) schema.Schema {
 		Validators: []validator.List{
 			disksRequiresPrimaryDiskValidator{},
 			uniqueDiskNamesValidator{},
-			totalDiskFollowsRulesValidator{Rules: []MultipleOfValidator{
-				{Multiple: 5},
-				{Multiple: 10, RangeFrom: 60, RangeTo: 200},
-				{Multiple: 100, RangeFrom: 200},
-			}},
 		},
 	}
 
@@ -2214,6 +2216,82 @@ func (r *serverResource) createAdditionalDisks(ctx context.Context, serverId int
 	return nil
 }
 
+type totalDiskRulesValidator struct {
+	Minimum int32
+	Rules   []MultipleOfValidator
+}
+
+func (v totalDiskRulesValidator) Description(ctx context.Context) string {
+	return fmt.Sprintf("Validates that the server's total disk allocation (`disk + sum(disks.size_gigabytes)`) is at least %d GB and follows the Binary Lane multiple-of rules.", v.Minimum)
+}
+
+func (v totalDiskRulesValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (v totalDiskRulesValidator) ValidateInt32(ctx context.Context, req validator.Int32Request, resp *validator.Int32Response) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	var disks types.List
+	diags := req.Config.GetAttribute(ctx, path.Root("disks"), &disks)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var sum int32
+	if !disks.IsNull() && !disks.IsUnknown() {
+		var elements []serverDiskModel
+		diags = disks.ElementsAs(ctx, &elements, false)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		for _, d := range elements {
+			if d.SizeGigabytes.IsNull() || d.SizeGigabytes.IsUnknown() {
+				return
+			}
+			sum += d.SizeGigabytes.ValueInt32()
+		}
+	}
+
+	disk := req.ConfigValue.ValueInt32()
+	total := disk + sum
+
+	if v.Minimum > 0 && total < v.Minimum {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Total disk allocation too small",
+			fmt.Sprintf(
+				"The server's total disk allocation is `disk + sum(disks.size_gigabytes)` = %d + %d = %d GB, which is less than the minimum %d GB.",
+				disk, sum, total, v.Minimum,
+			),
+		)
+		return
+	}
+
+	for _, rule := range v.Rules {
+		if total%rule.Multiple == 0 ||
+			rule.RangeFrom != 0 && total < rule.RangeFrom ||
+			rule.RangeTo != 0 && total >= rule.RangeTo {
+			continue
+		}
+		detail := fmt.Sprintf(
+			"The server's total disk allocation is `disk + sum(disks.size_gigabytes)` = %d + %d = %d. ",
+			disk, sum, total,
+		)
+		if rule.RangeFrom != 0 {
+			detail += fmt.Sprintf("When greater than %d, the total must be a multiple of %d.", rule.RangeFrom, rule.Multiple)
+		} else {
+			detail += fmt.Sprintf("The total must be a multiple of %d.", rule.Multiple)
+		}
+		resp.Diagnostics.AddAttributeError(req.Path, "Invalid total disk allocation", detail)
+		return
+	}
+}
+
 type disksRequiresPrimaryDiskValidator struct{}
 
 func (v disksRequiresPrimaryDiskValidator) Description(ctx context.Context) string {
@@ -2284,71 +2362,5 @@ func (v uniqueDiskNamesValidator) ValidateList(ctx context.Context, req validato
 			continue
 		}
 		seen[name] = i
-	}
-}
-
-type totalDiskFollowsRulesValidator struct {
-	Rules []MultipleOfValidator
-}
-
-func (v totalDiskFollowsRulesValidator) Description(ctx context.Context) string {
-	return "Validates that the server's total disk allocation (`disk + sum(disks.size_gigabytes)`) follows the Binary Lane multiple-of rules."
-}
-
-func (v totalDiskFollowsRulesValidator) MarkdownDescription(ctx context.Context) string {
-	return v.Description(ctx)
-}
-
-func (v totalDiskFollowsRulesValidator) ValidateList(ctx context.Context, req validator.ListRequest, resp *validator.ListResponse) {
-	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
-		return
-	}
-	if len(req.ConfigValue.Elements()) == 0 {
-		return
-	}
-
-	var disk types.Int32
-	diags := req.Config.GetAttribute(ctx, path.Root("disk"), &disk)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	if disk.IsNull() || disk.IsUnknown() {
-		return
-	}
-
-	var disks []serverDiskModel
-	diags = req.ConfigValue.ElementsAs(ctx, &disks, false)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var sum int32
-	for _, d := range disks {
-		if d.SizeGigabytes.IsNull() || d.SizeGigabytes.IsUnknown() {
-			return
-		}
-		sum += d.SizeGigabytes.ValueInt32()
-	}
-	total := disk.ValueInt32() + sum
-
-	for _, rule := range v.Rules {
-		if total%rule.Multiple == 0 ||
-			rule.RangeFrom != 0 && total < rule.RangeFrom ||
-			rule.RangeTo != 0 && total >= rule.RangeTo {
-			continue
-		}
-		detail := fmt.Sprintf(
-			"The server's total disk allocation is `disk + sum(disks.size_gigabytes)` = %d + %d = %d. ",
-			disk.ValueInt32(), sum, total,
-		)
-		if rule.RangeFrom != 0 {
-			detail += fmt.Sprintf("When greater than %d, the total must be a multiple of %d.", rule.RangeFrom, rule.Multiple)
-		} else {
-			detail += fmt.Sprintf("The total must be a multiple of %d.", rule.Multiple)
-		}
-		resp.Diagnostics.AddAttributeError(req.Path, "Invalid total disk allocation", detail)
-		return
 	}
 }

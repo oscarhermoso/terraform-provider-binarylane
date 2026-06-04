@@ -405,6 +405,54 @@ resource "binarylane_server" "test" {
 				PlanOnly:    true,
 				ExpectError: regexp.MustCompile(`Invalid total disk allocation`),
 			},
+			{
+				Config: providerConfig + `
+resource "binarylane_server" "test" {
+  name              = "tf-test-disk-only-below-min"
+  region            = "per"
+  image             = "debian-12"
+  size              = "std-1vcpu"
+  public_ipv4_count = 0
+  disk              = 10
+}
+`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`Total disk allocation too small`),
+			},
+			{
+				Config: providerConfig + `
+resource "binarylane_server" "test" {
+  name              = "tf-test-total-below-min"
+  region            = "per"
+  image             = "debian-12"
+  size              = "std-1vcpu"
+  public_ipv4_count = 0
+  disk              = 10
+  disks = [
+    { name = "data1", size_gigabytes = 5 },
+  ]
+}
+`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`Total disk allocation too small`),
+			},
+			{
+				Config: providerConfig + `
+resource "binarylane_server" "test" {
+  name              = "tf-test-small-primary-compensated"
+  region            = "per"
+  image             = "debian-12"
+  size              = "std-1vcpu"
+  public_ipv4_count = 0
+  disk              = 10
+  disks = [
+    { name = "data1", size_gigabytes = 10 },
+  ]
+}
+`,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
 		},
 	})
 }
