@@ -120,8 +120,8 @@ func ServerResourceSchema(ctx context.Context) schema.Schema {
 			"port_blocking": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
-				Description:         "Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.",
-				MarkdownDescription: "Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.",
+				Description:         "Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to verified accounts.",
+				MarkdownDescription: "Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to verified accounts.",
 			},
 			"region": schema.StringAttribute{
 				Required:            true,
@@ -130,6 +130,12 @@ func ServerResourceSchema(ctx context.Context) schema.Schema {
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
+			},
+			"separate_private_network_interface": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         "If true this will enable a separate private network interface for the server. This is only available for servers in a VPC.",
+				MarkdownDescription: "If true this will enable a separate private network interface for the server. This is only available for servers in a VPC.",
 			},
 			"size": schema.StringAttribute{
 				Required:            true,
@@ -172,19 +178,20 @@ func ServerResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type ServerModel struct {
-	AdvancedFeatures AdvancedFeaturesValue `tfsdk:"advanced_features"`
-	Backups          types.Bool            `tfsdk:"backups"`
-	Id               types.Int64           `tfsdk:"id"`
-	Image            types.String          `tfsdk:"image"`
-	Ipv6             types.Bool            `tfsdk:"ipv6"`
-	Name             types.String          `tfsdk:"name"`
-	PortBlocking     types.Bool            `tfsdk:"port_blocking"`
-	Region           types.String          `tfsdk:"region"`
-	Size             types.String          `tfsdk:"size"`
-	SshKeys          types.List            `tfsdk:"ssh_keys"`
-	UserData         types.String          `tfsdk:"user_data"`
-	VpcId            types.Int64           `tfsdk:"vpc_id"`
-	VpcIpv4Address   types.String          `tfsdk:"vpc_ipv4_address"`
+	AdvancedFeatures                AdvancedFeaturesValue `tfsdk:"advanced_features"`
+	Backups                         types.Bool            `tfsdk:"backups"`
+	Id                              types.Int64           `tfsdk:"id"`
+	Image                           types.String          `tfsdk:"image"`
+	Ipv6                            types.Bool            `tfsdk:"ipv6"`
+	Name                            types.String          `tfsdk:"name"`
+	PortBlocking                    types.Bool            `tfsdk:"port_blocking"`
+	Region                          types.String          `tfsdk:"region"`
+	SeparatePrivateNetworkInterface types.Bool            `tfsdk:"separate_private_network_interface"`
+	Size                            types.String          `tfsdk:"size"`
+	SshKeys                         types.List            `tfsdk:"ssh_keys"`
+	UserData                        types.String          `tfsdk:"user_data"`
+	VpcId                           types.Int64           `tfsdk:"vpc_id"`
+	VpcIpv4Address                  types.String          `tfsdk:"vpc_ipv4_address"`
 }
 
 var _ basetypes.ObjectTypable = AdvancedFeaturesType{}

@@ -42,7 +42,7 @@ data "binarylane_server" "example" {
   - \> 24576 MB must be a multiple of 4096
 - `name` (String) The hostname of your server, such as vps01.yourcompany.com. If not provided, the server will be created with a random name.
 - `permalink` (String) A randomly generated two-word identifier assigned to servers in regions that support this feature
-- `port_blocking` (Boolean) Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.
+- `port_blocking` (Boolean) Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to verified accounts.
 - `private_ipv4_addresses` (List of String) The private IPv4 addresses assigned to the server.
 - `private_ipv6_addresses` (List of String) The private IPv6 addresses assigned to the server.
 - `public_ipv4_addresses` (List of String) The public IPv4 addresses assigned to the server.

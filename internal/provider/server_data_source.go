@@ -30,15 +30,14 @@ type serverDataSource struct {
 
 type serverDataModel struct {
 	resources.ServerModel
-	PublicIpv4Addresses             types.List   `tfsdk:"public_ipv4_addresses"`
-	PrivateIPv4Addresses            types.List   `tfsdk:"private_ipv4_addresses"`
-	PublicIpv6Addresses             types.List   `tfsdk:"public_ipv6_addresses"`
-	PrivateIpv6Addresses            types.List   `tfsdk:"private_ipv6_addresses"`
-	Permalink                       types.String `tfsdk:"permalink"`
-	Memory                          types.Int32  `tfsdk:"memory"`
-	Disk                            types.Int32  `tfsdk:"disk"`
-	SourceAndDestinationCheck       types.Bool   `tfsdk:"source_and_destination_check"`
-	SeparatePrivateNetworkInterface types.Bool   `tfsdk:"separate_private_network_interface"`
+	PublicIpv4Addresses       types.List   `tfsdk:"public_ipv4_addresses"`
+	PrivateIPv4Addresses      types.List   `tfsdk:"private_ipv4_addresses"`
+	PublicIpv6Addresses       types.List   `tfsdk:"public_ipv6_addresses"`
+	PrivateIpv6Addresses      types.List   `tfsdk:"private_ipv6_addresses"`
+	Permalink                 types.String `tfsdk:"permalink"`
+	Memory                    types.Int32  `tfsdk:"memory"`
+	Disk                      types.Int32  `tfsdk:"disk"`
+	SourceAndDestinationCheck types.Bool   `tfsdk:"source_and_destination_check"`
 }
 
 func (d *serverDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {

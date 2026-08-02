@@ -747,6 +747,16 @@
 												"custom": {
 													"imports": [
 														{
+															"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+														}
+													],
+													"schema_definition": "stringvalidator.LengthAtLeast(1)"
+												}
+											},
+											{
+												"custom": {
+													"imports": [
+														{
 															"path": "regexp"
 														},
 														{
@@ -852,7 +862,7 @@
 						"name": "port_blocking",
 						"bool": {
 							"computed_optional_required": "computed_optional",
-							"description": "Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts."
+							"description": "Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to verified accounts."
 						}
 					},
 					{
@@ -872,6 +882,13 @@
 									}
 								}
 							]
+						}
+					},
+					{
+						"name": "separate_private_network_interface",
+						"bool": {
+							"computed_optional_required": "computed_optional",
+							"description": "If true this will enable a separate private network interface for the server. This is only available for servers in a VPC."
 						}
 					},
 					{
