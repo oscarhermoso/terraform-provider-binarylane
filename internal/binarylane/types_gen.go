@@ -1059,13 +1059,14 @@ func (e TaxCodeType) Valid() bool {
 
 // Defines values for ThresholdAlertType.
 const (
-	Cpu              ThresholdAlertType = "cpu"
-	DataTransferUsed ThresholdAlertType = "data-transfer-used"
-	MemoryUsed       ThresholdAlertType = "memory-used"
-	NetworkIncoming  ThresholdAlertType = "network-incoming"
-	NetworkOutgoing  ThresholdAlertType = "network-outgoing"
-	StorageRequests  ThresholdAlertType = "storage-requests"
-	StorageUsed      ThresholdAlertType = "storage-used"
+	Cpu               ThresholdAlertType = "cpu"
+	DataTransferUsed  ThresholdAlertType = "data-transfer-used"
+	LockedBackupSlots ThresholdAlertType = "locked-backup-slots"
+	MemoryUsed        ThresholdAlertType = "memory-used"
+	NetworkIncoming   ThresholdAlertType = "network-incoming"
+	NetworkOutgoing   ThresholdAlertType = "network-outgoing"
+	StorageRequests   ThresholdAlertType = "storage-requests"
+	StorageUsed       ThresholdAlertType = "storage-used"
 )
 
 // Valid indicates whether the value is a known member of the ThresholdAlertType enum.
@@ -1074,6 +1075,8 @@ func (e ThresholdAlertType) Valid() bool {
 	case Cpu:
 		return true
 	case DataTransferUsed:
+		return true
+	case LockedBackupSlots:
 		return true
 	case MemoryUsed:
 		return true
@@ -1164,14 +1167,15 @@ func (e VideoDevice) Valid() bool {
 
 // Defines values for VmMachineType.
 const (
-	PcI440fx1point5  VmMachineType = "pc_i440fx_1point5"
-	PcI440fx2point11 VmMachineType = "pc_i440fx_2point11"
-	PcI440fx4point1  VmMachineType = "pc_i440fx_4point1"
-	PcI440fx4point2  VmMachineType = "pc_i440fx_4point2"
-	PcI440fx5point0  VmMachineType = "pc_i440fx_5point0"
-	PcI440fx5point1  VmMachineType = "pc_i440fx_5point1"
-	PcI440fx7point2  VmMachineType = "pc_i440fx_7point2"
-	PcI440fx8point2  VmMachineType = "pc_i440fx_8point2"
+	PcI440fx1point5       VmMachineType = "pc_i440fx_1point5"
+	PcI440fx2point11      VmMachineType = "pc_i440fx_2point11"
+	PcI440fx4point1       VmMachineType = "pc_i440fx_4point1"
+	PcI440fx4point2       VmMachineType = "pc_i440fx_4point2"
+	PcI440fx5point0       VmMachineType = "pc_i440fx_5point0"
+	PcI440fx5point1       VmMachineType = "pc_i440fx_5point1"
+	PcI440fx7point2       VmMachineType = "pc_i440fx_7point2"
+	PcI440fx7point2point1 VmMachineType = "pc_i440fx_7point2point1"
+	PcI440fx8point2       VmMachineType = "pc_i440fx_8point2"
 )
 
 // Valid indicates whether the value is a known member of the VmMachineType enum.
@@ -1191,6 +1195,8 @@ func (e VmMachineType) Valid() bool {
 		return true
 	case PcI440fx7point2:
 		return true
+	case PcI440fx7point2point1:
+		return true
 	case PcI440fx8point2:
 		return true
 	default:
@@ -1209,7 +1215,7 @@ type Account struct {
 	// Email The email address registered for this account.
 	Email string `json:"email"`
 
-	// EmailVerified Whether this account has been verified. Un-verified accounts are subject to some restrictions.
+	// EmailVerified Whether this account has been verified. Unverified accounts are subject to some restrictions.
 	EmailVerified bool `json:"email_verified"`
 
 	// Status The status of this account.
@@ -1471,6 +1477,7 @@ type AdvancedServerFeatures struct {
 	// | pc_i440fx_5point0 | PC i440FX 5.0 |
 	// | pc_i440fx_5point1 | PC i440FX 5.1 |
 	// | pc_i440fx_7point2 | PC i440FX 7.2 |
+	// | pc_i440fx_7point2point1 | PC i440FX 7.2.1 |
 	// | pc_i440fx_8point2 | PC i440FX 8.2 |
 	//
 	MachineType *VmMachineType `json:"machine_type,omitempty"`
@@ -1662,6 +1669,7 @@ type ChangeAdvancedFeatures struct {
 	// | pc_i440fx_5point0 | PC i440FX 5.0 |
 	// | pc_i440fx_5point1 | PC i440FX 5.1 |
 	// | pc_i440fx_7point2 | PC i440FX 7.2 |
+	// | pc_i440fx_7point2point1 | PC i440FX 7.2.1 |
 	// | pc_i440fx_8point2 | PC i440FX 8.2 |
 	//
 	MachineType *VmMachineType `json:"machine_type,omitempty"`
@@ -2027,11 +2035,14 @@ type CreateServerRequest struct {
 	// Password If this is provided the default remote user account's password will be set to this value. If this is null a random password will be generated and emailed to the account email address.
 	Password *string `json:"password,omitempty"`
 
-	// PortBlocking Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.
+	// PortBlocking Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to verified accounts.
 	PortBlocking *bool `json:"port_blocking,omitempty"`
 
 	// Region The slug of the selected region.
 	Region string `json:"region"`
+
+	// SeparatePrivateNetworkInterface If true this will enable a separate private network interface for the server. This is only available for servers in a VPC.
+	SeparatePrivateNetworkInterface *bool `json:"separate_private_network_interface,omitempty"`
 
 	// Size The slug of the selected size.
 	Size string `json:"size"`
@@ -2881,6 +2892,9 @@ type Networks struct {
 	// Ipv6ReverseNameservers Any configured IPv6 reverse nameservers for this server. Please see our documentation for how this interacts with IPv6 nameserver settings at the account level.
 	Ipv6ReverseNameservers *[]string `json:"ipv6_reverse_nameservers,omitempty"`
 
+	// MacAddress The MAC address of this server's primary network interface. Customers may need this for ARP entries, DHCP reservations on a VPC, or MAC-based licensing.
+	MacAddress string `json:"mac_address"`
+
 	// PortBlocking Whether the default port blocking is enabled for this server.
 	PortBlocking bool `json:"port_blocking"`
 
@@ -3233,13 +3247,13 @@ type Sample struct {
 	// MemoryUsageBytes The virtual memory used in bytes.
 	MemoryUsageBytes float64 `json:"memory_usage_bytes"`
 
-	// NetworkIncomingKbps The incoming network data rate in Kb per second.
+	// NetworkIncomingKbps The incoming network data rate in KB per second (binary: 1 KB = 1024 bytes).
 	NetworkIncomingKbps float64 `json:"network_incoming_kbps"`
 
-	// NetworkOutgoingKbps The outgoing network data rate in Kb per second.
+	// NetworkOutgoingKbps The outgoing network data rate in KB per second (binary: 1 KB = 1024 bytes).
 	NetworkOutgoingKbps float64 `json:"network_outgoing_kbps"`
 
-	// StorageReadKbps The storage read rate in Kb per second.
+	// StorageReadKbps The storage read rate in KB per second (binary: 1 KB = 1024 bytes).
 	StorageReadKbps float64 `json:"storage_read_kbps"`
 
 	// StorageReadRequestsPerSecond The storage read requests per second.
@@ -3248,7 +3262,7 @@ type Sample struct {
 	// StorageUsageMegabytes The total storage used in MB.
 	StorageUsageMegabytes float64 `json:"storage_usage_megabytes"`
 
-	// StorageWriteKbps The storage write rate in Kb per second.
+	// StorageWriteKbps The storage write rate in KB per second (binary: 1 KB = 1024 bytes).
 	StorageWriteKbps float64 `json:"storage_write_kbps"`
 
 	// StorageWriteRequestsPerSecond The storage write requests per second.
@@ -3354,6 +3368,9 @@ type Server struct {
 
 	// Image The base image used to create this server.
 	Image Image `json:"image"`
+
+	// IsUnderMaintenance If true, this server is currently under maintenance and most actions will not be available. If this is null the status was not checked.
+	IsUnderMaintenance *bool `json:"is_under_maintenance,omitempty"`
 
 	// Kernel The currently selected kernel for the server.
 	Kernel *Kernel `json:"kernel,omitempty"`
@@ -3790,6 +3807,9 @@ type ThresholdAlert struct {
 	// CurrentValue The last measured value for this alert type over the threshold alert period. Refer to the documentation for each threshold alert type for what this value measures in the context of the alert type. If there is no measured value in the threshold alert period this will be null.
 	CurrentValue *int32 `json:"current_value,omitempty"`
 
+	// Description A human-readable description of what this threshold alert measures.
+	Description string `json:"description"`
+
 	// Enabled If a threshold alert is not enabled it will not generate warnings for the user.
 	Enabled bool `json:"enabled"`
 
@@ -3798,6 +3818,12 @@ type ThresholdAlert struct {
 
 	// LastRaised The date and time (if any) in ISO8601 format of the last time this alert was raised. An alert may not be raised again until it has been cleared.
 	LastRaised *time.Time `json:"last_raised,omitempty"`
+
+	// Name The display name of this threshold alert.
+	Name string `json:"name"`
+
+	// Unit The unit suffix for this alert's value (e.g. `"%"` or `"requests/second"`).
+	Unit string `json:"unit"`
 
 	// Value The threshold value of the alert. Refer to the documentation for each threshold alert type for what this value measures in the context of the alert type.
 	Value int32 `json:"value"`
@@ -3824,6 +3850,7 @@ type ThresholdAlertRequest struct {
 // | data-transfer-used | The alert is based off the percentage of your monthly data transfer limit. |
 // | storage-used | The alert is based off the disk space consumed as a percentage of your total disk space. If the server runs out of disk space programs may fail to execute or be unable to create new files, or the server may become unresponsive. |
 // | memory-used | The alert is based off the virtual memory consumed as a percentage of your physical memory. Virtual memory includes the swap file so the percentage may exceed 100% indicating that the server has run out of physical memory and is relying on swap space, which will generally cause poor performance. |
+// | locked-backup-slots | The alert is based off the percentage of scheduled backup slots (daily, weekly, monthly) occupied by locked backups. When all slots are locked, automated backups cannot proceed. |
 type ThresholdAlertType string
 
 // ThresholdAlertsResponse defines model for ThresholdAlertsResponse.
@@ -4006,6 +4033,7 @@ type VideoDevice string
 // | pc_i440fx_5point0 | PC i440FX 5.0 |
 // | pc_i440fx_5point1 | PC i440FX 5.1 |
 // | pc_i440fx_7point2 | PC i440FX 7.2 |
+// | pc_i440fx_7point2point1 | PC i440FX 7.2.1 |
 // | pc_i440fx_8point2 | PC i440FX 8.2 |
 type VmMachineType string
 

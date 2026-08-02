@@ -57,6 +57,7 @@ jq '[ .regions[] | .slug ] | sort' tmp/regions.json
 
 ```json
 [
+  "adl",
   "bne",
   "mel",
   "per",
@@ -80,21 +81,24 @@ jq '[ .images[] | .slug ] | sort' tmp/images.json
 
 ```json
 [
+  "alma-10",
   "alma-8",
   "alma-9",
   "byo-os",
+  "byo-os-uefi",
   "byo-os-virtio-disabled",
   "cpanel-plus-whm",
   "debian-11",
   "debian-12",
-  "rocky-8",
+  "debian-13",
+  "rocky-10",
   "rocky-9",
-  "ubuntu-20.04-neon-desktop",
   "ubuntu-20.04.6",
   "ubuntu-22.04",
   "ubuntu-22.04-desktop",
   "ubuntu-24.04",
-  "windows-2012-r2",
+  "ubuntu-24.04-neon-desktop",
+  "ubuntu-26.04",
   "windows-2016",
   "windows-2016-sql-2016-web",
   "windows-2019",
@@ -102,7 +106,8 @@ jq '[ .images[] | .slug ] | sort' tmp/images.json
   "windows-2019-sql-2017-web",
   "windows-2022",
   "windows-2022-sql-2019-std",
-  "windows-2022-sql-2019-web"
+  "windows-2022-sql-2019-web",
+  "windows-2025"
 ]
 ```
 
@@ -125,14 +130,16 @@ jq '[ .sizes[] | .slug ] | sort' tmp/sizes.json
   "cpu-4thr",
   "cpu-6thr",
   "cpu-8thr",
-  "ded-3900x-1600gb",
+  "ded-7900x-800gb",
   "ded-e2136-400gb",
   "ded-e2136-800gb",
-  "ded-e2288g-400gb",
   "ded-e2288g-800gb",
   "hdd-1000gb",
   "hdd-2000gb",
+  "hdd-4000gb",
   "hdd-500gb",
+  "hdd-6000gb",
+  "hdd-8000gb",
   "std-1vcpu",
   "std-2vcpu",
   "std-4vcpu",

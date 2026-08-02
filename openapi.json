@@ -2,13 +2,13 @@
   "openapi": "3.0.4",
   "info": {
     "title": "BinaryLane API",
-    "description": "# Introduction\n\nThis API is used by BinaryLane's 'mPanel' website, so you'll find everything you need here to automate your use of BinaryLane or develop tools for others. You could even build your own version of 'mPanel' if you wanted!\n\n\n## Getting Started Guide\n\nYou can find a detailed guide to using the API to manage your servers <a href='https://support.binarylane.com.au/support/solutions/articles/11000125203-getting-started-with-binarylane-api' target='_blank' rel='noopener noreferrer'>here</a>.\n\n\n# API Tools\n\nWe have created a CLI tool to interact with the API. You can find the repository <a href='https://github.com/binarylane/binarylane-cli' target='_blank' rel='noopener noreferrer'>here</a>.\n\n\n# Developer Preview Notes\n\n**Warning: this specification is currently in active development.** Until this warning is removed breaking changes are possible without the version changing.\nHowever, this API is mature and we have a fully functioning new version of mPanel that uses it, so breaking changes will be very limited.\n\nWe welcome all feedback from API users at the support email address above.\n\n\n# Version Information\n\nThis section will contain a link to our changelog once the developer preview period is complete.",
+    "description": "# Introduction\n\nThis API is used by BinaryLane's 'mPanel' website, so you'll find everything you need here to automate your use of BinaryLane or develop tools for others. You could even build your own version of 'mPanel' if you wanted!\n\n\n## Getting Started Guide\n\nYou can find a detailed guide to using the API to manage your servers <a href='https://support.binarylane.com.au/support/solutions/articles/11000125203-getting-started-with-binarylane-api' target='_blank' rel='noopener noreferrer'>here</a>.\n\n\n# API Tools\n\nWe have created a CLI tool to interact with the API. You can find the repository <a href='https://github.com/binarylane/binarylane-cli' target='_blank' rel='noopener noreferrer'>here</a>.\n\n\n# Units\n\nStorage, memory and data-transfer values use the familiar `GB`, `MB` and `TB` labels (matching our control panel and website) rather than the IEC `GiB`/`MiB` forms. The exact byte conventions are:\n\n| Label | Used for | Definition |\n| --- | --- | --- |\n| `MB` | Memory, storage | Binary megabyte: 1 MB = 1024² bytes |\n| `GB` | Disk, storage, data transfer | Binary gigabyte: 1 GB = 1024³ bytes |\n| `TB` | Data transfer | 1 TB = 1000 GB, where each GB = 1024³ bytes (so 1 TB = 1000 × 1024³ bytes) |\n\n\n# Developer Preview Notes\n\n**Warning: this specification is currently in active development.** Until this warning is removed breaking changes are possible without the version changing.\nHowever, this API is mature and we have a fully functioning new version of mPanel that uses it, so breaking changes will be very limited.\n\nWe welcome all feedback from API users at the support email address above.\n\n\n# Version Information\n\nThis section will contain a link to our changelog once the developer preview period is complete.",
     "contact": {
       "name": "BinaryLane Support",
       "url": "https://support.binarylane.com.au/support/home",
       "email": "support@binarylane.com.au"
     },
-    "version": "0.35.1",
+    "version": "0.39.1",
     "x-logo": {
       "url": "https://www.binarylane.com.au/res/images/binarylane/logo.png",
       "backgroundColor": "#000000",
@@ -6000,7 +6000,7 @@
           },
           "email_verified": {
             "type": "boolean",
-            "description": "Whether this account has been verified. Un-verified accounts are subject to some restrictions."
+            "description": "Whether this account has been verified. Unverified accounts are subject to some restrictions."
           },
           "two_factor_authentication_enabled": {
             "type": "boolean",
@@ -6568,7 +6568,7 @@
                 "$ref": "#/components/schemas/VmMachineType"
               }
             ],
-            "description": "The machine_type (corresponding to a KVM version) used for this server.\nA null value indicates automatic selection of the best KVM machine type supported by the host node.\n\n| Value | Description |\n| ----- | ----------- |\n| pc_i440fx_1point5 | PC i440FX 1.5 |\n| pc_i440fx_2point11 | PC i440FX 2.11 |\n| pc_i440fx_4point1 | PC i440FX 4.1 |\n| pc_i440fx_4point2 | PC i440FX 4.2 |\n| pc_i440fx_5point0 | PC i440FX 5.0 |\n| pc_i440fx_5point1 | PC i440FX 5.1 |\n| pc_i440fx_7point2 | PC i440FX 7.2 |\n| pc_i440fx_8point2 | PC i440FX 8.2 |\n\n",
+            "description": "The machine_type (corresponding to a KVM version) used for this server.\nA null value indicates automatic selection of the best KVM machine type supported by the host node.\n\n| Value | Description |\n| ----- | ----------- |\n| pc_i440fx_1point5 | PC i440FX 1.5 |\n| pc_i440fx_2point11 | PC i440FX 2.11 |\n| pc_i440fx_4point1 | PC i440FX 4.1 |\n| pc_i440fx_4point2 | PC i440FX 4.2 |\n| pc_i440fx_5point0 | PC i440FX 5.0 |\n| pc_i440fx_5point1 | PC i440FX 5.1 |\n| pc_i440fx_7point2 | PC i440FX 7.2 |\n| pc_i440fx_7point2point1 | PC i440FX 7.2.1 |\n| pc_i440fx_8point2 | PC i440FX 8.2 |\n\n",
             "nullable": true
           },
           "video_device": {
@@ -6965,7 +6965,7 @@
                 "$ref": "#/components/schemas/VmMachineType"
               }
             ],
-            "description": "Do not provide or set to null to keep existing machine type.\n\n| Value | Description |\n| ----- | ----------- |\n| pc_i440fx_1point5 | PC i440FX 1.5 |\n| pc_i440fx_2point11 | PC i440FX 2.11 |\n| pc_i440fx_4point1 | PC i440FX 4.1 |\n| pc_i440fx_4point2 | PC i440FX 4.2 |\n| pc_i440fx_5point0 | PC i440FX 5.0 |\n| pc_i440fx_5point1 | PC i440FX 5.1 |\n| pc_i440fx_7point2 | PC i440FX 7.2 |\n| pc_i440fx_8point2 | PC i440FX 8.2 |\n\n",
+            "description": "Do not provide or set to null to keep existing machine type.\n\n| Value | Description |\n| ----- | ----------- |\n| pc_i440fx_1point5 | PC i440FX 1.5 |\n| pc_i440fx_2point11 | PC i440FX 2.11 |\n| pc_i440fx_4point1 | PC i440FX 4.1 |\n| pc_i440fx_4point2 | PC i440FX 4.2 |\n| pc_i440fx_5point0 | PC i440FX 5.0 |\n| pc_i440fx_5point1 | PC i440FX 5.1 |\n| pc_i440fx_7point2 | PC i440FX 7.2 |\n| pc_i440fx_7point2point1 | PC i440FX 7.2.1 |\n| pc_i440fx_8point2 | PC i440FX 8.2 |\n\n",
             "nullable": true
           },
           "automatic_machine_type": {
@@ -7734,7 +7734,12 @@
           },
           "port_blocking": {
             "type": "boolean",
-            "description": "Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to reviewed accounts.",
+            "description": "Port blocking of outgoing connections for email, SSH and Remote Desktop (TCP ports 22, 25, and 3389) is enabled by default for all new servers. If this is false port blocking will be disabled. Disabling port blocking is only available to verified accounts.",
+            "nullable": true
+          },
+          "separate_private_network_interface": {
+            "type": "boolean",
+            "description": "If true this will enable a separate private network interface for the server. This is only available for servers in a VPC.",
             "nullable": true
           },
           "password": {
@@ -8583,6 +8588,7 @@
             "nullable": true
           },
           "path": {
+            "minLength": 1,
             "pattern": "/[A-Za-z0-9/.?=&+%_-]*",
             "type": "string",
             "description": "Leave null to accept the default '/' path.",
@@ -9615,6 +9621,7 @@
       },
       "Networks": {
         "required": [
+          "mac_address",
           "port_blocking",
           "recent_ddos",
           "v4",
@@ -9661,6 +9668,10 @@
             },
             "description": "Any configured IPv6 reverse nameservers for this server. Please see our documentation for how this interacts with IPv6 nameserver settings at the account level.",
             "nullable": true
+          },
+          "mac_address": {
+            "type": "string",
+            "description": "The MAC address of this server's primary network interface. Customers may need this for ARP entries, DHCP reservations on a VPC, or MAC-based licensing."
           }
         }
       },
@@ -10387,12 +10398,12 @@
           },
           "network_incoming_kbps": {
             "type": "number",
-            "description": "The incoming network data rate in Kb per second.",
+            "description": "The incoming network data rate in KB per second (binary: 1 KB = 1024 bytes).",
             "format": "double"
           },
           "network_outgoing_kbps": {
             "type": "number",
-            "description": "The outgoing network data rate in Kb per second.",
+            "description": "The outgoing network data rate in KB per second (binary: 1 KB = 1024 bytes).",
             "format": "double"
           },
           "storage_usage_megabytes": {
@@ -10402,12 +10413,12 @@
           },
           "storage_read_kbps": {
             "type": "number",
-            "description": "The storage read rate in Kb per second.",
+            "description": "The storage read rate in KB per second (binary: 1 KB = 1024 bytes).",
             "format": "double"
           },
           "storage_write_kbps": {
             "type": "number",
-            "description": "The storage write rate in Kb per second.",
+            "description": "The storage write rate in KB per second (binary: 1 KB = 1024 bytes).",
             "format": "double"
           },
           "storage_read_requests_per_second": {
@@ -10783,6 +10794,11 @@
               }
             ],
             "description": "The currently enabled advanced features, machine type and processor flags."
+          },
+          "is_under_maintenance": {
+            "type": "boolean",
+            "description": "If true, this server is currently under maintenance and most actions will not be available. If this is null the status was not checked.",
+            "nullable": true
           }
         },
         "x-cli-entity-ref": "name"
@@ -11871,7 +11887,10 @@
       "ThresholdAlert": {
         "required": [
           "alert_type",
+          "description",
           "enabled",
+          "name",
+          "unit",
           "value"
         ],
         "type": "object",
@@ -11882,6 +11901,18 @@
                 "$ref": "#/components/schemas/ThresholdAlertType"
               }
             ]
+          },
+          "name": {
+            "type": "string",
+            "description": "The display name of this threshold alert."
+          },
+          "unit": {
+            "type": "string",
+            "description": "The unit suffix for this alert's value (e.g. `\"%\"` or `\"requests/second\"`)."
+          },
+          "description": {
+            "type": "string",
+            "description": "A human-readable description of what this threshold alert measures."
           },
           "enabled": {
             "type": "boolean",
@@ -11946,10 +11977,11 @@
           "network-outgoing",
           "data-transfer-used",
           "storage-used",
-          "memory-used"
+          "memory-used",
+          "locked-backup-slots"
         ],
         "type": "string",
-        "description": "\n| Value | Description |\n| ----- | ----------- |\n| cpu | The alert is based off the average percentage of all CPU; 100% is the maximum possible even with multiple processors. A high average will prevent the server from responding quickly. |\n| storage-requests | The alert is based off The average number of requests (combined read and write) received by the storage subsystem. A high number of requests often indicates swap usage (due to memory exhaustion) and is associated with poor performance. |\n| network-incoming | The alert is based off the amount of data going into the server (from the internet and the LAN). A sudden increase may indicate the server is the victim of a DOS attack. |\n| network-outgoing | The alert is based off the amount of data coming out of the server (to the internet and the LAN). A sudden increase may indicate the server has been hacked and is being used for spam delivery. |\n| data-transfer-used | The alert is based off the percentage of your monthly data transfer limit. |\n| storage-used | The alert is based off the disk space consumed as a percentage of your total disk space. If the server runs out of disk space programs may fail to execute or be unable to create new files, or the server may become unresponsive. |\n| memory-used | The alert is based off the virtual memory consumed as a percentage of your physical memory. Virtual memory includes the swap file so the percentage may exceed 100% indicating that the server has run out of physical memory and is relying on swap space, which will generally cause poor performance. |\n\n",
+        "description": "\n| Value | Description |\n| ----- | ----------- |\n| cpu | The alert is based off the average percentage of all CPU; 100% is the maximum possible even with multiple processors. A high average will prevent the server from responding quickly. |\n| storage-requests | The alert is based off The average number of requests (combined read and write) received by the storage subsystem. A high number of requests often indicates swap usage (due to memory exhaustion) and is associated with poor performance. |\n| network-incoming | The alert is based off the amount of data going into the server (from the internet and the LAN). A sudden increase may indicate the server is the victim of a DOS attack. |\n| network-outgoing | The alert is based off the amount of data coming out of the server (to the internet and the LAN). A sudden increase may indicate the server has been hacked and is being used for spam delivery. |\n| data-transfer-used | The alert is based off the percentage of your monthly data transfer limit. |\n| storage-used | The alert is based off the disk space consumed as a percentage of your total disk space. If the server runs out of disk space programs may fail to execute or be unable to create new files, or the server may become unresponsive. |\n| memory-used | The alert is based off the virtual memory consumed as a percentage of your physical memory. Virtual memory includes the swap file so the percentage may exceed 100% indicating that the server has run out of physical memory and is relying on swap space, which will generally cause poor performance. |\n| locked-backup-slots | The alert is based off the percentage of scheduled backup slots (daily, weekly, monthly) occupied by locked backups. When all slots are locked, automated backups cannot proceed. |\n\n",
         "x-enum-descriptions": [
           "The alert is based off the average percentage of all CPU; 100% is the maximum possible even with multiple processors. A high average will prevent the server from responding quickly.",
           "The alert is based off The average number of requests (combined read and write) received by the storage subsystem. A high number of requests often indicates swap usage (due to memory exhaustion) and is associated with poor performance.",
@@ -11957,7 +11989,8 @@
           "The alert is based off the amount of data coming out of the server (to the internet and the LAN). A sudden increase may indicate the server has been hacked and is being used for spam delivery.",
           "The alert is based off the percentage of your monthly data transfer limit.",
           "The alert is based off the disk space consumed as a percentage of your total disk space. If the server runs out of disk space programs may fail to execute or be unable to create new files, or the server may become unresponsive.",
-          "The alert is based off the virtual memory consumed as a percentage of your physical memory. Virtual memory includes the swap file so the percentage may exceed 100% indicating that the server has run out of physical memory and is relying on swap space, which will generally cause poor performance."
+          "The alert is based off the virtual memory consumed as a percentage of your physical memory. Virtual memory includes the swap file so the percentage may exceed 100% indicating that the server has run out of physical memory and is relying on swap space, which will generally cause poor performance.",
+          "The alert is based off the percentage of scheduled backup slots (daily, weekly, monthly) occupied by locked backups. When all slots are locked, automated backups cannot proceed."
         ]
       },
       "ThresholdAlertsResponse": {
@@ -12300,10 +12333,11 @@
           "pc_i440fx_5point0",
           "pc_i440fx_5point1",
           "pc_i440fx_7point2",
+          "pc_i440fx_7point2point1",
           "pc_i440fx_8point2"
         ],
         "type": "string",
-        "description": "\n| Value | Description |\n| ----- | ----------- |\n| pc_i440fx_1point5 | PC i440FX 1.5 |\n| pc_i440fx_2point11 | PC i440FX 2.11 |\n| pc_i440fx_4point1 | PC i440FX 4.1 |\n| pc_i440fx_4point2 | PC i440FX 4.2 |\n| pc_i440fx_5point0 | PC i440FX 5.0 |\n| pc_i440fx_5point1 | PC i440FX 5.1 |\n| pc_i440fx_7point2 | PC i440FX 7.2 |\n| pc_i440fx_8point2 | PC i440FX 8.2 |\n\n",
+        "description": "\n| Value | Description |\n| ----- | ----------- |\n| pc_i440fx_1point5 | PC i440FX 1.5 |\n| pc_i440fx_2point11 | PC i440FX 2.11 |\n| pc_i440fx_4point1 | PC i440FX 4.1 |\n| pc_i440fx_4point2 | PC i440FX 4.2 |\n| pc_i440fx_5point0 | PC i440FX 5.0 |\n| pc_i440fx_5point1 | PC i440FX 5.1 |\n| pc_i440fx_7point2 | PC i440FX 7.2 |\n| pc_i440fx_7point2point1 | PC i440FX 7.2.1 |\n| pc_i440fx_8point2 | PC i440FX 8.2 |\n\n",
         "x-enum-descriptions": [
           "PC i440FX 1.5",
           "PC i440FX 2.11",
@@ -12312,6 +12346,7 @@
           "PC i440FX 5.0",
           "PC i440FX 5.1",
           "PC i440FX 7.2",
+          "PC i440FX 7.2.1",
           "PC i440FX 8.2"
         ]
       },

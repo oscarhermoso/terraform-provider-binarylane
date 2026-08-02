@@ -55,6 +55,7 @@ func LoadBalancerResourceSchema(ctx context.Context) schema.Schema {
 						Description:         "Leave null to accept the default '/' path.",
 						MarkdownDescription: "Leave null to accept the default '/' path.",
 						Validators: []validator.String{
+							stringvalidator.LengthAtLeast(1),
 							stringvalidator.RegexMatches(regexp.MustCompile("/[A-Za-z0-9/.?=&+%_-]*"), ""),
 						},
 					},

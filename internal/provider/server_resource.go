@@ -622,8 +622,9 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 		Options: &binarylane.SizeOptionsRequest{
 			Ipv4Addresses: data.PublicIpv4Count.ValueInt32Pointer(),
 		},
-		Backups: data.Backups.ValueBoolPointer(),
-		Ipv6:    data.Ipv6.ValueBoolPointer(),
+		Backups:                         data.Backups.ValueBoolPointer(),
+		Ipv6:                            data.Ipv6.ValueBoolPointer(),
+		SeparatePrivateNetworkInterface: data.SeparatePrivateNetworkInterface.ValueBoolPointer(),
 	}
 
 	if !data.Memory.IsNull() && !data.Memory.IsUnknown() {
@@ -693,9 +694,7 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	plannedSourceDestCheck := data.SourceAndDestinationCheck
 	serverRespSourceDestCheck := types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
 	data.SourceAndDestinationCheck = serverRespSourceDestCheck
-	plannedSeparatePrivateNic := data.SeparatePrivateNetworkInterface
-	serverRespSeparatePrivateNic := types.BoolPointerValue(serverResp.JSON200.Server.Networks.SeparatePrivateNetworkInterface)
-	data.SeparatePrivateNetworkInterface = serverRespSeparatePrivateNic
+	data.SeparatePrivateNetworkInterface = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SeparatePrivateNetworkInterface)
 
 	if serverResp.JSON200.Server.VpcId == nil {
 		data.VpcIpv4Address = types.StringNull()
@@ -769,16 +768,6 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 			return
 		}
 		data.SourceAndDestinationCheck = plannedSourceDestCheck
-	}
-
-	// Update separate_private_network_interface if needed
-	if plannedSeparatePrivateNic.Equal(types.BoolPointerValue(Pointer(true))) {
-		err := r.updateSeparatePrivateNetworkInterface(ctx, data.Id.ValueInt64(), true)
-		if err != nil {
-			resp.Diagnostics.AddError("Error updating separate private network interface", err.Error())
-			return
-		}
-		data.SeparatePrivateNetworkInterface = plannedSeparatePrivateNic
 	}
 
 	// One extra read to check the final state of enabled_advanced_features, needed because
