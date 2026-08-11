@@ -20,6 +20,15 @@ resource "binarylane_server" "example" {
   size              = "std-min" # 1 VPCU, 1 GB Memory, 20 GB NVME Storage, 1000 GB Data Transfer
   public_ipv4_count = 1
 
+  # When `disks` is set, `disk` is the primary disk size and the server's total allocated
+  # storage is `disk + sum(disks.size_gigabytes)`. Each additional disk is matched by name
+  # across plans; renaming a disk will destroy and re-create it (data loss).
+  # disk = 20
+  # disks = [
+  #   { name = "data1", size_gigabytes = 10 },
+  #   { name = "data2", size_gigabytes = 20 },
+  # ]
+
   # Accepts a cloud-init script or cloud-config YAML file to configure the server
   #   See more: https://cloudinit.readthedocs.io/en/latest/explanation/format.html#user-data-script
   user_data = file("./init.sh")
@@ -40,10 +49,11 @@ resource "binarylane_server" "example" {
 
 - `advanced_features` (Attributes) (see [below for nested schema](#nestedatt--advanced_features))
 - `backups` (Boolean) If `true` this will enable two daily backups for the server. By default, backups are disabled.
-- `disk` (Number) The total storage in GB for this server. Leave null to accept the default for the size Valid values:
+- `disk` (Number) The size of the primary disk in GB for this server. Leave null to accept the default for the size. When `disks` is also specified, the server's total allocated storage is `disk + sum(disks.size_gigabytes)` and this value refers only to the primary disk.  Valid values:
   - must be a multiple of 5
   - \> 60 GB must be a multiple of 10
   - \> 200 GB must be a multiple of 100
+- `disks` (Attributes List) A list of additional disks to attach to the server, on top of the primary disk. The server's total allocated storage will be `disk + sum(disks.size_gigabytes)`. Each disk is identified by its `name`, which is sent to the API as the disk description. Renaming a disk will cause it to be destroyed and re-created (data loss); resizing a disk is supported in place. (see [below for nested schema](#nestedatt--disks))
 - `ipv6` (Boolean) If `true` this will add a public and private IPv6 address to the server. By default, IPv6 is disabled.
 - `memory` (Number) The total memory in MB for this server. Leave null to accept the default size. Valid values:
   - must be a multiple of 128
@@ -89,6 +99,19 @@ Read-Only:
 - `cloud_init` (Boolean) When this option is enabled the Cloud Server will be provided a datasource for the cloud-init service.
 - `qemu_guest_agent` (Boolean) When this option is enabled the server will allow QEMU Guest Agent to perform password reset without rebooting.
 - `uefi_boot` (Boolean) When this option is enabled the Cloud Server will use UEFI instead of legacy PC BIOS.
+
+
+<a id="nestedatt--disks"></a>
+### Nested Schema for `disks`
+
+Required:
+
+- `name` (String) A label for the disk. Sent to the API as the disk description. Must be unique within the `disks` list.
+- `size_gigabytes` (Number) The size of the additional disk in GB.
+
+Read-Only:
+
+- `id` (Number) The server-assigned ID of this disk.
 
 
 <a id="nestedatt--timeouts"></a>

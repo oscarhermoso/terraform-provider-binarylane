@@ -29,10 +29,11 @@ data "binarylane_server" "example" {
 
 - `advanced_features` (Object) (see [below for nested schema](#nestedatt--advanced_features))
 - `backups` (Boolean) If `true` this will enable two daily backups for the server. By default, backups are disabled.
-- `disk` (Number) The total storage in GB for this server. Leave null to accept the default for the size Valid values:
+- `disk` (Number) The size of the primary disk in GB for this server. Leave null to accept the default for the size. When `disks` is also specified, the server's total allocated storage is `disk + sum(disks.size_gigabytes)` and this value refers only to the primary disk.  Valid values:
   - must be a multiple of 5
   - \> 60 GB must be a multiple of 10
   - \> 200 GB must be a multiple of 100
+- `disks` (Attributes List) A list of additional disks to attach to the server, on top of the primary disk. The server's total allocated storage will be `disk + sum(disks.size_gigabytes)`. Each disk is identified by its `name`, which is sent to the API as the disk description. Renaming a disk will cause it to be destroyed and re-created (data loss); resizing a disk is supported in place. (see [below for nested schema](#nestedatt--disks))
 - `image` (String) The slug of the selected operating system, such as `debian-12`. You can fetch a full list of images from the BinaryLane API.
 - `ipv6` (Boolean) If `true` this will add a public and private IPv6 address to the server. By default, IPv6 is disabled.
 - `memory` (Number) The total memory in MB for this server. Leave null to accept the default size. Valid values:
@@ -71,3 +72,13 @@ Read-Only:
 - `qemu_guest_agent` (Boolean)
 - `uefi_boot` (Boolean)
 - `unset_uuid` (Boolean)
+
+
+<a id="nestedatt--disks"></a>
+### Nested Schema for `disks`
+
+Read-Only:
+
+- `id` (Number) The server-assigned ID of this disk.
+- `name` (String) A label for the disk. Sent to the API as the disk description. Must be unique within the `disks` list.
+- `size_gigabytes` (Number) The size of the additional disk in GB.
