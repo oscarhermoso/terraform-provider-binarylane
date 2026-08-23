@@ -15,6 +15,24 @@ provider "binarylane" {
 # End of provider config
 
 `
+
+	// planOnlyProviderConfig configures the provider with a placeholder token, for tests that
+	// only ever plan and so never reach the API. providerConfig leaves the token to
+	// BINARYLANE_API_TOKEN, which those tests would otherwise need set to run at all.
+	planOnlyProviderConfig = `
+provider "binarylane" {
+  api_token = "placeholder-never-used"
+}
+
+# End of provider config
+
+`
+
+	// testRegion is the BinaryLane region acceptance tests create servers in.
+	// TEMPORARY: set to "mel" because "per" is intermittently returning "Unable to find a
+	// suitable host for the requested server configuration". Revert to "per" once that's
+	// resolved.
+	testRegion = "mel"
 )
 
 var (

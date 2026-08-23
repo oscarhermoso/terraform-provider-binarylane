@@ -1037,6 +1037,88 @@
 								}
 							]
 						}
+					},
+					{
+						"name": "disks",
+						"list_nested": {
+							"computed_optional_required": "computed_optional",
+							"description": "The disks attached to this server. Leave null to let Binary Lane manage the server's disks. If specified, every disk must be listed, including the primary: exactly one entry must have `primary = true`, and its `id` and `description` are assigned by Binary Lane.",
+							"nested_object": {
+								"attributes": [
+									{
+										"name": "id",
+										"int64": {
+											"computed_optional_required": "computed",
+											"description": "The ID of this disk."
+										}
+									},
+									{
+										"name": "description",
+										"string": {
+											"computed_optional_required": "computed_optional",
+											"description": "A label for this disk. Assigned by Binary Lane for the primary disk, so must be left null when `primary = true`. Changing this will destroy the disk and create a new one, losing any data on it. Disks that share a description are matched in the order they are listed.",
+											"validators": [
+												{
+													"custom": {
+														"imports": [
+															{
+																"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+															}
+														],
+														"schema_definition": "stringvalidator.LengthAtLeast(1)"
+													}
+												}
+											]
+										}
+									},
+									{
+										"name": "primary",
+										"bool": {
+											"computed_optional_required": "computed_optional",
+											"description": "If `true` this is the primary disk, which the operating system is installed on. Exactly one disk must be the primary."
+										}
+									},
+									{
+										"name": "size_gigabytes",
+										"int64": {
+											"computed_optional_required": "required",
+											"description": "The size of the disk in GB. The sum across all disks cannot exceed `disk`, and any remainder is left unallocated.",
+											"validators": [
+												{
+													"custom": {
+														"imports": [
+															{
+																"path": "github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+															}
+														],
+														"schema_definition": "int64validator.AtLeast(1)"
+													}
+												}
+											]
+										}
+									}
+								]
+							},
+							"validators": [
+								{
+									"custom": {
+										"schema_definition": "disksValidator{}"
+									}
+								}
+							],
+							"plan_modifiers": [
+								{
+									"custom": {
+										"imports": [
+											{
+												"path": "github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+											}
+										],
+										"schema_definition": "disksPlanModifier{}"
+									}
+								}
+							]
+						}
 					}
 				]
 			}

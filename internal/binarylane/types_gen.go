@@ -2164,16 +2164,16 @@ type DisableSelinuxType string
 // Disk defines model for Disk.
 type Disk struct {
 	// Description A description of this disk.
-	Description *string `json:"description,omitempty"`
+	Description *string `json:"description,omitempty" tfsdk:"description"`
 
 	// Id The ID of this disk.
-	Id int64 `json:"id"`
+	Id int64 `json:"id" tfsdk:"id"`
 
 	// Primary A primary disk is treated differently from other disks.
-	Primary bool `json:"primary"`
+	Primary bool `json:"primary" tfsdk:"primary"`
 
 	// SizeGigabytes The size of the disk in GB.
-	SizeGigabytes float64 `json:"size_gigabytes"`
+	SizeGigabytes float64 `json:"size_gigabytes" tfsdk:"size_gigabytes"`
 }
 
 // DistributionFeature
@@ -4093,7 +4093,7 @@ type GetAccountKeysParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4108,7 +4108,7 @@ type GetActionsParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4120,7 +4120,7 @@ type GetCustomersMyInvoicesParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4129,7 +4129,7 @@ type GetDataUsagesCurrentParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4138,7 +4138,7 @@ type GetDomainsParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4183,7 +4183,7 @@ type GetDomainsDomainNameRecordsParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4234,7 +4234,7 @@ type GetImagesParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4246,10 +4246,13 @@ type GetImagesImageIdOrSlugParamsImageIdOrSlug1 = string
 
 // GetLoadBalancersParams defines parameters for GetLoadBalancers.
 type GetLoadBalancersParams struct {
+	// Name Providing a name restricts the results to load balancers with this name (case insensitive).
+	Name *string `form:"name,omitempty" json:"name,omitempty"`
+
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4276,7 +4279,7 @@ type GetRegionsParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4285,7 +4288,7 @@ type GetReverseNamesIpv6Params struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4315,7 +4318,7 @@ type GetSamplesetsServerIdParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4342,7 +4345,7 @@ type GetServersParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4360,7 +4363,7 @@ type GetServersServerIdActionsParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4372,7 +4375,7 @@ type GetServersServerIdBackupsParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4384,7 +4387,7 @@ type GetServersServerIdKernelsParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4393,7 +4396,7 @@ type GetServersServerIdSnapshotsParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4402,7 +4405,7 @@ type GetServersServerIdSoftwareParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4417,7 +4420,7 @@ type GetSizesParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4426,7 +4429,7 @@ type GetSoftwareParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4435,7 +4438,7 @@ type GetSoftwareOperatingSystemOperatingSystemIdOrSlugParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4450,7 +4453,7 @@ type GetVpcsParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
@@ -4480,7 +4483,7 @@ type GetVpcsVpcIdMembersParams struct {
 	// Page The selected page. Page numbering starts at 1
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
-	// PerPage The number of results to show per page.
+	// PerPage The number of results to show per page. Use 0 to return only the total count.
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 

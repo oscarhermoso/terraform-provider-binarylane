@@ -8,7 +8,7 @@
       "url": "https://support.binarylane.com.au/support/home",
       "email": "support@binarylane.com.au"
     },
-    "version": "0.39.1",
+    "version": "0.40.0",
     "x-logo": {
       "url": "https://www.binarylane.com.au/res/images/binarylane/logo.png",
       "backgroundColor": "#000000",
@@ -111,12 +111,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -277,12 +277,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -401,12 +401,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -517,12 +517,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -730,12 +730,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -1029,12 +1029,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -1292,12 +1292,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -1493,6 +1493,14 @@
         "summary": "List all Load Balancers",
         "parameters": [
           {
+            "name": "name",
+            "in": "query",
+            "description": "Providing a name restricts the results to load balancers with this name (case insensitive).",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "description": "The selected page. Page numbering starts at 1",
@@ -1508,12 +1516,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -1534,7 +1542,7 @@
         "x-codeSamples": [
           {
             "lang": "Curl",
-            "source": "curl -X GET \"https://api.binarylane.com.au/v2/load_balancers?page=${page}&per_page=${per_page}\"  \\\n-H \"Authorization: Bearer ${APITOKEN}\""
+            "source": "curl -X GET \"https://api.binarylane.com.au/v2/load_balancers?name=${name}&page=${page}&per_page=${per_page}\"  \\\n-H \"Authorization: Bearer ${APITOKEN}\""
           }
         ],
         "x-cli-command": "load-balancer list"
@@ -1808,12 +1816,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -1864,12 +1872,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -2056,12 +2064,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -2122,12 +2130,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -2495,12 +2503,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -2729,12 +2737,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -2847,12 +2855,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -2914,12 +2922,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -3048,12 +3056,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -3201,12 +3209,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -3295,12 +3303,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -3368,12 +3376,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -3603,12 +3611,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -3721,12 +3729,12 @@
           {
             "name": "per_page",
             "in": "query",
-            "description": "The number of results to show per page.",
+            "description": "The number of results to show per page. Use 0 to return only the total count.",
             "schema": {
               "maximum": 200,
-              "minimum": 1,
+              "minimum": 0,
               "type": "integer",
-              "description": "The number of results to show per page.",
+              "description": "The number of results to show per page. Use 0 to return only the total count.",
               "format": "int32",
               "default": 20
             }
@@ -7998,21 +8006,33 @@
           "id": {
             "type": "integer",
             "description": "The ID of this disk.",
-            "format": "int64"
+            "format": "int64",
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "id"
+            }
           },
           "size_gigabytes": {
             "type": "number",
             "description": "The size of the disk in GB.",
-            "format": "double"
+            "format": "double",
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "size_gigabytes"
+            }
           },
           "description": {
             "type": "string",
             "description": "A description of this disk.",
-            "nullable": true
+            "nullable": true,
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "description"
+            }
           },
           "primary": {
             "type": "boolean",
-            "description": "A primary disk is treated differently from other disks."
+            "description": "A primary disk is treated differently from other disks.",
+            "x-oapi-codegen-extra-tags": {
+              "tfsdk": "primary"
+            }
           }
         }
       },

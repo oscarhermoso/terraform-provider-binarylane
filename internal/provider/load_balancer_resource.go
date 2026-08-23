@@ -140,11 +140,10 @@ func loadBalancerSchema(ctx context.Context) schema.Schema {
 func (r *loadBalancerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = loadBalancerSchema(ctx)
 
-	resp.Schema.Attributes["timeouts"] =
-		timeouts.Attributes(ctx, timeouts.Opts{
-			Create: true,
-			Update: true,
-		})
+	resp.Schema.Attributes["timeouts"] = timeouts.Attributes(ctx, timeouts.Opts{
+		Create: true,
+		Update: true,
+	})
 }
 
 func (r *loadBalancerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -404,49 +403,35 @@ func (r *loadBalancerResource) ImportState(
 	}
 
 	// Import by name
-	var page int32 = 1
-	perPage := int32(200)
-	var loadBalancer binarylane.LoadBalancer
-	var nextPage bool = true
-
-	for nextPage { // Need to paginate because the API does not support filtering by name
-		params := binarylane.GetLoadBalancersParams{
-			Page:    &page,
-			PerPage: &perPage,
-		}
-
-		lbResp, err := r.bc.client.GetLoadBalancersWithResponse(ctx, &params)
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Error getting load balancer for import: name=%s", req.ID), err.Error())
-			return
-		}
-
-		if lbResp.StatusCode() != http.StatusOK {
-			resp.Diagnostics.AddError(
-				"Unexpected HTTP status code getting load balancer for import",
-				fmt.Sprintf("Received %s reading load balancer: name=%s. Details: %s", lbResp.Status(), req.ID,
-					lbResp.Body))
-			return
-		}
-
-		loadBalancers := lbResp.JSON200.LoadBalancers
-		for _, lb := range loadBalancers {
-			if lb.Name == req.ID {
-				loadBalancer = lb
-				nextPage = false
-				break
-			}
-		}
-		if lbResp.JSON200.Links == nil || lbResp.JSON200.Links.Pages.Next == nil {
-			nextPage = false
-			break
-		}
-
-		page++
+	params := binarylane.GetLoadBalancersParams{
+		Name: &req.ID,
 	}
 
-	diags := resp.State.SetAttribute(ctx, path.Root("id"), loadBalancer.Id)
-	resp.Diagnostics.Append(diags...)
+	lbResp, err := r.bc.client.GetLoadBalancersWithResponse(ctx, &params)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error getting load balancer for import: name=%s", req.ID), err.Error())
+		return
+	}
+
+	if lbResp.StatusCode() != http.StatusOK {
+		resp.Diagnostics.AddError(
+			"Unexpected HTTP status code getting load balancer for import",
+			fmt.Sprintf("Received %s reading load balancer: name=%s. Details: %s", lbResp.Status(), req.ID,
+				lbResp.Body))
+		return
+	}
+
+	for _, lb := range lbResp.JSON200.LoadBalancers {
+		if lb.Name == req.ID {
+			resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), lb.Id)...)
+			return
+		}
+	}
+
+	resp.Diagnostics.AddError(
+		"Load balancer not found",
+		fmt.Sprintf("No load balancer named %q was found to import.", req.ID),
+	)
 }
 
 func setLoadBalancerModelState(ctx context.Context, data *loadBalancerDataModel, lb *binarylane.LoadBalancer) diag.Diagnostics {

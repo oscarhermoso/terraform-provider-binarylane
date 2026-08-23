@@ -1,8 +1,10 @@
 package provider
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -355,10 +357,8 @@ func serverSchema(ctx context.Context) schema.Schema {
 		},
 	}
 
-	diskDescription := "The size of the primary disk in GB for this server. Leave null to accept the default for the size. " +
-		"When `disks` is also specified, the server's total allocated storage is `disk + sum(disks.size_gigabytes)` and this value " +
-		"refers only to the primary disk. "
-	diskValidValues := "Valid values must be a multiple of 5. If the value is greater than 60 GB, it must be a multiple of 10. " +
+	diskDescription := "The total storage in GB for this server. Leave null to accept the default for the size."
+	diskValidValues := " Valid values must be a multiple of 5. If the value is greater than 60 GB, it must be a multiple of 10. " +
 		"if the value is greater than 200 GB, it must be a multiple of 100. "
 	diskValidValuesMarkdown := ` Valid values:
   - must be a multiple of 5
@@ -369,58 +369,13 @@ func serverSchema(ctx context.Context) schema.Schema {
 		Description:         diskDescription + diskValidValues,
 		MarkdownDescription: diskDescription + diskValidValuesMarkdown,
 		Optional:            true,
+		Required:            false,
 		Computed:            true,
 		Validators: []validator.Int32{
-			totalDiskRulesValidator{
-				Minimum: 20,
-				Rules: []MultipleOfValidator{
-					{Multiple: 5},
-					{Multiple: 10, RangeFrom: 60, RangeTo: 200},
-					{Multiple: 100, RangeFrom: 200},
-				},
-			},
+			int32validator.AtLeast(20),
 			MultipleOfValidator{Multiple: 5},
 			MultipleOfValidator{Multiple: 10, RangeFrom: 60, RangeTo: 200},
 			MultipleOfValidator{Multiple: 100, RangeFrom: 200},
-		},
-	}
-
-	disksDescription := "A list of additional disks to attach to the server, on top of the primary disk. " +
-		"The server's total allocated storage will be `disk + sum(disks.size_gigabytes)`. " +
-		"Each disk is identified by its `name`, which is sent to the API as the disk description. " +
-		"Renaming a disk will cause it to be destroyed and re-created (data loss); resizing a disk is supported in place."
-	s.Attributes["disks"] = schema.ListNestedAttribute{
-		Description:         disksDescription,
-		MarkdownDescription: disksDescription,
-		Optional:            true,
-		NestedObject: schema.NestedAttributeObject{
-			Attributes: map[string]schema.Attribute{
-				"id": schema.Int64Attribute{
-					Description:         "The server-assigned ID of this disk.",
-					MarkdownDescription: "The server-assigned ID of this disk.",
-					Computed:            true,
-				},
-				"name": schema.StringAttribute{
-					Description:         "A label for the disk. Sent to the API as the disk description. Must be unique within the `disks` list.",
-					MarkdownDescription: "A label for the disk. Sent to the API as the disk description. Must be unique within the `disks` list.",
-					Required:            true,
-					Validators: []validator.String{
-						stringvalidator.LengthAtLeast(1),
-					},
-				},
-				"size_gigabytes": schema.Int32Attribute{
-					Description:         "The size of the additional disk in GB.",
-					MarkdownDescription: "The size of the additional disk in GB.",
-					Required:            true,
-					Validators: []validator.Int32{
-						int32validator.AtLeast(1),
-					},
-				},
-			},
-		},
-		Validators: []validator.List{
-			disksRequiresPrimaryDiskValidator{},
-			uniqueDiskNamesValidator{},
 		},
 	}
 
@@ -470,6 +425,21 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		return
 	}
 
+	// `disks` includes the primary, so more than one element means an additional disk.
+	warnDisksMayRaceUserData := func() {
+		if plan.UserData.ValueString() == "" || plan.Disks.IsNull() || plan.Disks.IsUnknown() || len(plan.Disks.Elements()) < 2 {
+			return
+		}
+		resp.Diagnostics.AddAttributeWarning(
+			path.Root("disks"),
+			"Additional disks may race with user_data on first boot",
+			"Additional disks are attached after the server boots into a fresh OS install (on create, or a "+
+				"rebuild triggered by this plan), which can interrupt `user_data` (cloud-init) while it is "+
+				"still running on first boot. cloud-init only runs user_data once per instance, so any "+
+				"scripts that did not complete before the disk operations will not re-run on the next boot.",
+		)
+	}
+
 	if plan.SourceAndDestinationCheck.IsUnknown() {
 		if plan.VpcId.IsNull() {
 			plan.SourceAndDestinationCheck = types.BoolNull()
@@ -497,62 +467,9 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
 	}
 
-	// Carry the computed `id` of each plan disk over from prior state by name match.
-	// terraform-plugin-framework plans Computed-only attributes inside newly-added list
-	// elements as null, which would otherwise fail the "provider produced inconsistent
-	// result" check after apply when we populate the id from the API response.
-	if !plan.Disks.IsNull() && !plan.Disks.IsUnknown() {
-		stateIdsByName := map[string]types.Int64{}
-		if !req.State.Raw.IsNull() {
-			var stateForDisks serverResourceModel
-			if !req.State.Get(ctx, &stateForDisks).HasError() {
-				stateDiskList, sdDiags := elementsAsServerDisks(ctx, stateForDisks.Disks)
-				if !sdDiags.HasError() {
-					for _, sd := range stateDiskList {
-						stateIdsByName[sd.Name.ValueString()] = sd.Id
-					}
-				}
-			}
-		}
-
-		planDiskList, diskDiags := elementsAsServerDisks(ctx, plan.Disks)
-		resp.Diagnostics.Append(diskDiags...)
-		if !diskDiags.HasError() {
-			elements := make([]attr.Value, 0, len(planDiskList))
-			for _, d := range planDiskList {
-				id := types.Int64Unknown()
-				if stateId, ok := stateIdsByName[d.Name.ValueString()]; ok && !stateId.IsNull() && !stateId.IsUnknown() {
-					id = stateId
-				}
-				obj, objDiags := types.ObjectValue(serverDiskAttrTypes(), map[string]attr.Value{
-					"id":             id,
-					"name":           d.Name,
-					"size_gigabytes": d.SizeGigabytes,
-				})
-				resp.Diagnostics.Append(objDiags...)
-				elements = append(elements, obj)
-			}
-			newList, listDiags := types.ListValue(serverDiskObjectType(), elements)
-			resp.Diagnostics.Append(listDiags...)
-			if !listDiags.HasError() {
-				plan.Disks = newList
-				resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
-			}
-		}
-	}
-
 	if req.State.Raw.IsNull() {
-		if !plan.UserData.IsNull() && !plan.UserData.IsUnknown() && plan.UserData.ValueString() != "" &&
-			!plan.Disks.IsNull() && !plan.Disks.IsUnknown() && len(plan.Disks.Elements()) > 0 {
-			resp.Diagnostics.AddAttributeWarning(
-				path.Root("disks"),
-				"Additional disks may race with user_data on first boot",
-				"Additional disks are attached after the server is created, which can interrupt "+
-					"`user_data` (cloud-init) while it is still running on first boot. cloud-init only "+
-					"runs user_data once per instance, so any scripts that did not complete before the "+
-					"disk operations will not re-run on the next boot.",
-			)
-		}
+		warnDisksMayRaceUserData()
+
 		// Creation plan, no further modification needed
 		return
 	}
@@ -600,59 +517,7 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 				strings.Join(attrsRequiringRebuild, ", "),
 			),
 		)
-	}
-
-	if !plan.Disk.IsNull() && !plan.Disk.IsUnknown() &&
-		!state.Disk.IsNull() && !state.Disk.IsUnknown() &&
-		plan.Disk.ValueInt32() < state.Disk.ValueInt32() {
-		resp.Diagnostics.AddAttributeWarning(
-			path.Root("disk"),
-			"Primary disk shrink may corrupt the filesystem",
-			fmt.Sprintf(
-				"The primary disk is being reduced from %d GB to %d GB. Binary Lane resizes the block device in place and does not touch the filesystem on it. "+
-					"You must first shrink the filesystem(s) (and any partitions) on the server to fit within %d GB before applying, "+
-					"otherwise the filesystem will be irreparably corrupted and you will need to restore from backup.",
-				state.Disk.ValueInt32(), plan.Disk.ValueInt32(), plan.Disk.ValueInt32(),
-			),
-		)
-	}
-
-	if !plan.Disks.IsNull() && !plan.Disks.IsUnknown() &&
-		!state.Disks.IsNull() && !state.Disks.IsUnknown() {
-		planDisks, pdDiags := elementsAsServerDisks(ctx, plan.Disks)
-		resp.Diagnostics.Append(pdDiags...)
-		stateDisks, sdDiags := elementsAsServerDisks(ctx, state.Disks)
-		resp.Diagnostics.Append(sdDiags...)
-		if !pdDiags.HasError() && !sdDiags.HasError() {
-			stateSizesByName := map[string]int32{}
-			for _, sd := range stateDisks {
-				if sd.Name.IsNull() || sd.Name.IsUnknown() || sd.SizeGigabytes.IsNull() || sd.SizeGigabytes.IsUnknown() {
-					continue
-				}
-				stateSizesByName[sd.Name.ValueString()] = sd.SizeGigabytes.ValueInt32()
-			}
-			for i, pd := range planDisks {
-				if pd.Name.IsNull() || pd.Name.IsUnknown() || pd.SizeGigabytes.IsNull() || pd.SizeGigabytes.IsUnknown() {
-					continue
-				}
-				prior, ok := stateSizesByName[pd.Name.ValueString()]
-				if !ok {
-					continue
-				}
-				if pd.SizeGigabytes.ValueInt32() < prior {
-					resp.Diagnostics.AddAttributeWarning(
-						path.Root("disks").AtListIndex(i).AtName("size_gigabytes"),
-						"Additional disk shrink may corrupt the filesystem",
-						fmt.Sprintf(
-							"Disk %q is being reduced from %d GB to %d GB. Binary Lane resizes the block device in place and does not touch the filesystem on it. "+
-								"You must first shrink the filesystem(s) (and any partitions) on this disk to fit within %d GB before applying, "+
-								"otherwise the filesystem will be irreparably corrupted and you will need to restore from backup.",
-							pd.Name.ValueString(), prior, pd.SizeGigabytes.ValueInt32(), pd.SizeGigabytes.ValueInt32(),
-						),
-					)
-				}
-			}
-		}
+		warnDisksMayRaceUserData()
 	}
 
 	if !plan.Ipv6.Equal(state.Ipv6) {
@@ -663,6 +528,11 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 			plan.PublicIpv6Addresses = types.ListNull(state.PublicIpv6Addresses.ElementType(ctx))
 			plan.PrivateIpv6Addresses = types.ListNull(state.PrivateIpv6Addresses.ElementType(ctx))
 		}
+	} else {
+		// Computed list attributes aren't carried forward from state by default, so without
+		// this these would plan as unknown on every apply, even when ipv6 didn't change.
+		plan.PublicIpv6Addresses = state.PublicIpv6Addresses
+		plan.PrivateIpv6Addresses = state.PrivateIpv6Addresses
 	}
 
 	// Use state for unknown disk/memory values, as long as server size is the same
@@ -671,6 +541,32 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 	}
 	if (plan.Disk.IsNull() || plan.Disk.IsUnknown()) && plan.Size.Equal(state.Size) {
 		plan.Disk = state.Disk
+	}
+
+	// A configured `disks` is planned by the attribute's own plan modifier, which matches each
+	// disk with the one it corresponds to in prior state. Left unset, the disks are Binary Lane's
+	// to manage, and what happens to them depends on `disk` — resolved just above, after that
+	// plan modifier has already run.
+	if config.Disks.IsNull() || config.Disks.IsUnknown() {
+		// Computed list attributes aren't carried forward from state by default, so without this
+		// `disks` would plan as unknown on every apply, even when nothing about it changed.
+		plan.Disks = state.Disks
+
+		if state.Disks.IsNull() || state.Disks.IsUnknown() {
+			plan.Disks = types.ListUnknown(resources.DisksValue{}.Type(ctx))
+		} else if len(state.Disks.Elements()) == 1 && !plan.Disk.Equal(state.Disk) {
+			// A resize resizes the primary disk to fill the new total, but only when it is the
+			// server's only disk: with an additional disk it leaves every disk alone.
+			plan.Disks = types.ListUnknown(resources.DisksValue{}.Type(ctx))
+
+			statePrimary, _, diags := splitDisks(ctx, state.Disks)
+			resp.Diagnostics.Append(diags...)
+			if statePrimary != nil && !plan.Disk.IsUnknown() &&
+				float64(plan.Disk.ValueInt32()) < statePrimary.SizeGigabytes {
+				resp.Diagnostics.Append(resources.DiskShrinkWarning(path.Root("disk"), "The primary disk",
+					int64(statePrimary.SizeGigabytes), int64(plan.Disk.ValueInt32())))
+			}
+		}
 	}
 
 	if isAdvFeatChanged(&config.AdvancedFeatures, &state.AdvancedFeatures) {
@@ -734,6 +630,11 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 				)
 			}
 		}
+	} else {
+		// Computed object attributes aren't carried forward from state by default, so without
+		// this `advanced_features` would plan as unknown on every apply, even when none of its
+		// writable fields changed.
+		plan.AdvancedFeatures = state.AdvancedFeatures
 	}
 
 	// Save data into Terraform state
@@ -782,24 +683,19 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 		SeparatePrivateNetworkInterface: data.SeparatePrivateNetworkInterface.ValueBoolPointer(),
 	}
 
-	// Resolve additional disks at create time so their size can be included in the initial
-	// allocation (`options.disk` is the total).
-	planDisks, diskDiags := elementsAsServerDisks(ctx, data.Disks)
+	// The planned `disks` is unknown when it isn't configured, so the disks to create are read
+	// from config, which is always known.
+	configPrimary, configAdditional, diskDiags := splitDisks(ctx, config.Disks)
 	resp.Diagnostics.Append(diskDiags...)
 	if resp.Diagnostics.HasError() {
 		return
-	}
-	var additionalDiskTotal int32
-	for _, d := range planDisks {
-		additionalDiskTotal += d.SizeGigabytes.ValueInt32()
 	}
 
 	if !data.Memory.IsNull() && !data.Memory.IsUnknown() {
 		body.Options.Memory = data.Memory.ValueInt32Pointer()
 	}
 	if !data.Disk.IsNull() && !data.Disk.IsUnknown() {
-		totalDisk := data.Disk.ValueInt32() + additionalDiskTotal
-		body.Options.Disk = &totalDisk
+		body.Options.Disk = data.Disk.ValueInt32Pointer()
 	}
 	if !data.VpcIpv4Address.IsNull() && !data.VpcIpv4Address.IsUnknown() {
 		body.VpcIpv4Address = data.VpcIpv4Address.ValueStringPointer()
@@ -858,13 +754,9 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
 	data.PasswordChangeSupported = types.BoolValue(serverResp.JSON200.Server.PasswordChangeSupported)
 	data.Memory = types.Int32Value(serverResp.JSON200.Server.Memory)
-	plannedPrimaryDisk := data.Disk
-	plannedDisks := data.Disks
-	{
-		var readDiags diag.Diagnostics
-		data.Disk, data.Disks = readServerDisks(ctx, serverResp.JSON200.Server.Disks, data.Disks, &readDiags)
-		resp.Diagnostics.Append(readDiags...)
-	}
+	data.Disk = types.Int32Value(serverResp.JSON200.Server.Disk)
+	data.Disks, diags = serverDisksToList(ctx, serverResp.JSON200.Server.Disks, config.Disks)
+	resp.Diagnostics.Append(diags...)
 	plannedSourceDestCheck := data.SourceAndDestinationCheck
 	serverRespSourceDestCheck := types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
 	data.SourceAndDestinationCheck = serverRespSourceDestCheck
@@ -944,16 +836,23 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 		data.SourceAndDestinationCheck = plannedSourceDestCheck
 	}
 
-	// Apply additional disks if any were planned. The initial create allocated
-	// `primary + sum(additional)` to the primary disk; createAdditionalDisks shrinks it back
-	// and adds each requested disk. Restore plannedDisks so the subsequent fetch can use the
-	// plan's names to order the result list.
-	if len(planDisks) > 0 {
-		if err := r.createAdditionalDisks(ctx, data.Id.ValueInt64(), plannedPrimaryDisk.ValueInt32(), planDisks); err != nil {
+	// Carve the additional disks out of the server's total: it is created with a single primary
+	// disk spanning all of it, so shrink that to make room, as Binary Lane's own UI does
+	// (https://support.binarylane.com.au/support/solutions/articles/11000133468). If cloud-init's
+	// growpart has already expanded the filesystem to fill the original primary, this can
+	// corrupt it, and a disk can only be resized in place.
+	if configPrimary != nil {
+		finalDisks, err := r.reconcileServerDisks(
+			ctx, data.Id.ValueInt64(), serverResp.JSON200.Server.Disks,
+			configPrimary.SizeGigabytes, configAdditional, true,
+		)
+		data.Disks, diags = serverDisksToList(ctx, finalDisks, config.Disks)
+		resp.Diagnostics.Append(diags...)
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+		if err != nil {
 			resp.Diagnostics.AddError("Error creating additional disks", err.Error())
 			return
 		}
-		data.Disks = plannedDisks
 	}
 
 	// One extra read to check the final state of enabled_advanced_features, needed because
@@ -1003,7 +902,6 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var diag diag.Diagnostics
 	var config, plan, state serverResourceModel
 
 	// Read Terraform plan data into the model
@@ -1146,94 +1044,59 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 	}
 
-	// Total disk allocation reported to the API is `primary + sum(additional)`.
-	planDisks, diskDiags := elementsAsServerDisks(ctx, plan.Disks)
-	resp.Diagnostics.Append(diskDiags...)
+	// The disks to reconcile come from config, which describes every disk when `disks` is set.
+	// Left unset, the disks are Binary Lane's to manage and there is nothing to reconcile.
+	configPrimary, configAdditional, diags := splitDisks(ctx, config.Disks)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	stateDisks, diskDiags := elementsAsServerDisks(ctx, state.Disks)
-	resp.Diagnostics.Append(diskDiags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	var planAdditionalTotal, stateAdditionalTotal int32
-	for _, d := range planDisks {
-		planAdditionalTotal += d.SizeGigabytes.ValueInt32()
-	}
-	for _, d := range stateDisks {
-		stateAdditionalTotal += d.SizeGigabytes.ValueInt32()
-	}
+
 	planDiskKnown := !plan.Disk.IsNull() && !plan.Disk.IsUnknown()
-	plannedTotalDisk := plan.Disk.ValueInt32() + planAdditionalTotal
-	stateTotalDisk := state.Disk.ValueInt32() + stateAdditionalTotal
-	totalDiskChanged := planDiskKnown && plannedTotalDisk != stateTotalDisk
-	disksChanged := planAdditionalTotal != stateAdditionalTotal || !plan.Disks.Equal(state.Disks)
+	diskChanged := planDiskKnown && !plan.Disk.Equal(state.Disk)
+	sizeChanged := !plan.Size.Equal(state.Size)
 
-	// Pre-resize disk reconciliation: free space before any server-level resize so the API
-	// never sees disks > total during the operation.
-	if disksChanged {
-		planByName := make(map[string]serverDiskModel, len(planDisks))
-		for _, d := range planDisks {
-			planByName[d.Name.ValueString()] = d
-		}
-		for _, sd := range stateDisks {
-			if _, ok := planByName[sd.Name.ValueString()]; !ok {
-				if err := r.deleteServerDisk(ctx, state.Id.ValueInt64(), sd.Id.ValueInt64()); err != nil {
-					resp.Diagnostics.AddError("Error deleting additional disk", err.Error())
-					return
-				}
-			}
-		}
-		stateByName := make(map[string]serverDiskModel, len(stateDisks))
-		for _, d := range stateDisks {
-			stateByName[d.Name.ValueString()] = d
-		}
-		for _, pd := range planDisks {
-			sd, exists := stateByName[pd.Name.ValueString()]
-			if !exists {
-				continue
-			}
-			if pd.SizeGigabytes.ValueInt32() < sd.SizeGigabytes.ValueInt32() {
-				if err := r.resizeServerDisk(ctx, state.Id.ValueInt64(), sd.Id.ValueInt64(), pd.SizeGigabytes.ValueInt32()); err != nil {
-					resp.Diagnostics.AddError("Error shrinking additional disk", err.Error())
-					return
-				}
-			}
-		}
-	}
+	// A `disk` or `size` change resizes the server, which can resize the primary disk with it, so
+	// the disks are reconciled back to config after one of those too.
+	reconcileDisks := configPrimary != nil &&
+		(!plan.Disks.Equal(state.Disks) || diskChanged || sizeChanged)
 
-	// If the primary disk is being shrunk, do it before the server-level resize so the
-	// total resize never has to span both a primary shrink and a layout change at once.
-	if planDiskKnown && plan.Disk.ValueInt32() < state.Disk.ValueInt32() {
-		currentDisks, err := r.fetchServerDisks(ctx, state.Id.ValueInt64())
-		if err != nil {
-			resp.Diagnostics.AddError("Error fetching server disks", err.Error())
+	persistDisks := func(disks []binarylane.Disk) {
+		if disks == nil {
 			return
 		}
-		primaryId, currentPrimarySize := findPrimaryDiskId(currentDisks)
-		if primaryId != 0 && currentPrimarySize > plan.Disk.ValueInt32() {
-			if err := r.resizeServerDisk(ctx, state.Id.ValueInt64(), primaryId, plan.Disk.ValueInt32()); err != nil {
-				resp.Diagnostics.AddError("Error shrinking primary disk", err.Error())
-				return
-			}
+		var diags diag.Diagnostics
+		state.Disks, diags = serverDisksToList(ctx, disks, plan.Disks)
+		resp.Diagnostics.Append(diags...)
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	}
+
+	// Free space before the resize below, which is where space to grow or add a disk comes from.
+	var currentDisks []binarylane.Disk
+	if reconcileDisks {
+		var err error
+		currentDisks, err = r.reconcileServerDisks(
+			ctx, state.Id.ValueInt64(), nil, configPrimary.SizeGigabytes, configAdditional, false)
+		persistDisks(currentDisks)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reconciling server disks", err.Error())
+			return
 		}
 	}
 
 	// Resize operation
-	sizeChanged := !plan.Size.Equal(state.Size)
 	memoryChanged := !plan.Memory.IsNull() && !plan.Memory.IsUnknown() && !plan.Memory.Equal(state.Memory)
 	if sizeChanged || memoryChanged ||
 		!plan.Image.Equal(state.Image) ||
 		!plan.PublicIpv4Count.Equal(state.PublicIpv4Count) ||
-		totalDiskChanged {
+		diskChanged {
 
 		resizeReq := &binarylane.PostServersServerIdActionsResizeJSONRequestBody{
 			Type:    "resize",
 			Options: &binarylane.ChangeSizeOptionsRequest{},
 		}
 
-		if sizeChanged || memoryChanged || totalDiskChanged {
+		if sizeChanged || memoryChanged || diskChanged {
 			if sizeChanged {
 				resizeReq.Size = plan.Size.ValueStringPointer()
 			}
@@ -1241,8 +1104,8 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 				resizeReq.Options.Memory = plan.Memory.ValueInt32Pointer()
 			}
 			if planDiskKnown {
-				total := plannedTotalDisk
-				resizeReq.Options.Disk = &total
+				disk := plan.Disk.ValueInt32()
+				resizeReq.Options.Disk = &disk
 			}
 			state.Size = plan.Size
 			state.Memory = plan.Memory
@@ -1303,6 +1166,9 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
+		// The resize can resize the primary disk, so anything read before it is stale.
+		currentDisks = nil
+
 		if state.PublicIpv4Addresses.IsUnknown() || listContainsUnknown(ctx, state.PublicIpv4Addresses) || state.Memory.IsNull() || state.Memory.IsUnknown() {
 			refreshNeeded = true
 		}
@@ -1314,62 +1180,14 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 	}
 
-	// Post-resize disk reconciliation: sync primary, grow additional disks, add new ones.
-	if disksChanged || totalDiskChanged {
-		currentDisks, err := r.fetchServerDisks(ctx, state.Id.ValueInt64())
+	// Grow the primary back to its target size, then grow and add the rest, now that the resize
+	// has made room. currentDisks is nil if that resize ran, so they are re-read.
+	if reconcileDisks {
+		finalDisks, err := r.reconcileServerDisks(
+			ctx, state.Id.ValueInt64(), currentDisks, configPrimary.SizeGigabytes, configAdditional, true)
+		persistDisks(finalDisks)
 		if err != nil {
-			resp.Diagnostics.AddError("Error fetching server disks", err.Error())
-			return
-		}
-		primaryId, primarySize := findPrimaryDiskId(currentDisks)
-		if primaryId != 0 && planDiskKnown && primarySize != plan.Disk.ValueInt32() {
-			if err := r.resizeServerDisk(ctx, state.Id.ValueInt64(), primaryId, plan.Disk.ValueInt32()); err != nil {
-				resp.Diagnostics.AddError("Error syncing primary disk size", err.Error())
-				return
-			}
-		}
-
-		existingByName := make(map[string]binarylane.Disk, len(currentDisks))
-		for _, d := range currentDisks {
-			if d.Primary {
-				continue
-			}
-			desc := ""
-			if d.Description != nil {
-				desc = *d.Description
-			}
-			existingByName[desc] = d
-		}
-		for _, pd := range planDisks {
-			existing, ok := existingByName[pd.Name.ValueString()]
-			if ok {
-				if int32(existing.SizeGigabytes) < pd.SizeGigabytes.ValueInt32() {
-					if err := r.resizeServerDisk(ctx, state.Id.ValueInt64(), existing.Id, pd.SizeGigabytes.ValueInt32()); err != nil {
-						resp.Diagnostics.AddError("Error growing additional disk", err.Error())
-						return
-					}
-				}
-			} else {
-				if err := r.addServerDisk(ctx, state.Id.ValueInt64(), pd.Name.ValueString(), pd.SizeGigabytes.ValueInt32()); err != nil {
-					resp.Diagnostics.AddError("Error adding additional disk", err.Error())
-					return
-				}
-			}
-		}
-
-		finalDisks, err := r.fetchServerDisks(ctx, state.Id.ValueInt64())
-		if err != nil {
-			resp.Diagnostics.AddError("Error refreshing server disks", err.Error())
-			return
-		}
-		newDisk, newList := readServerDisks(ctx, finalDisks, plan.Disks, &resp.Diagnostics)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		state.Disk = newDisk
-		state.Disks = newList
-		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-		if resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Error reconciling server disks", err.Error())
 			return
 		}
 	}
@@ -1495,7 +1313,6 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		resp.Diagnostics.AddError("Error updating advanced features", err.Error())
 		return
 	}
-	resp.Diagnostics.Append(diag...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -1828,7 +1645,10 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 	state.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
 	state.SeparatePrivateNetworkInterface = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SeparatePrivateNetworkInterface)
 	state.Memory = types.Int32Value(serverResp.JSON200.Server.Memory)
-	state.Disk, state.Disks = readServerDisks(ctx, serverResp.JSON200.Server.Disks, state.Disks, &diags)
+	state.Disk = types.Int32Value(serverResp.JSON200.Server.Disk)
+	var readDiags diag.Diagnostics
+	state.Disks, readDiags = serverDisksToList(ctx, serverResp.JSON200.Server.Disks, state.Disks)
+	diags.Append(readDiags...)
 	state.Backups = types.BoolValue(serverResp.JSON200.Server.NextBackupWindow != nil)
 	state.Ipv6 = types.BoolValue(len(serverResp.JSON200.Server.Networks.V6) > 0)
 
@@ -2028,170 +1848,208 @@ func (r *serverResource) updateAdvancedFeatures(
 	return nil
 }
 
-func elementsAsServerDisks(ctx context.Context, list types.List) ([]serverDiskModel, diag.Diagnostics) {
-	if list.IsNull() || list.IsUnknown() {
-		return nil, nil
+// serverDisksToList converts the server's disks into the `disks` attribute value, ordered to
+// match `order` — the value Terraform already holds, either planned or from prior state. A
+// list's elements must stay where they were planned, so a configuration can list disks in any
+// order as long as this keeps to it.
+func serverDisksToList(ctx context.Context, apiDisks []binarylane.Disk, order types.List) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	var ordered []resources.DisksValue
+	if !order.IsNull() && !order.IsUnknown() {
+		diags.Append(order.ElementsAs(ctx, &ordered, true)...)
 	}
-	var disks []serverDiskModel
-	diags := list.ElementsAs(ctx, &disks, false)
-	return disks, diags
+	orderKeys := resources.DiskKeyer{}
+	rank := make(map[resources.DiskKey]int, len(ordered))
+	for i, d := range ordered {
+		rank[orderKeys.Of(d.Primary.ValueBool(), d.Description.ValueString())] = i
+	}
+
+	primaryFirst := func(d binarylane.Disk) int {
+		if d.Primary {
+			return 0
+		}
+		return 1
+	}
+
+	// Sort into a stable order first, to key the disks in and to fall back on.
+	disks := slices.Clone(apiDisks)
+	slices.SortStableFunc(disks, func(a, b binarylane.Disk) int {
+		return cmp.Or(cmp.Compare(primaryFirst(a), primaryFirst(b)), cmp.Compare(a.Id, b.Id))
+	})
+
+	// Disks the order doesn't mention keep that order, after those it does.
+	diskKeys := resources.DiskKeyer{}
+	rankById := make(map[int64]int, len(disks))
+	for _, d := range disks {
+		r, ranked := rank[diskKeys.Of(d.Primary, diskDescription(d))]
+		if !ranked {
+			r = len(rank)
+		}
+		rankById[d.Id] = r
+	}
+	slices.SortStableFunc(disks, func(a, b binarylane.Disk) int {
+		return cmp.Compare(rankById[a.Id], rankById[b.Id])
+	})
+
+	list, listDiags := types.ListValueFrom(ctx, resources.DisksValue{}.Type(ctx), disks)
+	diags.Append(listDiags...)
+	return list, diags
 }
 
-// readServerDisks splits the server's Disks slice into the primary disk size and a list of
-// additional disks. When priorDisks is non-null the returned list is ordered to match the
-// names in priorDisks (with any new disks appended in id order) so plans don't show
-// spurious reordering diffs.
-func readServerDisks(ctx context.Context, apiDisks []binarylane.Disk, priorDisks types.List, diags *diag.Diagnostics) (types.Int32, types.List) {
-	var primarySize int32
-	additional := make([]binarylane.Disk, 0, len(apiDisks))
+// splitDisks divides a `disks` list into its primary entry and the additional disks, as the API's
+// own type: binarylane.Disk carries tfsdk tags for exactly the attributes `disks` has, so the
+// values reflect straight into it. The attributes Binary Lane assigns are null in a configuration
+// and come back as their zero value. primary is nil when the list is null or unknown, or has no
+// entry with `primary = true`.
+func splitDisks(ctx context.Context, list types.List) (primary *binarylane.Disk, additional []binarylane.Disk, diags diag.Diagnostics) {
+	if list.IsNull() || list.IsUnknown() {
+		return nil, nil, nil
+	}
 
-	for _, d := range apiDisks {
-		if d.Primary {
-			primarySize = int32(d.SizeGigabytes)
+	var disks []binarylane.Disk
+	diags = list.ElementsAs(ctx, &disks, true)
+	if diags.HasError() {
+		return nil, nil, diags
+	}
+
+	for i, d := range disks {
+		if d.Primary && primary == nil {
+			primary = &disks[i]
 			continue
 		}
 		additional = append(additional, d)
 	}
-
-	slices.SortFunc(additional, func(a, b binarylane.Disk) int {
-		switch {
-		case a.Id < b.Id:
-			return -1
-		case a.Id > b.Id:
-			return 1
-		default:
-			return 0
-		}
-	})
-
-	// Mirror the prior null/empty shape when there are no additional disks, to avoid
-	// "provider produced inconsistent result" diffs when the user did not configure `disks`.
-	if len(additional) == 0 {
-		if priorDisks.IsNull() {
-			return types.Int32Value(primarySize), types.ListNull(serverDiskObjectType())
-		}
-		return types.Int32Value(primarySize), types.ListValueMust(serverDiskObjectType(), []attr.Value{})
-	}
-
-	if !priorDisks.IsNull() && !priorDisks.IsUnknown() {
-		prior, priorDiags := elementsAsServerDisks(ctx, priorDisks)
-		diags.Append(priorDiags...)
-		if !priorDiags.HasError() && len(prior) > 0 {
-			byName := make(map[string]int, len(additional))
-			for i, d := range additional {
-				name := ""
-				if d.Description != nil {
-					name = *d.Description
-				}
-				byName[name] = i
-			}
-			ordered := make([]binarylane.Disk, 0, len(additional))
-			used := make(map[int]struct{}, len(additional))
-			for _, p := range prior {
-				if idx, ok := byName[p.Name.ValueString()]; ok {
-					ordered = append(ordered, additional[idx])
-					used[idx] = struct{}{}
-				}
-			}
-			for i, d := range additional {
-				if _, ok := used[i]; ok {
-					continue
-				}
-				ordered = append(ordered, d)
-			}
-			additional = ordered
-		}
-	}
-
-	elements := make([]attr.Value, 0, len(additional))
-	for _, d := range additional {
-		name := ""
-		if d.Description != nil {
-			name = *d.Description
-		}
-		obj, objDiags := types.ObjectValue(serverDiskAttrTypes(), map[string]attr.Value{
-			"id":             types.Int64Value(d.Id),
-			"name":           types.StringValue(name),
-			"size_gigabytes": types.Int32Value(int32(d.SizeGigabytes)),
-		})
-		diags.Append(objDiags...)
-		elements = append(elements, obj)
-	}
-
-	list, listDiags := types.ListValue(serverDiskObjectType(), elements)
-	diags.Append(listDiags...)
-	if listDiags.HasError() {
-		return types.Int32Value(primarySize), types.ListNull(serverDiskObjectType())
-	}
-	return types.Int32Value(primarySize), list
+	return primary, additional, diags
 }
 
-func findPrimaryDiskId(disks []binarylane.Disk) (int64, int32) {
-	for _, d := range disks {
+// reconcileServerDisks brings the server's disks in line with desiredPrimary and
+// desiredAdditional, and returns them as they stand afterwards, re-read if anything changed —
+// including after a failure, since partially applied disk changes are not rolled back. current
+// is the disks as last read, or nil to read them here.
+//
+// Deleting and shrinking only free space, so they always run. Growing the primary, growing a
+// disk and adding one all claim space the server's total may not have yet, so they wait for
+// growAndAdd: Update calls this before its resize action with growAndAdd false and after it
+// with true, while Create has no resize of its own and always passes true.
+func (r *serverResource) reconcileServerDisks(
+	ctx context.Context,
+	serverId int64,
+	current []binarylane.Disk,
+	desiredPrimary float64,
+	desiredAdditional []binarylane.Disk,
+	growAndAdd bool,
+) ([]binarylane.Disk, error) {
+	if current == nil {
+		var err error
+		if current, err = r.fetchServerDisks(ctx, serverId); err != nil {
+			return nil, err
+		}
+	}
+
+	mutated, err := r.applyDiskChanges(ctx, serverId, current, desiredPrimary, desiredAdditional, growAndAdd)
+	if !mutated {
+		return current, err
+	}
+	disks, fetchErr := r.fetchServerDisks(ctx, serverId)
+	if fetchErr != nil {
+		return current, errors.Join(err, fetchErr)
+	}
+	return disks, err
+}
+
+// applyDiskChanges makes the changes reconcileServerDisks needs, reporting whether it attempted
+// any.
+func (r *serverResource) applyDiskChanges(
+	ctx context.Context,
+	serverId int64,
+	current []binarylane.Disk,
+	desiredPrimary float64,
+	desiredAdditional []binarylane.Disk,
+	growAndAdd bool,
+) (mutated bool, err error) {
+	desiredKeys := make([]resources.DiskKey, len(desiredAdditional))
+	desiredSizes := make(map[resources.DiskKey]float64, len(desiredAdditional))
+	keyer := resources.DiskKeyer{}
+	for i, d := range desiredAdditional {
+		desiredKeys[i] = keyer.Of(false, diskDescription(d))
+		desiredSizes[desiredKeys[i]] = d.SizeGigabytes
+	}
+
+	// Keyed by id order, which is the order the desired disks were planned against.
+	byId := slices.Clone(current)
+	slices.SortStableFunc(byId, func(a, b binarylane.Disk) int { return cmp.Compare(a.Id, b.Id) })
+
+	var primary *binarylane.Disk
+	currentKeys := make(map[int64]resources.DiskKey, len(current))
+	currentByKey := make(map[resources.DiskKey]binarylane.Disk, len(current))
+	keyer = resources.DiskKeyer{}
+	for i, d := range byId {
 		if d.Primary {
-			return d.Id, int32(d.SizeGigabytes)
+			primary = &byId[i]
+			continue
+		}
+		key := keyer.Of(false, diskDescription(d))
+		currentKeys[d.Id] = key
+		currentByKey[key] = d
+	}
+
+	// Delete disks that are no longer wanted and shrink those that are getting smaller.
+	for _, d := range current {
+		if d.Primary {
+			continue
+		}
+		desired, wanted := desiredSizes[currentKeys[d.Id]]
+		switch {
+		case !wanted:
+			mutated = true
+			if err := r.deleteServerDisk(ctx, serverId, d.Id); err != nil {
+				return true, err
+			}
+		case desired < d.SizeGigabytes:
+			mutated = true
+			if err := r.resizeServerDisk(ctx, serverId, d.Id, desired); err != nil {
+				return true, err
+			}
 		}
 	}
-	return 0, 0
+	// The primary shrinks before a server-level resize and grows after it, never both.
+	if primary != nil && (desiredPrimary < primary.SizeGigabytes ||
+		(growAndAdd && desiredPrimary > primary.SizeGigabytes)) {
+		mutated = true
+		if err := r.resizeServerDisk(ctx, serverId, primary.Id, desiredPrimary); err != nil {
+			return true, err
+		}
+	}
+
+	if !growAndAdd {
+		return mutated, nil
+	}
+
+	for i, d := range desiredAdditional {
+		if existing, ok := currentByKey[desiredKeys[i]]; ok {
+			if d.SizeGigabytes > existing.SizeGigabytes {
+				mutated = true
+				if err := r.resizeServerDisk(ctx, serverId, existing.Id, d.SizeGigabytes); err != nil {
+					return true, err
+				}
+			}
+			continue
+		}
+		mutated = true
+		if err := r.addServerDisk(ctx, serverId, diskDescription(d), d.SizeGigabytes); err != nil {
+			return true, err
+		}
+	}
+	return mutated, nil
 }
 
-func (r *serverResource) resizeServerDisk(ctx context.Context, serverId, diskId int64, sizeGigabytes int32) error {
-	tflog.Info(ctx, fmt.Sprintf("Resizing disk: server_id=%d, disk_id=%d, size_gigabytes=%d", serverId, diskId, sizeGigabytes))
-	resp, err := r.bc.client.PostServersServerIdActionsResizeDiskWithResponse(ctx, serverId, binarylane.ResizeDisk{
-		Type:          binarylane.ResizeDiskTypeResizeDisk,
-		DiskId:        diskId,
-		SizeGigabytes: sizeGigabytes,
-	})
-	if err != nil {
-		return fmt.Errorf("error resizing disk: server_id=%d, disk_id=%d, error: %w", serverId, diskId, err)
+// diskDescription returns a disk's description, which is unset for a disk added without one.
+func diskDescription(d binarylane.Disk) string {
+	if d.Description == nil {
+		return ""
 	}
-	if resp.StatusCode() != http.StatusOK {
-		return fmt.Errorf("unexpected HTTP status code resizing disk: server_id=%d, disk_id=%d, status=%s, body: %s", serverId, diskId, resp.Status(), resp.Body)
-	}
-	if err := r.waitForServerAction(ctx, serverId, resp.JSON200.Action.Id); err != nil {
-		return fmt.Errorf("error waiting for disk resize: server_id=%d, disk_id=%d, error: %w", serverId, diskId, err)
-	}
-	return nil
-}
-
-func (r *serverResource) deleteServerDisk(ctx context.Context, serverId, diskId int64) error {
-	tflog.Info(ctx, fmt.Sprintf("Deleting disk: server_id=%d, disk_id=%d", serverId, diskId))
-	resp, err := r.bc.client.PostServersServerIdActionsDeleteDiskWithResponse(ctx, serverId, binarylane.DeleteDisk{
-		Type:   binarylane.DeleteDiskTypeDeleteDisk,
-		DiskId: diskId,
-	})
-	if err != nil {
-		return fmt.Errorf("error deleting disk: server_id=%d, disk_id=%d, error: %w", serverId, diskId, err)
-	}
-	if resp.StatusCode() != http.StatusOK {
-		return fmt.Errorf("unexpected HTTP status code deleting disk: server_id=%d, disk_id=%d, status=%s, body: %s", serverId, diskId, resp.Status(), resp.Body)
-	}
-	if err := r.waitForServerAction(ctx, serverId, resp.JSON200.Action.Id); err != nil {
-		return fmt.Errorf("error waiting for disk delete: server_id=%d, disk_id=%d, error: %w", serverId, diskId, err)
-	}
-	return nil
-}
-
-func (r *serverResource) addServerDisk(ctx context.Context, serverId int64, name string, sizeGigabytes int32) error {
-	tflog.Info(ctx, fmt.Sprintf("Adding disk: server_id=%d, name=%s, size_gigabytes=%d", serverId, name, sizeGigabytes))
-	body := binarylane.AddDisk{
-		Type:          binarylane.AddDiskTypeAddDisk,
-		SizeGigabytes: sizeGigabytes,
-	}
-	if name != "" {
-		body.Description = &name
-	}
-	resp, err := r.bc.client.PostServersServerIdActionsAddDiskWithResponse(ctx, serverId, body)
-	if err != nil {
-		return fmt.Errorf("error adding disk: server_id=%d, name=%s, error: %w", serverId, name, err)
-	}
-	if resp.StatusCode() != http.StatusOK {
-		return fmt.Errorf("unexpected HTTP status code adding disk: server_id=%d, name=%s, status=%s, body: %s", serverId, name, resp.Status(), resp.Body)
-	}
-	if err := r.waitForServerAction(ctx, serverId, resp.JSON200.Action.Id); err != nil {
-		return fmt.Errorf("error waiting for disk add: server_id=%d, name=%s, error: %w", serverId, name, err)
-	}
-	return nil
+	return *d.Description
 }
 
 func (r *serverResource) fetchServerDisks(ctx context.Context, serverId int64) ([]binarylane.Disk, error) {
@@ -2205,173 +2063,74 @@ func (r *serverResource) fetchServerDisks(ctx context.Context, serverId int64) (
 	return resp.JSON200.Server.Disks, nil
 }
 
-// createAdditionalDisks shrinks the primary disk back to plannedPrimarySize (the server
-// was created with total = primary + sum(additional), so the primary currently holds all
-// the space) and then adds each requested additional disk in plan order.
-func (r *serverResource) createAdditionalDisks(ctx context.Context, serverId int64, plannedPrimarySize int32, planDisks []serverDiskModel) error {
-	current, err := r.fetchServerDisks(ctx, serverId)
+func (r *serverResource) resizeServerDisk(ctx context.Context, serverId int64, diskId int64, sizeGigabytes float64) error {
+	tflog.Info(ctx, fmt.Sprintf("Resizing disk: server_id=%d, disk_id=%d, size_gigabytes=%g", serverId, diskId, sizeGigabytes))
+
+	resizeResp, err := r.bc.client.PostServersServerIdActionsResizeDiskWithResponse(ctx, serverId, binarylane.ResizeDisk{
+		Type:          binarylane.ResizeDiskTypeResizeDisk,
+		DiskId:        diskId,
+		SizeGigabytes: int32(sizeGigabytes),
+	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error resizing disk: server_id=%d, disk_id=%d, error: %w", serverId, diskId, err)
 	}
-	primaryId, currentPrimarySize := findPrimaryDiskId(current)
-	if primaryId != 0 && currentPrimarySize != plannedPrimarySize {
-		if err := r.resizeServerDisk(ctx, serverId, primaryId, plannedPrimarySize); err != nil {
-			return err
-		}
+	if resizeResp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("unexpected HTTP status code resizing disk: server_id=%d, disk_id=%d, details: %s", serverId, diskId, resizeResp.Body)
 	}
-	for _, d := range planDisks {
-		if err := r.addServerDisk(ctx, serverId, d.Name.ValueString(), d.SizeGigabytes.ValueInt32()); err != nil {
-			return err
-		}
+
+	err = r.waitForServerAction(ctx, serverId, resizeResp.JSON200.Action.Id)
+	if err != nil {
+		return fmt.Errorf("error resizing disk: %w", err)
 	}
+
 	return nil
 }
 
-type totalDiskRulesValidator struct {
-	Minimum int32
-	Rules   []MultipleOfValidator
+func (r *serverResource) deleteServerDisk(ctx context.Context, serverId int64, diskId int64) error {
+	tflog.Info(ctx, fmt.Sprintf("Deleting disk: server_id=%d, disk_id=%d", serverId, diskId))
+
+	deleteResp, err := r.bc.client.PostServersServerIdActionsDeleteDiskWithResponse(ctx, serverId, binarylane.DeleteDisk{
+		Type:   binarylane.DeleteDiskTypeDeleteDisk,
+		DiskId: diskId,
+	})
+	if err != nil {
+		return fmt.Errorf("error deleting disk: server_id=%d, disk_id=%d, error: %w", serverId, diskId, err)
+	}
+	if deleteResp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("unexpected HTTP status code deleting disk: server_id=%d, disk_id=%d, details: %s", serverId, diskId, deleteResp.Body)
+	}
+
+	err = r.waitForServerAction(ctx, serverId, deleteResp.JSON200.Action.Id)
+	if err != nil {
+		return fmt.Errorf("error deleting disk: %w", err)
+	}
+
+	return nil
 }
 
-func (v totalDiskRulesValidator) Description(ctx context.Context) string {
-	return fmt.Sprintf("Validates that the server's total disk allocation (`disk + sum(disks.size_gigabytes)`) is at least %d GB and follows the Binary Lane multiple-of rules.", v.Minimum)
-}
+func (r *serverResource) addServerDisk(ctx context.Context, serverId int64, description string, sizeGigabytes float64) error {
+	tflog.Info(ctx, fmt.Sprintf("Adding disk: server_id=%d, description=%s, size_gigabytes=%g", serverId, description, sizeGigabytes))
 
-func (v totalDiskRulesValidator) MarkdownDescription(ctx context.Context) string {
-	return v.Description(ctx)
-}
-
-func (v totalDiskRulesValidator) ValidateInt32(ctx context.Context, req validator.Int32Request, resp *validator.Int32Response) {
-	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
-		return
+	addDisk := binarylane.AddDisk{
+		Type:          binarylane.AddDiskTypeAddDisk,
+		SizeGigabytes: int32(sizeGigabytes),
+	}
+	if description != "" {
+		addDisk.Description = &description
 	}
 
-	var disks types.List
-	diags := req.Config.GetAttribute(ctx, path.Root("disks"), &disks)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
+	addResp, err := r.bc.client.PostServersServerIdActionsAddDiskWithResponse(ctx, serverId, addDisk)
+	if err != nil {
+		return fmt.Errorf("error adding disk: server_id=%d, description=%s, error: %w", serverId, description, err)
+	}
+	if addResp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("unexpected HTTP status code adding disk: server_id=%d, description=%s, details: %s", serverId, description, addResp.Body)
 	}
 
-	var sum int32
-	if !disks.IsNull() && !disks.IsUnknown() {
-		var elements []serverDiskModel
-		diags = disks.ElementsAs(ctx, &elements, false)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		for _, d := range elements {
-			if d.SizeGigabytes.IsNull() || d.SizeGigabytes.IsUnknown() {
-				return
-			}
-			sum += d.SizeGigabytes.ValueInt32()
-		}
+	err = r.waitForServerAction(ctx, serverId, addResp.JSON200.Action.Id)
+	if err != nil {
+		return fmt.Errorf("error adding disk: %w", err)
 	}
 
-	disk := req.ConfigValue.ValueInt32()
-	total := disk + sum
-
-	if v.Minimum > 0 && total < v.Minimum {
-		resp.Diagnostics.AddAttributeError(
-			req.Path,
-			"Total disk allocation too small",
-			fmt.Sprintf(
-				"The server's total disk allocation is `disk + sum(disks.size_gigabytes)` = %d + %d = %d GB, which is less than the minimum %d GB.",
-				disk, sum, total, v.Minimum,
-			),
-		)
-		return
-	}
-
-	for _, rule := range v.Rules {
-		if total%rule.Multiple == 0 ||
-			rule.RangeFrom != 0 && total < rule.RangeFrom ||
-			rule.RangeTo != 0 && total >= rule.RangeTo {
-			continue
-		}
-		detail := fmt.Sprintf(
-			"The server's total disk allocation is `disk + sum(disks.size_gigabytes)` = %d + %d = %d. ",
-			disk, sum, total,
-		)
-		if rule.RangeFrom != 0 {
-			detail += fmt.Sprintf("When greater than %d, the total must be a multiple of %d.", rule.RangeFrom, rule.Multiple)
-		} else {
-			detail += fmt.Sprintf("The total must be a multiple of %d.", rule.Multiple)
-		}
-		resp.Diagnostics.AddAttributeError(req.Path, "Invalid total disk allocation", detail)
-		return
-	}
-}
-
-type disksRequiresPrimaryDiskValidator struct{}
-
-func (v disksRequiresPrimaryDiskValidator) Description(ctx context.Context) string {
-	return "When `disks` has one or more elements, the primary `disk` size must also be set so the total allocation is unambiguous."
-}
-
-func (v disksRequiresPrimaryDiskValidator) MarkdownDescription(ctx context.Context) string {
-	return v.Description(ctx)
-}
-
-func (v disksRequiresPrimaryDiskValidator) ValidateList(ctx context.Context, req validator.ListRequest, resp *validator.ListResponse) {
-	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
-		return
-	}
-	if len(req.ConfigValue.Elements()) == 0 {
-		return
-	}
-
-	var disk types.Int32
-	diags := req.Config.GetAttribute(ctx, path.Root("disk"), &disk)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	if disk.IsNull() {
-		resp.Diagnostics.AddAttributeError(
-			req.Path,
-			"Missing primary disk size",
-			"When `disks` has one or more elements, the primary `disk` size must also be set so the server's total allocation (`disk + sum(disks.size_gigabytes)`) is unambiguous.",
-		)
-	}
-}
-
-type uniqueDiskNamesValidator struct{}
-
-func (v uniqueDiskNamesValidator) Description(ctx context.Context) string {
-	return "Each `disks[*].name` must be unique within the list."
-}
-
-func (v uniqueDiskNamesValidator) MarkdownDescription(ctx context.Context) string {
-	return v.Description(ctx)
-}
-
-func (v uniqueDiskNamesValidator) ValidateList(ctx context.Context, req validator.ListRequest, resp *validator.ListResponse) {
-	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
-		return
-	}
-
-	var disks []serverDiskModel
-	diags := req.ConfigValue.ElementsAs(ctx, &disks, false)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	seen := make(map[string]int, len(disks))
-	for i, d := range disks {
-		if d.Name.IsNull() || d.Name.IsUnknown() {
-			continue
-		}
-		name := d.Name.ValueString()
-		if first, ok := seen[name]; ok {
-			resp.Diagnostics.AddAttributeError(
-				req.Path.AtListIndex(i).AtName("name"),
-				"Duplicate disk name",
-				fmt.Sprintf("Disk name %q is already used by disks[%d]; each `disks[*].name` must be unique within the list.", name, first),
-			)
-			continue
-		}
-		seen[name] = i
-	}
+	return nil
 }
