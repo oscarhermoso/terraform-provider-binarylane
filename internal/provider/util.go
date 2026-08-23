@@ -2,11 +2,14 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	d_schema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	r_schema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -265,4 +268,14 @@ func listContainsUnknown(ctx context.Context, list types.List) bool {
 
 func Pointer[T any](d T) *T {
 	return &d
+}
+
+// errFromDiagnostics turns error diagnostics into an error, for helpers that report errors rather
+// than diagnostics.
+func errFromDiagnostics(diags diag.Diagnostics) error {
+	messages := make([]string, 0, len(diags))
+	for _, d := range diags.Errors() {
+		messages = append(messages, fmt.Sprintf("%s: %s", d.Summary(), d.Detail()))
+	}
+	return errors.New(strings.Join(messages, "; "))
 }

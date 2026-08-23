@@ -145,6 +145,12 @@ func (r *serverFirewallRulesResource) Read(ctx context.Context, req resource.Rea
 		)
 		return
 	}
+	if fwResp.StatusCode() == http.StatusNotFound {
+		tflog.Warn(ctx, fmt.Sprintf("Server firewall rules not found, removing from state: server_id=%d", data.ServerId.ValueInt64()))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	if fwResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code reading server firewall rules",
@@ -237,6 +243,11 @@ func (r *serverFirewallRulesResource) Delete(ctx context.Context, req resource.D
 		)
 		return
 	}
+	if serverResp.StatusCode() == http.StatusNotFound {
+		tflog.Warn(ctx, fmt.Sprintf("Server already gone, no firewall rules to delete: server_id=%s", data.ServerId.String()))
+		return
+	}
+
 	if serverResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code deleting server firewall rules",

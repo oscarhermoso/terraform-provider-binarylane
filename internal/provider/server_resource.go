@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -772,8 +773,9 @@ func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// One extra read to check the final state of enabled_advanced_features, needed because
 	// some flags (like "cloud-init") are not set until the server is fully created. See #13
-	diag := r.fetchServerResourceState(ctx, &data)
-	resp.Diagnostics.Append(diag...)
+	if err := r.fetchServerResourceState(ctx, &data); err != nil {
+		resp.Diagnostics.AddError("Error reading server", err.Error())
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -791,8 +793,15 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	// Read API call logic
 	tflog.Debug(ctx, fmt.Sprintf("Reading server: id=%s, name=%s", data.Id.String(), data.Name.ValueString()))
-	diag := r.fetchServerResourceState(ctx, &data)
-	resp.Diagnostics.Append(diag...)
+	if err := r.fetchServerResourceState(ctx, &data); err != nil {
+		if errors.Is(err, errServerNotFound) {
+			tflog.Warn(ctx, fmt.Sprintf("Server not found, removing from state: id=%s, name=%s", data.Id.String(), data.Name.ValueString()))
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError("Error reading server", err.Error())
+		return
+	}
 
 	// Get user data script
 	userDataResp, err := r.bc.client.GetServersServerIdUserDataWithResponse(ctx, data.Id.ValueInt64())
@@ -841,8 +850,10 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
-		diag := r.fetchServerResourceState(ctx, &state)
-		resp.Diagnostics.Append(diag...)
+		if err := r.fetchServerResourceState(ctx, &state); err != nil {
+			resp.Diagnostics.AddError("Error reading server", err.Error())
+			return
+		}
 
 		// Save updated data into Terraform state
 		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -915,8 +926,10 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 	if !plan.VpcIpv4Address.Equal(state.VpcIpv4Address) && !plan.VpcIpv4Address.IsNull() && !plan.VpcIpv4Address.IsUnknown() {
 		// If VPC was just changed, IP address needs to be fetched so it can be sent in the request
 		if refreshNeeded {
-			diag := r.fetchServerResourceState(ctx, &state)
-			resp.Diagnostics.Append(diag...)
+			if err := r.fetchServerResourceState(ctx, &state); err != nil {
+				resp.Diagnostics.AddError("Error reading server", err.Error())
+				return
+			}
 			resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 			if resp.Diagnostics.HasError() {
 				return
@@ -1306,6 +1319,11 @@ func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
+	if serverResp.StatusCode() == http.StatusNotFound {
+		tflog.Warn(ctx, fmt.Sprintf("Server already gone, nothing to delete: id=%s, name=%s", data.Id.String(), data.Name.ValueString()))
+		return
+	}
+
 	if serverResp.StatusCode() != http.StatusNoContent {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code deleting server",
@@ -1473,25 +1491,25 @@ func (r *serverResource) updateSeparatePrivateNetworkInterface(
 	return nil
 }
 
-func (r *serverResource) fetchServerResourceState(ctx context.Context, state *serverResourceModel) diag.Diagnostics {
+// errServerNotFound reports that Binary Lane no longer has the server, so that Read can drop it
+// from state instead of failing (see #69).
+var errServerNotFound = errors.New("server not found")
+
+// fetchServerResourceState reads the server and maps it into state, returning errServerNotFound
+// if the server no longer exists.
+func (r *serverResource) fetchServerResourceState(ctx context.Context, state *serverResourceModel) error {
 	var diags diag.Diagnostics
 
 	serverResp, err := r.bc.client.GetServersServerIdWithResponse(ctx, state.Id.ValueInt64())
 	if err != nil {
-		return diag.Diagnostics{
-			diag.NewErrorDiagnostic(
-				fmt.Sprintf("Error reading server: id=%s, name=%s", state.Id.String(), state.Name.ValueString()),
-				err.Error(),
-			),
-		}
+		return fmt.Errorf("error reading server: id=%s, name=%s, error: %w", state.Id, state.Name.ValueString(), err)
+	}
+	if serverResp.StatusCode() == http.StatusNotFound {
+		return errServerNotFound
 	}
 	if serverResp.StatusCode() != http.StatusOK {
-		return diag.Diagnostics{
-			diag.NewErrorDiagnostic(
-				fmt.Sprintf("Unexpected HTTP status code %s reading server: name=%s, id=%s", serverResp.Status(), state.Name.ValueString(), state.Id.String()),
-				string(serverResp.Body),
-			),
-		}
+		return fmt.Errorf("unexpected HTTP status code %s reading server: id=%s, name=%s, details: %s",
+			serverResp.Status(), state.Id, state.Name.ValueString(), serverResp.Body)
 	}
 
 	state.Id = types.Int64Value(serverResp.JSON200.Server.Id)
@@ -1524,7 +1542,7 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 	}
 
 	advFeat := serverResp.JSON200.Server.AdvancedFeatures.EnabledAdvancedFeatures
-	state.AdvancedFeatures, diags = resources.NewAdvancedFeaturesValue(
+	advFeatValue, advFeatDiags := resources.NewAdvancedFeaturesValue(
 		resources.AdvancedFeaturesValue{}.AttributeTypes(ctx),
 		map[string]attr.Value{
 			"emulated_hyperv":  types.BoolValue(slices.Contains(advFeat, "emulated-hyperv")),
@@ -1538,7 +1556,9 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 			"qemu_guest_agent": types.BoolValue(slices.Contains(advFeat, "qemu-guest-agent")),
 			"uefi_boot":        types.BoolValue(slices.Contains(advFeat, "uefi-boot")),
 		})
-	if diags.HasError() {
+	diags.Append(advFeatDiags...)
+	state.AdvancedFeatures = advFeatValue
+	if advFeatDiags.HasError() {
 		state.AdvancedFeatures = resources.NewAdvancedFeaturesValueUnknown()
 	}
 
@@ -1600,7 +1620,11 @@ func (r *serverResource) fetchServerResourceState(ctx context.Context, state *se
 		state.PrivateIpv6Addresses = tfPrivateIpv6Addresses
 	}
 
-	return diags
+	if diags.HasError() {
+		return errFromDiagnostics(diags)
+	}
+
+	return nil
 }
 
 func isAdvFeatChanged(config *resources.AdvancedFeaturesValue, data *resources.AdvancedFeaturesValue) bool {

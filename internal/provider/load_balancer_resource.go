@@ -384,6 +384,11 @@ func (r *loadBalancerResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
+	if lbResp.StatusCode() == http.StatusNotFound {
+		tflog.Warn(ctx, fmt.Sprintf("Load balancer already gone, nothing to delete: id=%s, name=%s", data.Id.String(), data.Name.ValueString()))
+		return
+	}
+
 	if lbResp.StatusCode() != http.StatusNoContent {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code deleting load balancer",

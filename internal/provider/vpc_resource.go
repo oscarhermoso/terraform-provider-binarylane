@@ -230,6 +230,11 @@ func (r *vpcResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 		return
 	}
 
+	if vpcResp.StatusCode() == http.StatusNotFound {
+		tflog.Warn(ctx, fmt.Sprintf("VPC already gone, nothing to delete: id=%d", data.Id.ValueInt64()))
+		return
+	}
+
 	if vpcResp.StatusCode() != http.StatusNoContent {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code deleting VPC",
