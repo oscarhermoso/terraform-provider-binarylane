@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"terraform-provider-binarylane/internal/binarylane"
 	"testing"
@@ -282,6 +283,72 @@ EOT
 			},
 		},
 	})
+}
+
+// TestServerResourceDeletedOutOfBand covers a server that no longer exists at Binary Lane: the
+// next refresh drops it from state so a plan can re-create it, rather than failing with the 404
+// and leaving the state to be edited by hand (#69).
+func TestServerResourceDeletedOutOfBand(t *testing.T) {
+	// Must assign a password to the server or Binary Lane will send emails
+	password := GenerateTestPassword(t)
+
+	var serverId string
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: providerConfig + `
+resource "binarylane_server" "test" {
+	name              = "tf-test-server-out-of-band"
+	// TEMPORARY: "per" is intermittently returning "Unable to find a suitable host for the
+	// requested server configuration"
+	region            = "mel"
+	image             = "debian-12"
+	size              = "std-min"
+	public_ipv4_count = 0
+	password          = "` + password + `"
+}
+`,
+				Check: resource.TestCheckResourceAttrWith("binarylane_server.test", "id", func(value string) error {
+					serverId = value
+					return nil
+				}),
+			},
+			{
+				PreConfig:          func() { deleteServerOutOfBand(t, serverId) },
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true, // the server is gone from state, so the plan re-creates it
+			},
+		},
+	})
+}
+
+// deleteServerOutOfBand deletes a server through the API, as if someone had removed it outside of
+// Terraform.
+func deleteServerOutOfBand(t *testing.T, serverId string) {
+	t.Helper()
+
+	client, err := binarylane.NewClientWithDefaultConfig()
+	if err != nil {
+		t.Fatalf("Error creating Binary Lane API client: %s", err)
+	}
+
+	id, err := strconv.ParseInt(serverId, 10, 64)
+	if err != nil {
+		t.Fatalf("Error parsing server id %q: %s", serverId, err)
+	}
+
+	reason := "Terraform deletion"
+	deleteResp, err := client.DeleteServersServerIdWithResponse(context.Background(), id, &binarylane.DeleteServersServerIdParams{
+		Reason: &reason,
+	})
+	if err != nil {
+		t.Fatalf("Error deleting server %d out of band: %s", id, err)
+	}
+	if deleteResp.StatusCode() != http.StatusNoContent {
+		t.Fatalf("Unexpected status %d deleting server %d out of band: %s", deleteResp.StatusCode(), id, deleteResp.Body)
+	}
 }
 
 func TestServerResourceRename(t *testing.T) {
