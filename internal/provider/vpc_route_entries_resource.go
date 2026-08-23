@@ -217,6 +217,11 @@ func (r *vpcRouteEntriesResource) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
+	if vpcResp.StatusCode() == http.StatusNotFound {
+		tflog.Warn(ctx, fmt.Sprintf("VPC already gone, no route entries to delete: vpc_id=%d", data.VpcId.ValueInt64()))
+		return
+	}
+
 	if vpcResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code deleting VPC route entries",

@@ -182,6 +182,12 @@ func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 		)
 		return
 	}
+	if sshResp.StatusCode() == http.StatusNotFound {
+		tflog.Warn(ctx, fmt.Sprintf("SSH Key not found, removing from state: id=%s, name=%s", data.Id.String(), data.Name.ValueString()))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	if sshResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code getting SSH key",
@@ -264,6 +270,11 @@ func (r *sshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		)
 		return
 	}
+	if sshResp.StatusCode() == http.StatusNotFound {
+		tflog.Warn(ctx, fmt.Sprintf("SSH Key already gone, nothing to delete: id=%s, name=%s", state.Id.String(), state.Name.ValueString()))
+		return
+	}
+
 	if sshResp.StatusCode() != http.StatusNoContent {
 		resp.Diagnostics.AddError(
 			"Unexpected HTTP status code deleting SSH Key",
