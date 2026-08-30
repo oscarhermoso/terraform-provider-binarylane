@@ -23,6 +23,10 @@ func TestServerResource(t *testing.T) {
 	sshPublicKeyInitial := GenerateTestPublicKey(t)
 	sshPublicKeyUpdated := GenerateTestPublicKey(t)
 
+	// Captured while "zeta" still exists, then checked once it is gone and the disks after it
+	// have shifted down a position.
+	var alphaDiskId, betaDiskId string
+
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -49,7 +53,7 @@ resource "binarylane_ssh_key" "updated" {
 
 resource "binarylane_server" "test" {
   name              = "tf-test-server-resource"
-  region            = "per"
+  region            = "` + testRegion + `"
   image             = "debian-11"
   size              = "std-min"
 	memory            = 1152
@@ -77,11 +81,16 @@ data "binarylane_server" "test" {
 					// Verify resource values
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "id"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "name", "tf-test-server-resource"),
-					resource.TestCheckResourceAttr("binarylane_server.test", "region", "per"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "region", testRegion),
 					resource.TestCheckResourceAttr("binarylane_server.test", "image", "debian-11"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "size", "std-min"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "memory", "1152"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "disk", "20"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.#", "1"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.0.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.primary", "true"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.description", "SYSTEM"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.size_gigabytes", "20"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "vpc_id"),
 					resource.TestCheckResourceAttrSet("binarylane_server.test", "vpc_ipv4_address"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_count", "1"),
@@ -114,7 +123,7 @@ echo "Hello World" > /var/tmp/output.txt
 					// Verify data source values
 					resource.TestCheckResourceAttrPair("data.binarylane_server.test", "id", "binarylane_server.test", "id"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "name", "tf-test-server-resource"),
-					resource.TestCheckResourceAttr("data.binarylane_server.test", "region", "per"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "region", testRegion),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "image", "debian-11"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "size", "std-min"),
 					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "vpc_id"),
@@ -125,6 +134,11 @@ echo "Hello World" > /var/tmp/output.txt
 `),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "memory", "1152"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "disk", "20"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.#", "1"),
+					resource.TestCheckResourceAttrSet("data.binarylane_server.test", "disks.0.id"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.0.primary", "true"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.0.description", "SYSTEM"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.0.size_gigabytes", "20"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "backups", "true"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "port_blocking", "false"),
 					resource.TestCheckResourceAttr("data.binarylane_server.test", "source_and_destination_check", "false"),
@@ -180,10 +194,16 @@ resource "binarylane_ssh_key" "updated" {
 
 resource "binarylane_server" "test" {
   name              = "tf-test-server-resource-2"
-  region            = "per"
+  region            = "` + testRegion + `"
   image             = "debian-12"
-  size              = "std-1vcpu"
-  disk              = "45"
+  size              = "std-min"
+  disk              = 40
+  disks             = [
+    { primary = true, size_gigabytes = 25 },
+    { description = "zeta", size_gigabytes = 5 },
+    { description = "alpha", size_gigabytes = 5 },
+    { description = "beta", size_gigabytes = 5 },
+  ]
   password          = "` + password1 + `"
   vpc_id            = null
   public_ipv4_count = 0
@@ -207,9 +227,34 @@ EOT
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("binarylane_server.test", "name", "tf-test-server-resource-2"),
-					resource.TestCheckResourceAttr("binarylane_server.test", "size", "std-1vcpu"),
-					resource.TestCheckResourceAttr("binarylane_server.test", "memory", "2048"),
-					resource.TestCheckResourceAttr("binarylane_server.test", "disk", "45"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "size", "std-min"),
+					// `memory` is unset here and `size` is unchanged, so it carries forward
+					// the 1152 set in the previous step.
+					resource.TestCheckResourceAttr("binarylane_server.test", "memory", "1152"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disk", "40"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.#", "4"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.0.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.primary", "true"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.description", "SYSTEM"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.size_gigabytes", "25"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.1.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.primary", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.description", "zeta"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.size_gigabytes", "5"),
+					resource.TestCheckResourceAttrWith("binarylane_server.test", "disks.2.id", func(value string) error {
+						alphaDiskId = value
+						return nil
+					}),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.2.primary", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.2.description", "alpha"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.2.size_gigabytes", "5"),
+					resource.TestCheckResourceAttrWith("binarylane_server.test", "disks.3.id", func(value string) error {
+						betaDiskId = value
+						return nil
+					}),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.3.primary", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.3.description", "beta"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.3.size_gigabytes", "5"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_count", "0"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "public_ipv4_addresses.#", "0"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "image", "debian-12"),
@@ -254,10 +299,16 @@ resource "binarylane_ssh_key" "updated" {
 
 resource "binarylane_server" "test" {
   name              = "tf-test-server-resource-2"
-  region            = "per"
+  region            = "` + testRegion + `"
   image             = "debian-12"
-  size              = "std-1vcpu"
-  disk              = "45"
+  size              = "std-min"
+  disk              = 35
+  disks             = [
+    { primary = true, size_gigabytes = 15 },
+    { description = "alpha", size_gigabytes = 10 },
+    { description = "beta", size_gigabytes = 5 },
+    { description = "delta", size_gigabytes = 5 },
+  ]
   password          = "` + password2 + `"
   vpc_id            = null
   public_ipv4_count = 0
@@ -278,6 +329,288 @@ EOT
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("binarylane_server.test", "name", "tf-test-server-resource-2"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "password", password2),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disk", "35"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.#", "4"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.0.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.primary", "true"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.description", "SYSTEM"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.size_gigabytes", "15"),
+					// Removing "zeta" shifts these down a position, but each keeps the disk it
+					// had: they are matched to prior state by description, not by index.
+					resource.TestCheckResourceAttrWith("binarylane_server.test", "disks.1.id", func(value string) error {
+						if value != alphaDiskId {
+							return fmt.Errorf("disk \"alpha\" has id %s, want %s", value, alphaDiskId)
+						}
+						return nil
+					}),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.primary", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.description", "alpha"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.size_gigabytes", "10"),
+					resource.TestCheckResourceAttrWith("binarylane_server.test", "disks.2.id", func(value string) error {
+						if value != betaDiskId {
+							return fmt.Errorf("disk \"beta\" has id %s, want %s", value, betaDiskId)
+						}
+						return nil
+					}),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.2.primary", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.2.description", "beta"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.2.size_gigabytes", "5"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.3.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.3.primary", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.3.description", "delta"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.3.size_gigabytes", "5"),
+				),
+			},
+			// Dropping `disks` leaves the server's disks alone: growing the total here only
+			// adds unallocated space, since the primary is not the only disk.
+			{
+				Config: providerConfig + `
+resource "binarylane_ssh_key" "updated" {
+  name       = "tf-test-server-resource-updated"
+  public_key = "` + sshPublicKeyUpdated + `"
+  default    = true
+}
+
+resource "binarylane_server" "test" {
+  name              = "tf-test-server-resource-2"
+  region            = "` + testRegion + `"
+  image             = "debian-12"
+  size              = "std-min"
+  disk              = 50
+  password          = "` + password2 + `"
+  vpc_id            = null
+  public_ipv4_count = 0
+  ssh_keys          = [binarylane_ssh_key.updated.id]
+
+  user_data         = <<EOT
+#cloud-config
+echo "Hello Whitespace" > /var/tmp/output.txt
+
+
+EOT
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("binarylane_server.test", "disk", "50"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.#", "4"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.0.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.primary", "true"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.description", "SYSTEM"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.size_gigabytes", "15"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.1.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.primary", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.description", "alpha"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.size_gigabytes", "10"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.2.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.2.primary", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.2.description", "beta"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.2.size_gigabytes", "5"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.3.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.3.primary", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.3.description", "delta"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.3.size_gigabytes", "5"),
+				),
+			},
+		},
+	})
+}
+
+// TestServerResourceDisksValidation exercises the plan-time `disks` validators. Every case only
+// plans a fresh server, so no infrastructure is created.
+func TestServerResourceDisksValidation(t *testing.T) {
+	tests := []struct {
+		name string
+		// attributes are added to an otherwise valid server resource.
+		attributes string
+		// expectErr is the error the plan must fail with, or empty if it must succeed.
+		expectErr string
+	}{
+		{
+			name:       "no primary disk",
+			attributes: `disks = [{ description = "data1", size_gigabytes = 10 }]`,
+			expectErr:  "Missing primary disk",
+		},
+		{
+			name:       "empty disks list",
+			attributes: `disks = []`,
+			expectErr:  "Missing primary disk",
+		},
+		{
+			name: "two primary disks",
+			attributes: `disks = [
+    { primary = true, size_gigabytes = 20 },
+    { primary = true, size_gigabytes = 10 },
+  ]`,
+			expectErr: "Multiple primary disks",
+		},
+		{
+			// The primary disk's description is assigned by Binary Lane, not by the user.
+			name:       "primary disk with a description",
+			attributes: `disks = [{ primary = true, description = "SYSTEM", size_gigabytes = 20 }]`,
+			expectErr:  "Primary disk description is server-assigned",
+		},
+		{
+			name: "disks exceeding the total",
+			attributes: `disk = 45
+  disks = [
+    { primary = true, size_gigabytes = 30 },
+    { description = "data1", size_gigabytes = 20 },
+  ]`,
+			expectErr: "Disks exceed total disk allocation",
+		},
+		{
+			name:       "disk below the minimum",
+			attributes: `disk = 10`,
+			expectErr:  "Attribute disk",
+		},
+		{
+			// Binary Lane allows duplicate descriptions, and so does this provider.
+			name: "duplicate descriptions",
+			attributes: `disks = [
+    { primary = true, size_gigabytes = 20 },
+    { description = "data", size_gigabytes = 5 },
+    { description = "data", size_gigabytes = 10 },
+  ]`,
+		},
+		{
+			// Also valid with room to spare, leaving the difference unallocated.
+			name: "disks filling the total exactly",
+			attributes: `disk = 40
+  disks = [
+    { primary = true, size_gigabytes = 30 },
+    { description = "data1", size_gigabytes = 10 },
+  ]`,
+		},
+		{
+			name: "disks with the total left unset",
+			attributes: `disks = [
+    { primary = true, size_gigabytes = 30 },
+    { description = "data1", size_gigabytes = 10 },
+  ]`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			step := resource.TestStep{
+				Config: planOnlyProviderConfig + fmt.Sprintf(`
+resource "binarylane_server" "test" {
+  name              = "tf-test-disks-validation"
+  region            = %q
+  image             = "debian-12"
+  size              = "std-min"
+  public_ipv4_count = 0
+  %s
+}
+`, testRegion, tt.attributes),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			}
+			if tt.expectErr != "" {
+				step.ExpectError = regexp.MustCompile(tt.expectErr)
+			}
+			resource.UnitTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Steps:                    []resource.TestStep{step},
+			})
+		})
+	}
+}
+
+func TestServerResourceCreateWithDisks(t *testing.T) {
+	// Must assign a password to the server or Binary Lane will send emails
+	password := GenerateTestPassword(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: providerConfig + `
+resource "binarylane_server" "test" {
+	name              = "tf-test-server-create-disks"
+	region            = "` + testRegion + `"
+	image             = "debian-12"
+	size              = "std-min"
+	public_ipv4_count = 0
+	password          = "` + password + `"
+	disk              = 40
+	disks = [
+		{ primary = true, size_gigabytes = 20 },
+		{ description = "data", size_gigabytes = 10 },
+		{ description = "data", size_gigabytes = 5 },
+	]
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// 5 GB of the total is left unallocated.
+					resource.TestCheckResourceAttr("binarylane_server.test", "disk", "40"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.#", "3"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.0.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.primary", "true"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.description", "SYSTEM"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.size_gigabytes", "20"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.1.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.primary", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.description", "data"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.size_gigabytes", "10"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.2.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.2.primary", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.2.description", "data"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.2.size_gigabytes", "5"),
+				),
+			},
+			// The same disks in a different order, which is not a change.
+			{
+				Config: providerConfig + `
+resource "binarylane_server" "test" {
+	name              = "tf-test-server-create-disks"
+	region            = "` + testRegion + `"
+	image             = "debian-12"
+	size              = "std-min"
+	public_ipv4_count = 0
+	password          = "` + password + `"
+	disk              = 40
+	disks = [
+		{ description = "data", size_gigabytes = 10 },
+		{ primary = true, size_gigabytes = 20 },
+		{ description = "data", size_gigabytes = 5 },
+	]
+}
+
+data "binarylane_server" "test" {
+	depends_on = [binarylane_server.test]
+
+	id = binarylane_server.test.id
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// The resource keeps the order the configuration lists the disks in
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.#", "3"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.0.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.primary", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.description", "data"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.0.size_gigabytes", "10"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.1.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.primary", "true"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.description", "SYSTEM"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.1.size_gigabytes", "20"),
+					resource.TestCheckResourceAttrSet("binarylane_server.test", "disks.2.id"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.2.primary", "false"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.2.description", "data"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "disks.2.size_gigabytes", "5"),
+
+					// The data source has no order of its own, so it lists the primary disk
+					// first and the rest by id
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.#", "3"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.0.primary", "true"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.0.description", "SYSTEM"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.0.size_gigabytes", "20"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.1.primary", "false"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.1.description", "data"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.1.size_gigabytes", "10"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.2.primary", "false"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.2.description", "data"),
+					resource.TestCheckResourceAttr("data.binarylane_server.test", "disks.2.size_gigabytes", "5"),
 				),
 			},
 		},
@@ -297,7 +630,7 @@ func TestServerResourceRename(t *testing.T) {
 
 resource "binarylane_server" "test" {
 	name              = "tf-test-server-rename-1"
-	region            = "per"
+	region            = "` + testRegion + `"
 	image             = "debian-11"
 	size              = "std-min"
 	public_ipv4_count = 0
@@ -310,7 +643,7 @@ resource "binarylane_server" "test" {
 				Config: providerConfig + `
 resource "binarylane_server" "test" {
 	name              = "tf-test-server-rename-2"
-	region            = "per"
+	region            = "` + testRegion + `"
 	image             = "debian-11"
 	size              = "std-min"
 	public_ipv4_count = 0
@@ -319,7 +652,7 @@ resource "binarylane_server" "test" {
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("binarylane_server.test", "name", "tf-test-server-rename-2"),
-					resource.TestCheckResourceAttr("binarylane_server.test", "region", "per"),
+					resource.TestCheckResourceAttr("binarylane_server.test", "region", testRegion),
 					resource.TestCheckResourceAttr("binarylane_server.test", "image", "debian-11"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "size", "std-min"),
 					resource.TestCheckResourceAttr("binarylane_server.test", "password", password),
@@ -341,7 +674,7 @@ func TestServerVpcIpv4Change(t *testing.T) {
 				Config: providerConfig + `
 resource "binarylane_server" "test" {
 	name              = "tf-test-server-vpcipv4-1"
-	region            = "per"
+	region            = "` + testRegion + `"
 	image             = "debian-11"
 	size              = "std-min"
 	public_ipv4_count = 0
@@ -367,7 +700,7 @@ resource "binarylane_vpc" "test2" {
 
 resource "binarylane_server" "test" {
 	name              = "tf-test-server-vpcipv4-1"
-	region            = "per"
+	region            = "` + testRegion + `"
 	image             = "debian-11"
 	size              = "std-min"
 	public_ipv4_count = 0
@@ -407,7 +740,7 @@ resource "binarylane_vpc" "test2" {
 
 resource "binarylane_server" "test" {
 	name              = "tf-test-server-vpcipv4-1"
-	region            = "per"
+	region            = "` + testRegion + `"
 	image             = "debian-11"
 	size              = "std-min"
 	public_ipv4_count = 0
@@ -447,7 +780,7 @@ resource "binarylane_vpc" "test2" {
 
 resource "binarylane_server" "test" {
 	name              = "tf-test-server-vpcipv4-1"
-	region            = "per"
+	region            = "` + testRegion + `"
 	image             = "debian-11"
 	size              = "std-min"
 	public_ipv4_count = 0

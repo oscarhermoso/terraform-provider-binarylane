@@ -28,7 +28,7 @@ func TestLoadBalancerResource(t *testing.T) {
 resource "binarylane_server" "test" {
   count             = 2
   name              = "tf-test-lb-server-${count.index}"
-  region            = "per"
+  region            = "` + testRegion + `"
   image             = "debian-12"
   size              = "std-min"
   password          = "` + password + `"
@@ -94,7 +94,7 @@ data "binarylane_load_balancer" "test" {
 resource "binarylane_server" "test" {
   count             = 2
   name              = "tf-test-lb-server-${count.index}"
-  region            = "per"
+  region            = "` + testRegion + `"
   image             = "debian-12"
   size              = "std-min"
   password          = "` + password + `"

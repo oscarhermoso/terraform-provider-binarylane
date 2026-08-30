@@ -9,6 +9,9 @@ cat <<<$(jq --tab '. + {"$schema": "https://raw.githubusercontent.com/hashicorp/
 ADVANCED_FEATURES_CONFIG=$(dirname "$0")/data/server_advanced_features.json
 cat <<<$(jq --tab --slurpfile adv_feat_cfg $ADVANCED_FEATURES_CONFIG '.resources[1].schema.attributes |= . + $adv_feat_cfg' $GENERATOR_CONFIG) >$GENERATOR_CONFIG
 
+DISKS_CONFIG=$(dirname "$0")/data/server_disks.json
+cat <<<$(jq --tab --slurpfile disks_cfg $DISKS_CONFIG '.resources[1].schema.attributes |= . + $disks_cfg' $GENERATOR_CONFIG) >$GENERATOR_CONFIG
+
 # Use set instead of list for server_ids in load_balancer resource
 jq --tab '
   .resources |= map(

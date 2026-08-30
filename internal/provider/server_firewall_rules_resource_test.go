@@ -20,7 +20,7 @@ func TestServerFirewallRulesResource(t *testing.T) {
 
 resource "binarylane_server" "test" {
   name              = "tf-test-server-fw-rules"
-  region            = "per"
+  region            = "` + testRegion + `"
   image             = "debian-12"
   size              = "std-min"
   password          = "` + password + `"
@@ -90,7 +90,7 @@ data "binarylane_server_firewall_rules" "test" {
 
 resource "binarylane_server" "test" {
   name              = "tf-test-server-fw-rules"
-  region            = "per"
+  region            = "` + testRegion + `"
   image             = "debian-12"
   size              = "std-min"
   password          = "` + password + `"

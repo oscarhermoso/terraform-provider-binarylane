@@ -118,6 +118,8 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.Permalink = types.StringValue(*serverResp.JSON200.Server.Permalink)
 	data.Memory = types.Int32Value(serverResp.JSON200.Server.Memory)
 	data.Disk = types.Int32Value(serverResp.JSON200.Server.Disk)
+	data.Disks, diag = serverDisksToList(ctx, serverResp.JSON200.Server.Disks, data.Disks)
+	diags.Append(diag...)
 	data.SourceAndDestinationCheck = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SourceAndDestinationCheck)
 	data.SeparatePrivateNetworkInterface = types.BoolPointerValue(serverResp.JSON200.Server.Networks.SeparatePrivateNetworkInterface)
 

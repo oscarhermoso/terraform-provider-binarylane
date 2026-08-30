@@ -29,10 +29,11 @@ data "binarylane_server" "example" {
 
 - `advanced_features` (Object) (see [below for nested schema](#nestedatt--advanced_features))
 - `backups` (Boolean) If `true` this will enable two daily backups for the server. By default, backups are disabled.
-- `disk` (Number) The total storage in GB for this server. Leave null to accept the default for the size Valid values:
+- `disk` (Number) The total storage in GB for this server. Leave null to accept the default for the size. Valid values:
   - must be a multiple of 5
   - \> 60 GB must be a multiple of 10
   - \> 200 GB must be a multiple of 100
+- `disks` (Attributes List) The disks attached to this server. Leave null to let Binary Lane manage the server's disks. If specified, every disk must be listed, including the primary: exactly one entry must have `primary = true`, and its `id` and `description` are assigned by Binary Lane. (see [below for nested schema](#nestedatt--disks))
 - `image` (String) The slug of the selected operating system, such as `debian-12`. You can fetch a full list of images from the BinaryLane API.
 - `ipv6` (Boolean) If `true` this will add a public and private IPv6 address to the server. By default, IPv6 is disabled.
 - `memory` (Number) The total memory in MB for this server. Leave null to accept the default size. Valid values:
@@ -71,3 +72,14 @@ Read-Only:
 - `qemu_guest_agent` (Boolean)
 - `uefi_boot` (Boolean)
 - `unset_uuid` (Boolean)
+
+
+<a id="nestedatt--disks"></a>
+### Nested Schema for `disks`
+
+Read-Only:
+
+- `description` (String) A label for this disk. Assigned by Binary Lane for the primary disk, so must be left null when `primary = true`. Changing this will destroy the disk and create a new one, losing any data on it. Disks that share a description are matched in the order they are listed.
+- `id` (Number) The ID of this disk.
+- `primary` (Boolean) If `true` this is the primary disk, which the operating system is installed on. Exactly one disk must be the primary.
+- `size_gigabytes` (Number) The size of the disk in GB. The sum across all disks cannot exceed `disk`, and any remainder is left unallocated.

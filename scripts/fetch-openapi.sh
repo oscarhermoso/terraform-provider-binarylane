@@ -37,6 +37,12 @@ cat <<<$(jq 'del(.paths."/images/{image_id}")' $OPENAPI_FILE) >$OPENAPI_FILE
 
 # Add x-oapi-codegen-extra-tags so structs can be reflected
 
+## Disk
+cat <<<$(jq '.components.schemas.Disk.properties.id += {"x-oapi-codegen-extra-tags": {"tfsdk": "id"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Disk.properties.description += {"x-oapi-codegen-extra-tags": {"tfsdk": "description"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Disk.properties.primary += {"x-oapi-codegen-extra-tags": {"tfsdk": "primary"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+cat <<<$(jq '.components.schemas.Disk.properties.size_gigabytes += {"x-oapi-codegen-extra-tags": {"tfsdk": "size_gigabytes"}}' $OPENAPI_FILE) >$OPENAPI_FILE
+
 ## RouteEntryRequest
 cat <<<$(jq '.components.schemas.RouteEntryRequest.properties.destination += {"x-oapi-codegen-extra-tags": {"tfsdk": "destination"}}' $OPENAPI_FILE) >$OPENAPI_FILE
 cat <<<$(jq '.components.schemas.RouteEntryRequest.properties.description += {"x-oapi-codegen-extra-tags": {"tfsdk": "description"}}' $OPENAPI_FILE) >$OPENAPI_FILE
